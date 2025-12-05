@@ -1,0 +1,58 @@
+[
+  {
+    "id": "test-001",
+    "name": "Basic ML Classification Project",
+    "description": "A machine learning model for customer churn prediction using historical data",
+    "review_level": "basic",
+    "expected_aspects": ["data_privacy", "bias", "transparency"]
+  },
+  {
+    "id": "test-002", 
+    "name": "Healthcare Diagnosis Assistant",
+    "description": "An AI system that assists doctors in diagnosing respiratory conditions from X-ray images",
+    "review_level": "standard",
+    "expected_aspects": ["safety", "reliability", "human_oversight", "data_privacy"]
+  },
+  {
+    "id": "test-003",
+    "name": "Automated Resume Screening Tool",
+    "description": "AI tool that screens job applications and ranks candidates based on resume content",
+    "review_level": "standard",
+    "expected_aspects": ["bias", "fairness", "transparency", "human_oversight"]
+  },
+  {
+    "id": "test-004",
+    "name": "Customer Service Chatbot",
+    "description": "A conversational AI for handling customer support inquiries and complaints",
+    "review_level": "basic",
+    "expected_aspects": ["transparency", "accountability", "data_privacy"]
+  },
+  {
+    "id": "test-005",
+    "name": "Autonomous Vehicle Decision System",
+    "description": "AI system for real-time decision making in self-driving vehicles including pedestrian detection",
+    "review_level": "comprehensive",
+    "expected_aspects": ["safety", "reliability", "accountability", "human_oversight", "robustness"]
+  },
+  {
+    "id": "test-006",
+    "name": "Financial Credit Scoring Model",
+    "description": "Machine learning model that predicts credit worthiness and loan approval decisions",
+    "review_level": "comprehensive",
+    "expected_aspects": ["bias", "fairness", "transparency", "accountability", "explainability"]
+  },
+  {
+    "id": "test-007",
+    "name": "Simple Data Visualization Dashboard",
+    "description": "A dashboard that displays sales metrics and generates charts from database queries",
+    "review_level": "basic",
+    "expected_aspects": ["data_privacy", "transparency"]
+  },
+  {
+    "id": "test-008",
+    "name": "Facial Recognition Access Control",
+    "description": "AI system for employee identification and building access control using facial recognition",
+    "review_level": "comprehensive",
+    "expected_aspects": ["privacy", "bias", "consent", "security", "human_oversight"]
+  }
+]

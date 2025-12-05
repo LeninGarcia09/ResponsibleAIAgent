@@ -1,0 +1,193 @@
+{
+  "timestamp": "2025-12-05T16:45:44.854985",
+  "api_url": "https://rai-backend.graymoss-a8a3aef8.westus3.azurecontainerapps.io/api",
+  "summary": {
+    "total": 8,
+    "passed": 2,
+    "failed": 6,
+    "pass_rate": 25.0
+  },
+  "results": [
+    {
+      "id": "test-001",
+      "name": "Basic ML Classification Project",
+      "review_level": "basic",
+      "validation": {
+        "has_error": false,
+        "has_risk_level": false,
+        "has_summary": true,
+        "has_recommendations": false,
+        "has_concerns": false,
+        "aspects_covered": [
+          "data_privacy",
+          "bias",
+          "transparency"
+        ],
+        "missing_aspects": [],
+        "has_quick_start": true,
+        "score": 60.0,
+        "passed": true
+      },
+      "response_preview": "{'ai_powered': True, 'next_steps': ['Review and document Responsible AI principles', 'Audit and document data sources for bias', 'Integrate Fairlearn and Presidio into the development process'], 'over..."
+    },
+    {
+      "id": "test-002",
+      "name": "Healthcare Diagnosis Assistant",
+      "review_level": "standard",
+      "validation": {
+        "has_error": true,
+        "has_risk_level": false,
+        "has_summary": false,
+        "has_recommendations": false,
+        "has_concerns": false,
+        "aspects_covered": [],
+        "missing_aspects": [
+          "safety",
+          "reliability",
+          "human_oversight",
+          "data_privacy"
+        ],
+        "score": 0.0,
+        "passed": false
+      },
+      "response_preview": "{'error': '500 Server Error: Internal Server Error for url: https://rai-backend.graymoss-a8a3aef8.westus3.azurecontainerapps.io/api/submit-review'}"
+    },
+    {
+      "id": "test-003",
+      "name": "Automated Resume Screening Tool",
+      "review_level": "standard",
+      "validation": {
+        "has_error": false,
+        "has_risk_level": false,
+        "has_summary": true,
+        "has_recommendations": false,
+        "has_concerns": false,
+        "aspects_covered": [
+          "bias",
+          "fairness",
+          "transparency"
+        ],
+        "missing_aspects": [
+          "human_oversight"
+        ],
+        "score": 60.0,
+        "passed": true
+      },
+      "response_preview": "{'ai_powered': True, 'next_steps': ['Install and configure Fairlearn to assess fairness.', 'Implement Presidio for data privacy measures.', 'Use InterpretML to enhance model transparency.'], 'overall_..."
+    },
+    {
+      "id": "test-004",
+      "name": "Customer Service Chatbot",
+      "review_level": "basic",
+      "validation": {
+        "has_error": true,
+        "has_risk_level": false,
+        "has_summary": false,
+        "has_recommendations": false,
+        "has_concerns": false,
+        "aspects_covered": [],
+        "missing_aspects": [
+          "transparency",
+          "accountability",
+          "data_privacy"
+        ],
+        "has_quick_start": false,
+        "score": 0.0,
+        "passed": false
+      },
+      "response_preview": "{'error': '500 Server Error: Internal Server Error for url: https://rai-backend.graymoss-a8a3aef8.westus3.azurecontainerapps.io/api/submit-review'}"
+    },
+    {
+      "id": "test-005",
+      "name": "Autonomous Vehicle Decision System",
+      "review_level": "comprehensive",
+      "validation": {
+        "has_error": false,
+        "has_risk_level": false,
+        "has_summary": true,
+        "has_recommendations": false,
+        "has_concerns": false,
+        "aspects_covered": [
+          "safety"
+        ],
+        "missing_aspects": [
+          "reliability",
+          "accountability",
+          "human_oversight",
+          "robustness"
+        ],
+        "score": 40.0,
+        "passed": false
+      },
+      "response_preview": "{'ai_powered': True, 'next_steps': ['Review Microsoft Responsible AI principles', 'Document intended use and limitations', 'Integrate Fairlearn and Presidio for fairness and privacy'], 'overall_assess..."
+    },
+    {
+      "id": "test-006",
+      "name": "Financial Credit Scoring Model",
+      "review_level": "comprehensive",
+      "validation": {
+        "has_error": true,
+        "has_risk_level": false,
+        "has_summary": false,
+        "has_recommendations": false,
+        "has_concerns": false,
+        "aspects_covered": [],
+        "missing_aspects": [
+          "bias",
+          "fairness",
+          "transparency",
+          "accountability",
+          "explainability"
+        ],
+        "score": 0.0,
+        "passed": false
+      },
+      "response_preview": "{'error': '500 Server Error: Internal Server Error for url: https://rai-backend.graymoss-a8a3aef8.westus3.azurecontainerapps.io/api/submit-review'}"
+    },
+    {
+      "id": "test-007",
+      "name": "Simple Data Visualization Dashboard",
+      "review_level": "basic",
+      "validation": {
+        "has_error": false,
+        "has_risk_level": false,
+        "has_summary": true,
+        "has_recommendations": false,
+        "has_concerns": false,
+        "aspects_covered": [
+          "transparency"
+        ],
+        "missing_aspects": [
+          "data_privacy"
+        ],
+        "has_quick_start": true,
+        "score": 40.0,
+        "passed": false
+      },
+      "response_preview": "{'ai_powered': True, 'next_steps': ['Define and implement fairness metrics using Fairlearn', 'Set up privacy measures with Presidio', 'Create a model card for transparency'], 'overall_assessment': {'c..."
+    },
+    {
+      "id": "test-008",
+      "name": "Facial Recognition Access Control",
+      "review_level": "comprehensive",
+      "validation": {
+        "has_error": true,
+        "has_risk_level": false,
+        "has_summary": false,
+        "has_recommendations": false,
+        "has_concerns": false,
+        "aspects_covered": [],
+        "missing_aspects": [
+          "privacy",
+          "bias",
+          "consent",
+          "security",
+          "human_oversight"
+        ],
+        "score": 0.0,
+        "passed": false
+      },
+      "response_preview": "{'error': '500 Server Error: Internal Server Error for url: https://rai-backend.graymoss-a8a3aef8.westus3.azurecontainerapps.io/api/submit-review'}"
+    }
+  ]
+}
