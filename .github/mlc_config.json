@@ -1,0 +1,14 @@
+{
+  "ignorePatterns": [
+    {
+      "pattern": "^https://rai-backend"
+    },
+    {
+      "pattern": "^https://rai-frontend"
+    },
+    {
+      "pattern": "^https://raisimpleacr"
+    }
+  ],
+  "aliveStatusCodes": [200, 206, 301, 302, 403]
+}

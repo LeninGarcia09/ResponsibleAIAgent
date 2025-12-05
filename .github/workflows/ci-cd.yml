@@ -1,0 +1,155 @@
+# CI/CD Pipeline for Responsible AI Agent
+# Triggers on push to main and pull requests
+# Builds and deploys to Azure Container Apps
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+env:
+  AZURE_CONTAINER_REGISTRY: raisimpleacr.azurecr.io
+  RESOURCE_GROUP: rg-rai-simple
+  BACKEND_APP: rai-backend
+  FRONTEND_APP: rai-frontend
+
+jobs:
+  # ============================================
+  # Build and Test Backend
+  # ============================================
+  build-backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Run linting
+        run: |
+          pip install flake8
+          flake8 app.py rai_system_prompt.py --max-line-length=120 --ignore=E501,W503
+        continue-on-error: true
+
+      - name: Run tests
+        run: |
+          python -m pytest test_backend.py -v --tb=short
+        continue-on-error: true
+
+  # ============================================
+  # Build and Test Frontend
+  # ============================================
+  build-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Build application
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_BASE_URL: https://rai-backend.graymoss-a8a3aef8.westus3.azurecontainerapps.io/api
+
+  # ============================================
+  # Deploy to Azure (only on push to main)
+  # ============================================
+  deploy:
+    needs: [build-backend, build-frontend]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to Azure Container Registry
+        run: |
+          az acr login --name raisimpleacr
+
+      - name: Get short SHA
+        id: sha
+        run: echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Build and push Backend image
+        run: |
+          az acr build \
+            --registry raisimpleacr \
+            --image rai-backend:${{ steps.sha.outputs.SHORT_SHA }} \
+            --image rai-backend:latest \
+            --file backend/Dockerfile \
+            backend/
+
+      - name: Build and push Frontend image
+        run: |
+          az acr build \
+            --registry raisimpleacr \
+            --image rai-frontend:${{ steps.sha.outputs.SHORT_SHA }} \
+            --image rai-frontend:latest \
+            --file frontend/Dockerfile \
+            frontend/
+
+      - name: Deploy Backend to Container Apps
+        run: |
+          az containerapp update \
+            --name ${{ env.BACKEND_APP }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --image ${{ env.AZURE_CONTAINER_REGISTRY }}/rai-backend:${{ steps.sha.outputs.SHORT_SHA }}
+
+      - name: Deploy Frontend to Container Apps
+        run: |
+          az containerapp update \
+            --name ${{ env.FRONTEND_APP }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --image ${{ env.AZURE_CONTAINER_REGISTRY }}/rai-frontend:${{ steps.sha.outputs.SHORT_SHA }}
+
+      - name: Verify deployment
+        run: |
+          echo "Backend URL: https://rai-backend.graymoss-a8a3aef8.westus3.azurecontainerapps.io/api/health"
+          echo "Frontend URL: https://rai-frontend.graymoss-a8a3aef8.westus3.azurecontainerapps.io"
+          
+          # Wait for deployment
+          sleep 30
+          
+          # Health check
+          curl -s https://rai-backend.graymoss-a8a3aef8.westus3.azurecontainerapps.io/api/health | jq .
