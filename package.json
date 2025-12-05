@@ -1,0 +1,29 @@
+{
+  "name": "responsible-ai-agent",
+  "version": "1.0.0",
+  "description": "Responsible AI Agent Platform for reviewing AI solutions against standards and best practices",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && pip install -r requirements.txt",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && func start",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && pip install -r requirements.txt",
+    "deploy": "npm run build:frontend && npm run build:backend",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces"
+  },
+  "keywords": [
+    "responsible-ai",
+    "azure",
+    "microsoft",
+    "compliance",
+    "security"
+  ],
+  "author": "Microsoft",
+  "license": "UNLICENSED"
+}

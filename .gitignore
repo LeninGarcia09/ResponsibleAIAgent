@@ -1,0 +1,70 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+local.settings.json
+
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+.next/
+out/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Azure Functions
+bin/
+obj/
+.azure/
+__blobstorage__/
+__queuestorage__/
+__azurite_db*__.json
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Logs
+*.log
+logs/
+
+# Test coverage
+coverage/
+*.cover
+.coverage
+.pytest_cache/
+
+# Secrets
+*.key
+*.pem
+*.pfx
+secrets/
+
+# Python packages
+.python_packages/
+backend/.python_packages/
