@@ -2,7 +2,29 @@
 
 ## Overview
 
-The Responsible AI Review Agent is a web application that helps development teams assess their AI projects against Microsoft's Responsible AI principles. It uses Azure OpenAI (GPT-4o) to provide intelligent, context-aware recommendations.
+The Responsible AI Agent is a web application that helps teams evaluate AI projects against responsible AI principles. It uses Azure OpenAI to provide intelligent assessments and recommendations.
+
+## Environments
+
+| Environment | Branch | Purpose | URLs |
+|-------------|--------|---------|------|
+| **Production** | `master` | Stable release | [Frontend](https://rai-frontend.graymoss-a8a3aef8.westus3.azurecontainerapps.io) / [API](https://rai-backend.graymoss-a8a3aef8.westus3.azurecontainerapps.io/api) |
+| **Development** | `dev` | Testing & new features | [Frontend](https://rai-frontend-dev.blackdesert-120a609f.westus3.azurecontainerapps.io) / [API](https://rai-backend-dev.blackdesert-120a609f.westus3.azurecontainerapps.io/api) |
+
+## Deployment Workflow
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Feature   │────▶│     Dev     │────▶│    Master   │
+│   Branch    │     │   Branch    │     │   Branch    │
+└─────────────┘     └─────────────┘     └─────────────┘
+                           │                    │
+                           ▼                    ▼
+                    ┌─────────────┐     ┌─────────────┐
+                    │     DEV     │     │ PRODUCTION  │
+                    │ Environment │     │ Environment │
+                    └─────────────┘     └─────────────┘
+```
 
 ## System Architecture
 

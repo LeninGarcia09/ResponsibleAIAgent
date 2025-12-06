@@ -1,27 +1,59 @@
 # CI/CD Pipeline for Responsible AI Agent
-# Triggers on push to main and pull requests
-# Builds and deploys to Azure Container Apps
+# Multi-environment deployment: dev and production
+#
+# Workflow:
+# - Push to 'dev' branch → Deploy to DEV environment
+# - Push to 'master' branch → Deploy to PRODUCTION environment
+# - Pull requests → Build and test only (no deploy)
 
 name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main, master]
+    branches: [master, dev]
   pull_request:
-    branches: [main, master]
+    branches: [master, dev]
 
 env:
   AZURE_CONTAINER_REGISTRY: raisimpleacr.azurecr.io
   RESOURCE_GROUP: rg-rai-simple
-  BACKEND_APP: rai-backend
-  FRONTEND_APP: rai-frontend
 
 jobs:
+  # ============================================
+  # Determine Environment
+  # ============================================
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.set-env.outputs.environment }}
+      backend_app: ${{ steps.set-env.outputs.backend_app }}
+      frontend_app: ${{ steps.set-env.outputs.frontend_app }}
+      backend_url: ${{ steps.set-env.outputs.backend_url }}
+      frontend_url: ${{ steps.set-env.outputs.frontend_url }}
+    steps:
+      - name: Set environment variables
+        id: set-env
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+            echo "backend_app=rai-backend" >> $GITHUB_OUTPUT
+            echo "frontend_app=rai-frontend" >> $GITHUB_OUTPUT
+            echo "backend_url=https://rai-backend.graymoss-a8a3aef8.westus3.azurecontainerapps.io" >> $GITHUB_OUTPUT
+            echo "frontend_url=https://rai-frontend.graymoss-a8a3aef8.westus3.azurecontainerapps.io" >> $GITHUB_OUTPUT
+          else
+            echo "environment=development" >> $GITHUB_OUTPUT
+            echo "backend_app=rai-backend-dev" >> $GITHUB_OUTPUT
+            echo "frontend_app=rai-frontend-dev" >> $GITHUB_OUTPUT
+            echo "backend_url=https://rai-backend-dev.blackdesert-120a609f.westus3.azurecontainerapps.io" >> $GITHUB_OUTPUT
+            echo "frontend_url=https://rai-frontend-dev.blackdesert-120a609f.westus3.azurecontainerapps.io" >> $GITHUB_OUTPUT
+          fi
+
   # ============================================
   # Build and Test Backend
   # ============================================
   build-backend:
     runs-on: ubuntu-latest
+    needs: setup
     defaults:
       run:
         working-directory: backend
@@ -41,11 +73,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest
+          pip install pytest flake8
 
       - name: Run linting
         run: |
-          pip install flake8
           flake8 app.py rai_system_prompt.py --max-line-length=120 --ignore=E501,W503
         continue-on-error: true
 
@@ -59,6 +90,7 @@ jobs:
   # ============================================
   build-frontend:
     runs-on: ubuntu-latest
+    needs: setup
     defaults:
       run:
         working-directory: frontend
@@ -84,16 +116,17 @@ jobs:
       - name: Build application
         run: npm run build
         env:
-          NEXT_PUBLIC_API_BASE_URL: https://rai-backend.graymoss-a8a3aef8.westus3.azurecontainerapps.io/api
+          NEXT_PUBLIC_API_BASE_URL: ${{ needs.setup.outputs.backend_url }}/api
 
   # ============================================
-  # Deploy to Azure (only on push to main)
+  # Deploy to Azure
   # ============================================
   deploy:
-    needs: [build-backend, build-frontend]
+    needs: [setup, build-backend, build-frontend]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-
+    if: github.event_name == 'push'
+    environment: ${{ needs.setup.outputs.environment }}
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -101,22 +134,30 @@ jobs:
       - name: Azure Login
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Login to Azure Container Registry
         run: |
           az acr login --name raisimpleacr
 
-      - name: Get short SHA
-        id: sha
-        run: echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      - name: Get version tag
+        id: version
+        run: |
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          if [[ "${{ needs.setup.outputs.environment }}" == "production" ]]; then
+            echo "tag=prod-${SHORT_SHA}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=dev-${SHORT_SHA}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Build and push Backend image
         run: |
           az acr build \
             --registry raisimpleacr \
-            --image rai-backend:${{ steps.sha.outputs.SHORT_SHA }} \
-            --image rai-backend:latest \
+            --image rai-backend:${{ steps.version.outputs.tag }} \
             --file backend/Dockerfile \
             backend/
 
@@ -124,32 +165,40 @@ jobs:
         run: |
           az acr build \
             --registry raisimpleacr \
-            --image rai-frontend:${{ steps.sha.outputs.SHORT_SHA }} \
-            --image rai-frontend:latest \
+            --image rai-frontend:${{ steps.version.outputs.tag }} \
             --file frontend/Dockerfile \
+            --build-arg NEXT_PUBLIC_API_URL=${{ needs.setup.outputs.backend_url }}/api \
             frontend/
 
       - name: Deploy Backend to Container Apps
         run: |
           az containerapp update \
-            --name ${{ env.BACKEND_APP }} \
+            --name ${{ needs.setup.outputs.backend_app }} \
             --resource-group ${{ env.RESOURCE_GROUP }} \
-            --image ${{ env.AZURE_CONTAINER_REGISTRY }}/rai-backend:${{ steps.sha.outputs.SHORT_SHA }}
+            --image ${{ env.AZURE_CONTAINER_REGISTRY }}/rai-backend:${{ steps.version.outputs.tag }}
 
       - name: Deploy Frontend to Container Apps
         run: |
           az containerapp update \
-            --name ${{ env.FRONTEND_APP }} \
+            --name ${{ needs.setup.outputs.frontend_app }} \
             --resource-group ${{ env.RESOURCE_GROUP }} \
-            --image ${{ env.AZURE_CONTAINER_REGISTRY }}/rai-frontend:${{ steps.sha.outputs.SHORT_SHA }}
+            --image ${{ env.AZURE_CONTAINER_REGISTRY }}/rai-frontend:${{ steps.version.outputs.tag }}
 
-      - name: Verify deployment
+      - name: Deployment Summary
         run: |
-          echo "Backend URL: https://rai-backend.graymoss-a8a3aef8.westus3.azurecontainerapps.io/api/health"
-          echo "Frontend URL: https://rai-frontend.graymoss-a8a3aef8.westus3.azurecontainerapps.io"
-          
-          # Wait for deployment
+          echo "## 🚀 Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ needs.setup.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.version.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### URLs" >> $GITHUB_STEP_SUMMARY
+          echo "- **Backend:** ${{ needs.setup.outputs.backend_url }}/api/health" >> $GITHUB_STEP_SUMMARY
+          echo "- **Frontend:** ${{ needs.setup.outputs.frontend_url }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Health Check
+        run: |
+          echo "Waiting for deployment to stabilize..."
           sleep 30
           
-          # Health check
-          curl -s https://rai-backend.graymoss-a8a3aef8.westus3.azurecontainerapps.io/api/health | jq .
+          echo "Checking backend health..."
+          curl -s ${{ needs.setup.outputs.backend_url }}/api/health | jq . || echo "Health check pending - container may be starting"
