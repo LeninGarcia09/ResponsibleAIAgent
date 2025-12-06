@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiClient, AIReviewSubmission, AdvancedReviewSubmission, SubmissionResponse, Recommendation, isAIRecommendation } from '@/lib/api'
 import styles from './submit.module.css'
@@ -87,6 +87,19 @@ export default function SubmitPage() {
   
   // Review depth selection
   const [reviewDepth, setReviewDepth] = useState<'quick_scan' | 'standard' | 'deep_dive'>('standard')
+
+  // Load example prompt from sessionStorage if available
+  useEffect(() => {
+    const examplePrompt = sessionStorage.getItem('examplePrompt')
+    if (examplePrompt) {
+      setFormData(prev => ({ 
+        ...prev, 
+        project_description: examplePrompt,
+        project_name: 'My AI Project' // Default name they can change
+      }))
+      sessionStorage.removeItem('examplePrompt') // Clear after use
+    }
+  }, [])
 
   // Advanced form data
   const [advancedData, setAdvancedData] = useState<Partial<AdvancedReviewSubmission>>({
