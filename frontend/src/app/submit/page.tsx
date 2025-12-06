@@ -158,13 +158,16 @@ export default function SubmitPage() {
 
     try {
       if (reviewMode === 'basic') {
-        if (!formData.project_name) {
-          throw new Error('Please provide a project name')
+        // Only description is truly required now
+        if (!formData.project_description?.trim()) {
+          throw new Error('Please describe your AI idea - even a single sentence works!')
         }
         // Include review depth in the description for the AI to understand
         const enhancedFormData = {
           ...formData,
-          project_description: `[Review Mode: ${reviewDepth.replace('_', ' ').toUpperCase()}]\n\n${formData.project_description || 'No description provided.'}\n\n` +
+          // Use a default project name if not provided
+          project_name: formData.project_name?.trim() || 'My AI Project',
+          project_description: `[Review Mode: ${reviewDepth.replace('_', ' ').toUpperCase()}]\n\n${formData.project_description}\n\n` +
             (formData.industry ? `Industry: ${formData.industry}\n` : '') +
             (formData.technology_type ? `Use Case Type: ${formData.technology_type}\n` : '') +
             (formData.target_users ? `Target Users: ${formData.target_users}\n` : '') +
@@ -229,6 +232,10 @@ export default function SubmitPage() {
     </div>
   )
 
+  // Track which optional sections are expanded
+  const [showMoreDetails, setShowMoreDetails] = useState(false)
+  const [showRiskFactors, setShowRiskFactors] = useState(false)
+
   const handleCapabilityToggle = (capabilityId: string) => {
     const current = formData.ai_capabilities || []
     const updated = current.includes(capabilityId)
@@ -237,208 +244,287 @@ export default function SubmitPage() {
     setFormData(prev => ({ ...prev, ai_capabilities: updated }))
   }
 
+  // Calculate how complete the form is for the accuracy indicator
+  const getFormCompleteness = () => {
+    let filled = 0
+    let total = 7
+    if (formData.project_name) filled++
+    if (formData.project_description) filled++
+    if (formData.industry) filled++
+    if (formData.technology_type) filled++
+    if (formData.data_types) filled++
+    if (formData.target_users) filled++
+    if (formData.ai_capabilities && formData.ai_capabilities.length > 0) filled++
+    return Math.round((filled / total) * 100)
+  }
+
   const renderBasicForm = () => (
     <>
-      {/* Review Depth Selection */}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>📊 Review Depth</h2>
-        <p className={styles.sectionDescription}>
-          Choose how thorough you want the AI review to be.
-        </p>
-        <div className={styles.reviewDepthSelector}>
-          <button
-            type="button"
-            className={`${styles.depthOption} ${reviewDepth === 'quick_scan' ? styles.depthActive : ''}`}
-            onClick={() => setReviewDepth('quick_scan')}
-          >
-            <span className={styles.depthIcon}>⚡</span>
-            <div className={styles.depthContent}>
-              <span className={styles.depthTitle}>Quick Scan</span>
-              <span className={styles.depthTime}>1-2 min</span>
-            </div>
-            <span className={styles.depthDesc}>High-level risk flags and key considerations</span>
-          </button>
-          <button
-            type="button"
-            className={`${styles.depthOption} ${reviewDepth === 'standard' ? styles.depthActive : ''}`}
-            onClick={() => setReviewDepth('standard')}
-          >
-            <span className={styles.depthIcon}>📋</span>
-            <div className={styles.depthContent}>
-              <span className={styles.depthTitle}>Standard Review</span>
-              <span className={styles.depthTime}>5-10 min</span>
-            </div>
-            <span className={styles.depthDesc}>Comprehensive analysis with recommendations</span>
-          </button>
-          <button
-            type="button"
-            className={`${styles.depthOption} ${reviewDepth === 'deep_dive' ? styles.depthActive : ''}`}
-            onClick={() => setReviewDepth('deep_dive')}
-          >
-            <span className={styles.depthIcon}>🔬</span>
-            <div className={styles.depthContent}>
-              <span className={styles.depthTitle}>Deep Dive</span>
-              <span className={styles.depthTime}>15-30 min</span>
-            </div>
-            <span className={styles.depthDesc}>Full audit with implementation guidance</span>
-          </button>
+      {/* Encouraging intro message */}
+      <section className={styles.introSection}>
+        <div className={styles.introIcon}>💡</div>
+        <div className={styles.introContent}>
+          <h2 className={styles.introTitle}>Tell us about your AI idea</h2>
+          <p className={styles.introText}>
+            <strong>Only one field is required</strong> — just describe what you want to build. 
+            The more details you add, the more accurate and tailored our recommendations will be.
+          </p>
         </div>
       </section>
 
-      {/* Project Basics */}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>📝 Project Basics</h2>
-        <p className={styles.sectionDescription}>
-          Tell us about your AI project.
+      {/* Accuracy Indicator */}
+      <div className={styles.accuracyIndicator}>
+        <div className={styles.accuracyHeader}>
+          <span className={styles.accuracyLabel}>Recommendation Accuracy</span>
+          <span className={styles.accuracyPercent}>{getFormCompleteness()}%</span>
+        </div>
+        <div className={styles.accuracyBar}>
+          <div 
+            className={styles.accuracyFill} 
+            style={{ width: `${getFormCompleteness()}%` }}
+          />
+        </div>
+        <p className={styles.accuracyHint}>
+          {getFormCompleteness() < 30 && "Add more details to improve recommendations"}
+          {getFormCompleteness() >= 30 && getFormCompleteness() < 60 && "Good start! A few more details will help"}
+          {getFormCompleteness() >= 60 && getFormCompleteness() < 85 && "Great! We have enough for solid recommendations"}
+          {getFormCompleteness() >= 85 && "Excellent! You'll get highly tailored guidance"}
         </p>
+      </div>
+
+      {/* Main Input - The Only Required Field */}
+      <section className={styles.section}>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>
+            Describe your AI idea <span className={styles.required}>*</span>
+          </label>
+          <textarea
+            value={formData.project_description}
+            onChange={(e) => setFormData(prev => ({ ...prev, project_description: e.target.value }))}
+            className={styles.textareaLarge}
+            rows={6}
+            placeholder="Just tell us what you're trying to build. For example:
+
+• 'We want to create a chatbot that answers customer questions about our products'
+• 'I'm thinking about using AI to help screen job applications'
+• 'We need to summarize long legal documents for our team'
+• 'I want to build an AI tutor for students'
+
+Don't worry about technical details - we'll help you figure those out!"
+          />
+          <div className={styles.inputHintLight}>
+            ✨ Tip: Even a single sentence is enough to get started!
+          </div>
+        </div>
 
         <div className={styles.formGroup}>
           <label className={styles.label}>
-            Project Name <span className={styles.required}>*</span>
+            Project Name <span className={styles.optional}>(optional)</span>
           </label>
           <input
             type="text"
             value={formData.project_name}
             onChange={(e) => setFormData(prev => ({ ...prev, project_name: e.target.value }))}
             className={styles.input}
-            required
-            placeholder="e.g., Customer Service AI Chatbot"
+            placeholder="Give your project a name, or we'll use 'My AI Project'"
           />
         </div>
+      </section>
 
-        <div className={styles.formRow}>
-          <div className={styles.formGroup}>
-            <label className={styles.label}>Industry / Domain</label>
+      {/* Quick Context - Optional but helpful */}
+      <section className={styles.section}>
+        <div className={styles.sectionHeaderCollapsible}>
+          <div>
+            <h2 className={styles.sectionTitle}>🎯 Quick Context</h2>
+            <p className={styles.sectionDescription}>
+              These help us give you industry-specific guidance
+            </p>
+          </div>
+          <span className={styles.optionalBadge}>Optional</span>
+        </div>
+
+        <div className={styles.quickContextGrid}>
+          <div className={styles.contextCard}>
+            <label className={styles.contextLabel}>Industry</label>
             <select
               value={formData.industry || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, industry: e.target.value }))}
-              className={styles.select}
+              className={styles.selectCompact}
             >
               {INDUSTRY_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
+            <span className={styles.contextHelp}>Helps with compliance requirements</span>
           </div>
 
-          <div className={styles.formGroup}>
-            <label className={styles.label}>Use Case Type</label>
+          <div className={styles.contextCard}>
+            <label className={styles.contextLabel}>Type of AI</label>
             <select
               value={formData.technology_type || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, technology_type: e.target.value }))}
-              className={styles.select}
+              className={styles.selectCompact}
             >
               {USE_CASE_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
-          </div>
-        </div>
-
-        <div className={styles.formRow}>
-          <div className={styles.formGroup}>
-            <label className={styles.label}>Deployment Stage</label>
-            <select
-              value={formData.deployment_stage}
-              onChange={(e) => setFormData(prev => ({ ...prev, deployment_stage: e.target.value }))}
-              className={styles.select}
-            >
-              <option value="Planning">🔵 Planning / Ideation</option>
-              <option value="Development">🟡 Development</option>
-              <option value="Testing">🟠 Testing / Validation</option>
-              <option value="Staging">🟣 Staging / Pre-production</option>
-              <option value="Production">🟢 Production</option>
-            </select>
+            <span className={styles.contextHelp}>Helps suggest reference architectures</span>
           </div>
 
-          <div className={styles.formGroup}>
-            <label className={styles.label}>Data Sensitivity</label>
+          <div className={styles.contextCard}>
+            <label className={styles.contextLabel}>Data Sensitivity</label>
             <select
               value={formData.data_types || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, data_types: e.target.value }))}
-              className={styles.select}
+              className={styles.selectCompact}
             >
               {DATA_SENSITIVITY_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
+            <span className={styles.contextHelp}>Helps with privacy recommendations</span>
           </div>
-        </div>
 
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Target Users</label>
-          <input
-            type="text"
-            value={formData.target_users || ''}
-            onChange={(e) => setFormData(prev => ({ ...prev, target_users: e.target.value }))}
-            className={styles.input}
-            placeholder="e.g., Internal employees, Customers, Healthcare professionals"
-          />
-        </div>
-      </section>
-
-      {/* AI Capabilities - Risk Indicators */}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>⚠️ AI Capabilities & Risk Factors</h2>
-        <p className={styles.sectionDescription}>
-          Select all that apply. These help identify potential risk areas for your review.
-        </p>
-        <div className={styles.capabilitiesGrid}>
-          {AI_CAPABILITIES.map(cap => (
-            <label
-              key={cap.id}
-              className={`${styles.capabilityItem} ${
-                formData.ai_capabilities?.includes(cap.id) ? styles.capabilitySelected : ''
-              } ${styles[`risk${cap.risk.charAt(0).toUpperCase() + cap.risk.slice(1)}`]}`}
+          <div className={styles.contextCard}>
+            <label className={styles.contextLabel}>Project Stage</label>
+            <select
+              value={formData.deployment_stage}
+              onChange={(e) => setFormData(prev => ({ ...prev, deployment_stage: e.target.value }))}
+              className={styles.selectCompact}
             >
-              <input
-                type="checkbox"
-                checked={formData.ai_capabilities?.includes(cap.id) || false}
-                onChange={() => handleCapabilityToggle(cap.id)}
-                className={styles.capabilityCheckbox}
-              />
-              <span className={styles.capabilityLabel}>{cap.label}</span>
-              <span className={`${styles.riskBadge} ${styles[`riskBadge${cap.risk.charAt(0).toUpperCase() + cap.risk.slice(1)}`]}`}>
-                {cap.risk}
-              </span>
-            </label>
-          ))}
+              <option value="Planning">💡 Just an idea</option>
+              <option value="Development">🔧 Building it</option>
+              <option value="Testing">🧪 Testing</option>
+              <option value="Production">🚀 Already live</option>
+            </select>
+            <span className={styles.contextHelp}>Helps prioritize recommendations</span>
+          </div>
         </div>
       </section>
 
-      {/* Project Description */}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>💬 Project Description</h2>
-        <p className={styles.sectionDescription}>
-          Describe your AI solution in detail. The more context you provide, the better recommendations you'll receive.
-        </p>
+      {/* Expandable: More Details */}
+      <section className={styles.expandableSection}>
+        <button 
+          type="button"
+          className={styles.expandButton}
+          onClick={() => setShowMoreDetails(!showMoreDetails)}
+        >
+          <span className={styles.expandIcon}>{showMoreDetails ? '▼' : '▶'}</span>
+          <span className={styles.expandTitle}>Add more details</span>
+          <span className={styles.expandBadge}>+15% accuracy</span>
+        </button>
+        
+        {showMoreDetails && (
+          <div className={styles.expandContent}>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>
+                Who will use this AI? <span className={styles.optional}>(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={formData.target_users || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, target_users: e.target.value }))}
+                className={styles.input}
+                placeholder="e.g., Customers, employees, students, healthcare providers..."
+              />
+            </div>
 
-        <div className={styles.formGroup}>
-          <label className={styles.label}>
-            What does your AI system do?
-          </label>
-          <textarea
-            value={formData.project_description}
-            onChange={(e) => setFormData(prev => ({ ...prev, project_description: e.target.value }))}
-            className={styles.textarea}
-            rows={5}
-            placeholder="Example: We're building a chatbot for our customer support team that uses Azure OpenAI to answer customer questions about our products. It will access our product knowledge base and can escalate to human agents when needed..."
-          />
-          <div className={styles.inputHint}>
-            💡 Include: purpose, key features, data sources, who will use it, and any specific concerns
+            <div className={styles.formGroup}>
+              <label className={styles.label}>
+                Any specific questions or concerns? <span className={styles.optional}>(optional)</span>
+              </label>
+              <textarea
+                value={formData.additional_context || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, additional_context: e.target.value }))}
+                className={styles.textarea}
+                rows={3}
+                placeholder="e.g., How do we prevent bias? What about GDPR? Is this use case allowed under EU AI Act?"
+              />
+            </div>
           </div>
-        </div>
+        )}
+      </section>
 
-        <div className={styles.formGroup}>
-          <label className={styles.label}>
-            Specific Questions or Concerns (Optional)
+      {/* Expandable: Risk Factors */}
+      <section className={styles.expandableSection}>
+        <button 
+          type="button"
+          className={styles.expandButton}
+          onClick={() => setShowRiskFactors(!showRiskFactors)}
+        >
+          <span className={styles.expandIcon}>{showRiskFactors ? '▼' : '▶'}</span>
+          <span className={styles.expandTitle}>Identify risk factors</span>
+          <span className={styles.expandBadge}>+20% accuracy</span>
+        </button>
+        
+        {showRiskFactors && (
+          <div className={styles.expandContent}>
+            <p className={styles.expandDescription}>
+              Check any that apply to your AI system. This helps us identify potential compliance requirements and risks.
+            </p>
+            <div className={styles.riskGrid}>
+              {AI_CAPABILITIES.map(cap => (
+                <label
+                  key={cap.id}
+                  className={`${styles.riskItem} ${
+                    formData.ai_capabilities?.includes(cap.id) ? styles.riskItemSelected : ''
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={formData.ai_capabilities?.includes(cap.id) || false}
+                    onChange={() => handleCapabilityToggle(cap.id)}
+                    className={styles.riskCheckbox}
+                  />
+                  <span className={styles.riskLabel}>{cap.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Review Depth - Simplified */}
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>⚡ Review Speed</h2>
+        <div className={styles.speedSelector}>
+          <label className={`${styles.speedOption} ${reviewDepth === 'quick_scan' ? styles.speedActive : ''}`}>
+            <input
+              type="radio"
+              name="reviewDepth"
+              value="quick_scan"
+              checked={reviewDepth === 'quick_scan'}
+              onChange={() => setReviewDepth('quick_scan')}
+              className={styles.speedRadio}
+            />
+            <span className={styles.speedIcon}>⚡</span>
+            <span className={styles.speedText}>Quick (1-2 min)</span>
           </label>
-          <textarea
-            value={formData.additional_context || ''}
-            onChange={(e) => setFormData(prev => ({ ...prev, additional_context: e.target.value }))}
-            className={styles.textarea}
-            rows={3}
-            placeholder="e.g., How do we ensure the chatbot doesn't hallucinate? What compliance frameworks apply to our industry?"
-          />
+          <label className={`${styles.speedOption} ${reviewDepth === 'standard' ? styles.speedActive : ''}`}>
+            <input
+              type="radio"
+              name="reviewDepth"
+              value="standard"
+              checked={reviewDepth === 'standard'}
+              onChange={() => setReviewDepth('standard')}
+              className={styles.speedRadio}
+            />
+            <span className={styles.speedIcon}>📋</span>
+            <span className={styles.speedText}>Standard (5-10 min)</span>
+          </label>
+          <label className={`${styles.speedOption} ${reviewDepth === 'deep_dive' ? styles.speedActive : ''}`}>
+            <input
+              type="radio"
+              name="reviewDepth"
+              value="deep_dive"
+              checked={reviewDepth === 'deep_dive'}
+              onChange={() => setReviewDepth('deep_dive')}
+              className={styles.speedRadio}
+            />
+            <span className={styles.speedIcon}>🔬</span>
+            <span className={styles.speedText}>Deep Dive (15-30 min)</span>
+          </label>
         </div>
       </section>
     </>
