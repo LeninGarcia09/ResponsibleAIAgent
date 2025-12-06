@@ -1439,3 +1439,202 @@
     margin-top: 8px;
   }
 }
+
+/* ============================================
+   ENHANCED BASIC FORM STYLES
+   ============================================ */
+
+/* Review Depth Selector */
+.reviewDepthSelector {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.depthOption {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 16px 20px;
+  background: #fff;
+  border: 2px solid #e1e1e1;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.depthOption:hover {
+  border-color: #0078d4;
+  background: #f8fbff;
+}
+
+.depthActive {
+  border-color: #0078d4;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  box-shadow: 0 2px 8px rgba(0, 120, 212, 0.15);
+}
+
+.depthIcon {
+  font-size: 28px;
+  grid-row: span 2;
+}
+
+.depthContent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.depthTitle {
+  font-weight: 600;
+  font-size: 16px;
+  color: #333;
+}
+
+.depthTime {
+  font-size: 12px;
+  color: #666;
+  background: #f0f0f0;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.depthActive .depthTime {
+  background: #0078d4;
+  color: white;
+}
+
+.depthDesc {
+  grid-column: 2 / -1;
+  font-size: 13px;
+  color: #666;
+}
+
+/* Form Row for side-by-side fields */
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 600px) {
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Input hint text */
+.inputHint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #666;
+  background: #fffef0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 3px solid #ffb900;
+}
+
+/* AI Capabilities Grid */
+.capabilitiesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.capabilityItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #fafafa;
+  border: 2px solid #e1e1e1;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.capabilityItem:hover {
+  background: #f5f5f5;
+  border-color: #ccc;
+}
+
+.capabilitySelected {
+  background: #fff8f0;
+  border-color: #ff8c00;
+}
+
+.capabilityCheckbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #0078d4;
+}
+
+.capabilityLabel {
+  flex: 1;
+  font-size: 14px;
+  color: #333;
+}
+
+.riskBadge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.riskBadgeCritical {
+  background: #d13438;
+  color: white;
+}
+
+.riskBadgeHigh {
+  background: #ff8c00;
+  color: white;
+}
+
+.riskBadgeMedium {
+  background: #ffb900;
+  color: #333;
+}
+
+.riskBadgeLow {
+  background: #107c10;
+  color: white;
+}
+
+/* Risk level styling for capability items */
+.riskCritical:hover,
+.riskCritical.capabilitySelected {
+  border-color: #d13438;
+}
+
+.riskHigh:hover,
+.riskHigh.capabilitySelected {
+  border-color: #ff8c00;
+}
+
+.riskMedium:hover,
+.riskMedium.capabilitySelected {
+  border-color: #ffb900;
+}
+
+/* Responsive adjustments for capabilities */
+@media (max-width: 600px) {
+  .capabilitiesGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .depthOption {
+    grid-template-columns: auto 1fr;
+  }
+  
+  .depthDesc {
+    grid-column: 2;
+  }
+}

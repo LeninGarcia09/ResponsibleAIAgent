@@ -7,6 +7,63 @@ import styles from './submit.module.css'
 
 type ReviewMode = 'basic' | 'advanced'
 
+// Industry options for domain-specific guidance
+const INDUSTRY_OPTIONS = [
+  { value: '', label: 'Select an industry...' },
+  { value: 'healthcare', label: '🏥 Healthcare & Life Sciences' },
+  { value: 'finance', label: '💰 Financial Services & Banking' },
+  { value: 'hr', label: '👥 Human Resources & Recruitment' },
+  { value: 'customer_service', label: '💬 Customer Service & Support' },
+  { value: 'education', label: '📚 Education & E-Learning' },
+  { value: 'government', label: '🏛️ Government & Public Sector' },
+  { value: 'retail', label: '🛒 Retail & E-Commerce' },
+  { value: 'manufacturing', label: '🏭 Manufacturing & Industrial' },
+  { value: 'legal', label: '⚖️ Legal & Compliance' },
+  { value: 'media', label: '📺 Media & Entertainment' },
+  { value: 'other', label: '🔷 Other' },
+]
+
+// Use case types for reference architecture matching
+const USE_CASE_OPTIONS = [
+  { value: '', label: 'Select use case type...' },
+  { value: 'chatbot', label: '💬 Chatbot / Virtual Assistant' },
+  { value: 'content_generation', label: '✍️ Content Generation' },
+  { value: 'document_processing', label: '📄 Document Processing & Analysis' },
+  { value: 'recommendation', label: '🎯 Recommendation System' },
+  { value: 'image_analysis', label: '🖼️ Image / Video Analysis' },
+  { value: 'predictive_analytics', label: '📊 Predictive Analytics' },
+  { value: 'automation', label: '⚙️ Process Automation' },
+  { value: 'search', label: '🔍 Intelligent Search (RAG)' },
+  { value: 'code_assistant', label: '💻 Code Assistant / Developer Tools' },
+  { value: 'decision_support', label: '🧠 Decision Support System' },
+  { value: 'other', label: '🔷 Other' },
+]
+
+// AI capabilities that may trigger specific risk assessments
+const AI_CAPABILITIES = [
+  { id: 'personal_data', label: 'Processes personal/PII data', risk: 'high' },
+  { id: 'decisions', label: 'Makes or influences decisions about people', risk: 'high' },
+  { id: 'content_gen', label: 'Generates content (text, images, code)', risk: 'medium' },
+  { id: 'facial_recognition', label: 'Uses facial recognition or biometrics', risk: 'critical' },
+  { id: 'autonomous', label: 'Operates autonomously without human oversight', risk: 'high' },
+  { id: 'financial', label: 'Handles financial transactions or advice', risk: 'high' },
+  { id: 'health_data', label: 'Processes health or medical data', risk: 'critical' },
+  { id: 'children', label: 'Designed for or accessible by children', risk: 'high' },
+  { id: 'public_facing', label: 'Public-facing / customer-facing', risk: 'medium' },
+  { id: 'employee_monitoring', label: 'Monitors employee behavior or performance', risk: 'high' },
+]
+
+// Data sensitivity levels
+const DATA_SENSITIVITY_OPTIONS = [
+  { value: '', label: 'Select data sensitivity...' },
+  { value: 'public', label: '🟢 Public data only' },
+  { value: 'internal', label: '🟡 Internal/business data' },
+  { value: 'confidential', label: '🟠 Confidential data' },
+  { value: 'pii', label: '🔴 Personal Identifiable Information (PII)' },
+  { value: 'sensitive_pii', label: '🔴 Sensitive PII (health, financial, biometric)' },
+  { value: 'regulated', label: '⚫ Regulated data (HIPAA, GDPR, etc.)' },
+]
+
 export default function SubmitPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -15,12 +72,21 @@ export default function SubmitPage() {
   const [reviewMode, setReviewMode] = useState<ReviewMode>('basic')
   const [currentSection, setCurrentSection] = useState(0)
   
-  // Basic form data
+  // Basic form data with enhanced inputs
   const [formData, setFormData] = useState<Partial<AIReviewSubmission>>({
     project_name: '',
     project_description: '',
     deployment_stage: 'Development',
+    industry: '',
+    technology_type: '',
+    target_users: '',
+    data_types: '',
+    ai_capabilities: [],
+    additional_context: '',
   })
+  
+  // Review depth selection
+  const [reviewDepth, setReviewDepth] = useState<'quick_scan' | 'standard' | 'deep_dive'>('standard')
 
   // Advanced form data
   const [advancedData, setAdvancedData] = useState<Partial<AdvancedReviewSubmission>>({
@@ -82,7 +148,18 @@ export default function SubmitPage() {
         if (!formData.project_name) {
           throw new Error('Please provide a project name')
         }
-        const response = await apiClient.submitReview(formData as AIReviewSubmission)
+        // Include review depth in the description for the AI to understand
+        const enhancedFormData = {
+          ...formData,
+          project_description: `[Review Mode: ${reviewDepth.replace('_', ' ').toUpperCase()}]\n\n${formData.project_description || 'No description provided.'}\n\n` +
+            (formData.industry ? `Industry: ${formData.industry}\n` : '') +
+            (formData.technology_type ? `Use Case Type: ${formData.technology_type}\n` : '') +
+            (formData.target_users ? `Target Users: ${formData.target_users}\n` : '') +
+            (formData.data_types ? `Data Sensitivity: ${formData.data_types}\n` : '') +
+            (formData.ai_capabilities?.length ? `AI Capabilities/Risk Factors: ${formData.ai_capabilities.join(', ')}\n` : '') +
+            (formData.additional_context ? `\nSpecific Questions/Concerns:\n${formData.additional_context}` : '')
+        }
+        const response = await apiClient.submitReview(enhancedFormData as AIReviewSubmission)
         setResult(response)
       } else {
         if (!advancedData.project_name) {
@@ -139,55 +216,219 @@ export default function SubmitPage() {
     </div>
   )
 
+  const handleCapabilityToggle = (capabilityId: string) => {
+    const current = formData.ai_capabilities || []
+    const updated = current.includes(capabilityId)
+      ? current.filter(c => c !== capabilityId)
+      : [...current, capabilityId]
+    setFormData(prev => ({ ...prev, ai_capabilities: updated }))
+  }
+
   const renderBasicForm = () => (
-    <section className={styles.section}>
-      <h2 className={styles.sectionTitle}>Project Information</h2>
-      <p className={styles.sectionDescription}>
-        Provide basic details about your AI project for a quick Responsible AI assessment.
-      </p>
+    <>
+      {/* Review Depth Selection */}
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>📊 Review Depth</h2>
+        <p className={styles.sectionDescription}>
+          Choose how thorough you want the AI review to be.
+        </p>
+        <div className={styles.reviewDepthSelector}>
+          <button
+            type="button"
+            className={`${styles.depthOption} ${reviewDepth === 'quick_scan' ? styles.depthActive : ''}`}
+            onClick={() => setReviewDepth('quick_scan')}
+          >
+            <span className={styles.depthIcon}>⚡</span>
+            <div className={styles.depthContent}>
+              <span className={styles.depthTitle}>Quick Scan</span>
+              <span className={styles.depthTime}>1-2 min</span>
+            </div>
+            <span className={styles.depthDesc}>High-level risk flags and key considerations</span>
+          </button>
+          <button
+            type="button"
+            className={`${styles.depthOption} ${reviewDepth === 'standard' ? styles.depthActive : ''}`}
+            onClick={() => setReviewDepth('standard')}
+          >
+            <span className={styles.depthIcon}>📋</span>
+            <div className={styles.depthContent}>
+              <span className={styles.depthTitle}>Standard Review</span>
+              <span className={styles.depthTime}>5-10 min</span>
+            </div>
+            <span className={styles.depthDesc}>Comprehensive analysis with recommendations</span>
+          </button>
+          <button
+            type="button"
+            className={`${styles.depthOption} ${reviewDepth === 'deep_dive' ? styles.depthActive : ''}`}
+            onClick={() => setReviewDepth('deep_dive')}
+          >
+            <span className={styles.depthIcon}>🔬</span>
+            <div className={styles.depthContent}>
+              <span className={styles.depthTitle}>Deep Dive</span>
+              <span className={styles.depthTime}>15-30 min</span>
+            </div>
+            <span className={styles.depthDesc}>Full audit with implementation guidance</span>
+          </button>
+        </div>
+      </section>
 
-      <div className={styles.formGroup}>
-        <label className={styles.label}>
-          Project Name <span className={styles.required}>*</span>
-        </label>
-        <input
-          type="text"
-          value={formData.project_name}
-          onChange={(e) => setFormData(prev => ({ ...prev, project_name: e.target.value }))}
-          className={styles.input}
-          required
-          placeholder="e.g., Customer Service AI Chatbot"
-        />
-      </div>
+      {/* Project Basics */}
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>📝 Project Basics</h2>
+        <p className={styles.sectionDescription}>
+          Tell us about your AI project.
+        </p>
 
-      <div className={styles.formGroup}>
-        <label className={styles.label}>
-          Project Description / Question
-        </label>
-        <textarea
-          value={formData.project_description}
-          onChange={(e) => setFormData(prev => ({ ...prev, project_description: e.target.value }))}
-          className={styles.textarea}
-          rows={4}
-          placeholder="Describe your AI solution, its purpose, and key features. You can also ask specific questions about Responsible AI practices..."
-        />
-      </div>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>
+            Project Name <span className={styles.required}>*</span>
+          </label>
+          <input
+            type="text"
+            value={formData.project_name}
+            onChange={(e) => setFormData(prev => ({ ...prev, project_name: e.target.value }))}
+            className={styles.input}
+            required
+            placeholder="e.g., Customer Service AI Chatbot"
+          />
+        </div>
 
-      <div className={styles.formGroup}>
-        <label className={styles.label}>Deployment Stage</label>
-        <select
-          value={formData.deployment_stage}
-          onChange={(e) => setFormData(prev => ({ ...prev, deployment_stage: e.target.value }))}
-          className={styles.select}
-        >
-          <option value="Planning">Planning</option>
-          <option value="Development">Development</option>
-          <option value="Testing">Testing</option>
-          <option value="Staging">Staging</option>
-          <option value="Production">Production</option>
-        </select>
-      </div>
-    </section>
+        <div className={styles.formRow}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Industry / Domain</label>
+            <select
+              value={formData.industry || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, industry: e.target.value }))}
+              className={styles.select}
+            >
+              {INDUSTRY_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Use Case Type</label>
+            <select
+              value={formData.technology_type || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, technology_type: e.target.value }))}
+              className={styles.select}
+            >
+              {USE_CASE_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className={styles.formRow}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Deployment Stage</label>
+            <select
+              value={formData.deployment_stage}
+              onChange={(e) => setFormData(prev => ({ ...prev, deployment_stage: e.target.value }))}
+              className={styles.select}
+            >
+              <option value="Planning">🔵 Planning / Ideation</option>
+              <option value="Development">🟡 Development</option>
+              <option value="Testing">🟠 Testing / Validation</option>
+              <option value="Staging">🟣 Staging / Pre-production</option>
+              <option value="Production">🟢 Production</option>
+            </select>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Data Sensitivity</label>
+            <select
+              value={formData.data_types || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, data_types: e.target.value }))}
+              className={styles.select}
+            >
+              {DATA_SENSITIVITY_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Target Users</label>
+          <input
+            type="text"
+            value={formData.target_users || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, target_users: e.target.value }))}
+            className={styles.input}
+            placeholder="e.g., Internal employees, Customers, Healthcare professionals"
+          />
+        </div>
+      </section>
+
+      {/* AI Capabilities - Risk Indicators */}
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>⚠️ AI Capabilities & Risk Factors</h2>
+        <p className={styles.sectionDescription}>
+          Select all that apply. These help identify potential risk areas for your review.
+        </p>
+        <div className={styles.capabilitiesGrid}>
+          {AI_CAPABILITIES.map(cap => (
+            <label
+              key={cap.id}
+              className={`${styles.capabilityItem} ${
+                formData.ai_capabilities?.includes(cap.id) ? styles.capabilitySelected : ''
+              } ${styles[`risk${cap.risk.charAt(0).toUpperCase() + cap.risk.slice(1)}`]}`}
+            >
+              <input
+                type="checkbox"
+                checked={formData.ai_capabilities?.includes(cap.id) || false}
+                onChange={() => handleCapabilityToggle(cap.id)}
+                className={styles.capabilityCheckbox}
+              />
+              <span className={styles.capabilityLabel}>{cap.label}</span>
+              <span className={`${styles.riskBadge} ${styles[`riskBadge${cap.risk.charAt(0).toUpperCase() + cap.risk.slice(1)}`]}`}>
+                {cap.risk}
+              </span>
+            </label>
+          ))}
+        </div>
+      </section>
+
+      {/* Project Description */}
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>💬 Project Description</h2>
+        <p className={styles.sectionDescription}>
+          Describe your AI solution in detail. The more context you provide, the better recommendations you'll receive.
+        </p>
+
+        <div className={styles.formGroup}>
+          <label className={styles.label}>
+            What does your AI system do?
+          </label>
+          <textarea
+            value={formData.project_description}
+            onChange={(e) => setFormData(prev => ({ ...prev, project_description: e.target.value }))}
+            className={styles.textarea}
+            rows={5}
+            placeholder="Example: We're building a chatbot for our customer support team that uses Azure OpenAI to answer customer questions about our products. It will access our product knowledge base and can escalate to human agents when needed..."
+          />
+          <div className={styles.inputHint}>
+            💡 Include: purpose, key features, data sources, who will use it, and any specific concerns
+          </div>
+        </div>
+
+        <div className={styles.formGroup}>
+          <label className={styles.label}>
+            Specific Questions or Concerns (Optional)
+          </label>
+          <textarea
+            value={formData.additional_context || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, additional_context: e.target.value }))}
+            className={styles.textarea}
+            rows={3}
+            placeholder="e.g., How do we ensure the chatbot doesn't hallucinate? What compliance frameworks apply to our industry?"
+          />
+        </div>
+      </section>
+    </>
   )
 
   const renderAdvancedSection = (sectionIndex: number) => {
