@@ -60,6 +60,7 @@ export interface Tool {
   description?: string
   purpose?: string
   category?: string
+  install?: string
 }
 
 // Static format recommendation (fallback)
@@ -72,7 +73,14 @@ export interface StaticRecommendation {
   tools?: Tool[]
 }
 
-// AI-powered recommendation format
+// Code example in recommendation
+export interface CodeExample {
+  language: string
+  code: string
+  explanation?: string
+}
+
+// AI-powered recommendation format (enhanced v2)
 export interface AIRecommendation {
   id: string
   principle: string
@@ -81,9 +89,15 @@ export interface AIRecommendation {
   issue: string
   recommendation: string
   implementation_steps: string[]
+  code_example?: CodeExample
   tools: Tool[]
   effort?: string
+  time_estimate?: string
+  cost?: string
+  skill_required?: string
   impact?: string
+  confidence?: string
+  alternatives?: string[]
 }
 
 // Union type for both formats
@@ -101,11 +115,61 @@ export interface OverallAssessment {
   critical_gaps: string[]
 }
 
-// Quick-start guide types for actionable guidance
+// Risk Scores (new in v2)
+export interface PrincipleScores {
+  fairness: number
+  reliability_safety: number
+  privacy_security: number
+  inclusiveness: number
+  transparency: number
+  accountability: number
+}
+
+export interface RiskScores {
+  overall_score: number
+  risk_level: string
+  principle_scores: PrincipleScores
+  score_explanation?: string
+}
+
+// EU AI Act Classification (new in v2)
+export interface EUAIActClassification {
+  risk_category: string
+  category_rationale: string
+  annex_reference?: string
+  compliance_requirements: string[]
+  estimated_compliance_level: string
+  compliance_gaps: string[]
+}
+
+// Reference Architecture (new in v2)
+export interface AzureService {
+  service: string
+  purpose: string
+  tier?: string
+}
+
+export interface GitHubRepo {
+  name: string
+  url: string
+  description: string
+}
+
+export interface ReferenceArchitecture {
+  recommended_pattern: string
+  architecture_diagram?: string
+  azure_services: AzureService[]
+  github_repos: GitHubRepo[]
+  estimated_monthly_cost?: string
+  deployment_complexity?: string
+}
+
+// Quick-start guide types for actionable guidance (enhanced v2)
 export interface ChecklistItem {
   task: string
   resource_url?: string
   priority: string
+  time_estimate?: string
 }
 
 export interface EssentialTool {
@@ -113,11 +177,13 @@ export interface EssentialTool {
   url: string
   install_command?: string
   purpose: string
+  cost?: string
 }
 
 export interface WeekFocus {
   focus: string
   actions: string[]
+  milestone?: string
 }
 
 export interface QuickReference {
@@ -133,7 +199,15 @@ export interface TemplateItem {
   purpose: string
 }
 
+export interface CodeSnippet {
+  tool: string
+  description: string
+  language: string
+  code: string
+}
+
 export interface QuickStartGuide {
+  detected_project_type?: string
   week_one_checklist?: ChecklistItem[]
   essential_tools?: EssentialTool[]
   thirty_day_roadmap?: {
@@ -143,6 +217,7 @@ export interface QuickStartGuide {
     week_4?: WeekFocus
   }
   quick_reference?: QuickReference
+  code_snippets?: CodeSnippet[]
   templates_and_checklists?: TemplateItem[]
 }
 
@@ -154,8 +229,18 @@ export interface ReferenceLink {
 
 export interface ReferenceLinks {
   getting_started?: ReferenceLink[]
+  architecture_references?: ReferenceLink[]
   tools_documentation?: ReferenceLink[]
   templates?: ReferenceLink[]
+  github_repositories?: ReferenceLink[]
+}
+
+// Self-evaluation from agent (new in v2)
+export interface SelfEvaluation {
+  response_confidence: string
+  limitations: string[]
+  additional_info_needed: string[]
+  follow_up_questions: string[]
 }
 
 export interface SubmissionResponse {
@@ -164,7 +249,11 @@ export interface SubmissionResponse {
   project_name: string
   status?: string
   ai_powered?: boolean
+  review_mode?: string  // quick_scan | standard | deep_dive
   overall_assessment?: OverallAssessment
+  risk_scores?: RiskScores
+  eu_ai_act_classification?: EUAIActClassification
+  reference_architecture?: ReferenceArchitecture
   quick_start_guide?: QuickStartGuide
   recommendations: Recommendation[]
   summary: {
@@ -174,9 +263,12 @@ export interface SubmissionResponse {
     medium_priority_items?: number
     low_priority_items?: number
     top_3_priorities?: string[]
+    estimated_total_effort?: string
+    estimated_total_cost?: string
   }
   next_steps?: string[]
   reference_links?: ReferenceLinks
+  self_evaluation?: SelfEvaluation
   microsoft_rai_resources?: {
     overview: string
     standards: string

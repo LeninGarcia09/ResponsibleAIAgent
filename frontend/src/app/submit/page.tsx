@@ -753,6 +753,168 @@ export default function SubmitPage() {
               </div>
             )}
 
+            {/* Risk Scores Section */}
+            {result.risk_scores && (
+              <div className={styles.riskScoresSection}>
+                <h3 className={styles.sectionHeading}>📊 Risk Assessment</h3>
+                <div className={styles.riskScoreMain}>
+                  <div className={styles.overallRiskScore}>
+                    <div className={`${styles.riskScoreCircle} ${styles[`risk${result.risk_scores.risk_level?.replace(' ', '')}`]}`}>
+                      <span className={styles.riskScoreNumber}>{result.risk_scores.overall_score}</span>
+                      <span className={styles.riskScoreLabel}>/ 100</span>
+                    </div>
+                    <span className={`${styles.riskLevel} ${styles[`risk${result.risk_scores.risk_level?.replace(' ', '')}`]}`}>
+                      {result.risk_scores.risk_level} Risk
+                    </span>
+                  </div>
+                  {result.risk_scores.score_explanation && (
+                    <p className={styles.riskExplanation}>{result.risk_scores.score_explanation}</p>
+                  )}
+                </div>
+                {result.risk_scores.principle_scores && (
+                  <div className={styles.principleScores}>
+                    <h4>Scores by Principle</h4>
+                    <div className={styles.principleScoreGrid}>
+                      <div className={styles.principleScoreItem}>
+                        <span className={styles.principleName}>Fairness</span>
+                        <div className={styles.scoreBar}>
+                          <div className={styles.scoreBarFill} style={{width: `${result.risk_scores.principle_scores.fairness}%`}}></div>
+                        </div>
+                        <span className={styles.scoreValue}>{result.risk_scores.principle_scores.fairness}</span>
+                      </div>
+                      <div className={styles.principleScoreItem}>
+                        <span className={styles.principleName}>Reliability & Safety</span>
+                        <div className={styles.scoreBar}>
+                          <div className={styles.scoreBarFill} style={{width: `${result.risk_scores.principle_scores.reliability_safety}%`}}></div>
+                        </div>
+                        <span className={styles.scoreValue}>{result.risk_scores.principle_scores.reliability_safety}</span>
+                      </div>
+                      <div className={styles.principleScoreItem}>
+                        <span className={styles.principleName}>Privacy & Security</span>
+                        <div className={styles.scoreBar}>
+                          <div className={styles.scoreBarFill} style={{width: `${result.risk_scores.principle_scores.privacy_security}%`}}></div>
+                        </div>
+                        <span className={styles.scoreValue}>{result.risk_scores.principle_scores.privacy_security}</span>
+                      </div>
+                      <div className={styles.principleScoreItem}>
+                        <span className={styles.principleName}>Inclusiveness</span>
+                        <div className={styles.scoreBar}>
+                          <div className={styles.scoreBarFill} style={{width: `${result.risk_scores.principle_scores.inclusiveness}%`}}></div>
+                        </div>
+                        <span className={styles.scoreValue}>{result.risk_scores.principle_scores.inclusiveness}</span>
+                      </div>
+                      <div className={styles.principleScoreItem}>
+                        <span className={styles.principleName}>Transparency</span>
+                        <div className={styles.scoreBar}>
+                          <div className={styles.scoreBarFill} style={{width: `${result.risk_scores.principle_scores.transparency}%`}}></div>
+                        </div>
+                        <span className={styles.scoreValue}>{result.risk_scores.principle_scores.transparency}</span>
+                      </div>
+                      <div className={styles.principleScoreItem}>
+                        <span className={styles.principleName}>Accountability</span>
+                        <div className={styles.scoreBar}>
+                          <div className={styles.scoreBarFill} style={{width: `${result.risk_scores.principle_scores.accountability}%`}}></div>
+                        </div>
+                        <span className={styles.scoreValue}>{result.risk_scores.principle_scores.accountability}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* EU AI Act Classification */}
+            {result.eu_ai_act_classification && (
+              <div className={styles.euAiActSection}>
+                <h3 className={styles.sectionHeading}>🇪🇺 EU AI Act Classification</h3>
+                <div className={`${styles.euRiskCategory} ${styles[`euRisk${result.eu_ai_act_classification.risk_category?.replace(' ', '')}`]}`}>
+                  <span className={styles.euRiskLabel}>{result.eu_ai_act_classification.risk_category} Risk</span>
+                  {result.eu_ai_act_classification.annex_reference && (
+                    <span className={styles.euAnnexRef}>{result.eu_ai_act_classification.annex_reference}</span>
+                  )}
+                </div>
+                <p className={styles.euRationale}>{result.eu_ai_act_classification.category_rationale}</p>
+                {result.eu_ai_act_classification.compliance_requirements && result.eu_ai_act_classification.compliance_requirements.length > 0 && (
+                  <div className={styles.euRequirements}>
+                    <h4>Compliance Requirements</h4>
+                    <ul>
+                      {result.eu_ai_act_classification.compliance_requirements.map((req, i) => (
+                        <li key={i}>{req}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {result.eu_ai_act_classification.estimated_compliance_level && (
+                  <div className={styles.complianceLevel}>
+                    <strong>Estimated Compliance:</strong> {result.eu_ai_act_classification.estimated_compliance_level}
+                  </div>
+                )}
+                {result.eu_ai_act_classification.compliance_gaps && result.eu_ai_act_classification.compliance_gaps.length > 0 && (
+                  <div className={styles.complianceGaps}>
+                    <h4>Compliance Gaps to Address</h4>
+                    <ul>
+                      {result.eu_ai_act_classification.compliance_gaps.map((gap, i) => (
+                        <li key={i}>{gap}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Reference Architecture */}
+            {result.reference_architecture && (
+              <div className={styles.refArchSection}>
+                <h3 className={styles.sectionHeading}>🏗️ Recommended Architecture</h3>
+                <div className={styles.archPattern}>
+                  <h4>{result.reference_architecture.recommended_pattern}</h4>
+                  {result.reference_architecture.deployment_complexity && (
+                    <span className={styles.archComplexity}>
+                      Complexity: {result.reference_architecture.deployment_complexity}
+                    </span>
+                  )}
+                  {result.reference_architecture.estimated_monthly_cost && (
+                    <span className={styles.archCost}>
+                      Est. Cost: {result.reference_architecture.estimated_monthly_cost}
+                    </span>
+                  )}
+                </div>
+                {result.reference_architecture.architecture_diagram && (
+                  <div className={styles.archDiagram}>
+                    <pre>{result.reference_architecture.architecture_diagram}</pre>
+                  </div>
+                )}
+                {result.reference_architecture.azure_services && result.reference_architecture.azure_services.length > 0 && (
+                  <div className={styles.azureServices}>
+                    <h4>Azure Services</h4>
+                    <div className={styles.serviceGrid}>
+                      {result.reference_architecture.azure_services.map((service, i) => (
+                        <div key={i} className={styles.serviceCard}>
+                          <span className={styles.serviceName}>{service.service}</span>
+                          <span className={styles.servicePurpose}>{service.purpose}</span>
+                          {service.tier && <span className={styles.serviceTier}>{service.tier}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {result.reference_architecture.github_repos && result.reference_architecture.github_repos.length > 0 && (
+                  <div className={styles.githubRepos}>
+                    <h4>📦 Starter Repositories</h4>
+                    <div className={styles.repoGrid}>
+                      {result.reference_architecture.github_repos.map((repo, i) => (
+                        <a key={i} href={repo.url} target="_blank" rel="noopener noreferrer" className={styles.repoCard}>
+                          <span className={styles.repoName}>{repo.name}</span>
+                          <span className={styles.repoDesc}>{repo.description}</span>
+                          <span className={styles.repoLink}>View on GitHub ↗</span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className={styles.summary}>
               <span className={styles.summaryItem}>
                 Total: <strong>{result.summary.total_recommendations}</strong>
