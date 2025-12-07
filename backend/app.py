@@ -795,6 +795,28 @@ def get_tools():
     })
 
 
+@app.route("/api/references", methods=["GET"])
+def get_references():
+    """Return Microsoft RAI documentation references and resources."""
+    if KNOWLEDGE_AVAILABLE and knowledge_loader:
+        try:
+            refs = knowledge_loader.microsoft_references
+            if refs:
+                return jsonify({
+                    "references": refs,
+                    "source": "knowledge_base"
+                })
+        except Exception as e:
+            print(f"Error loading references from knowledge base: {e}")
+    
+    # Fallback - no references available
+    return jsonify({
+        "references": {},
+        "source": "static",
+        "message": "No references available"
+    })
+
+
 @app.route("/api/knowledge/status", methods=["GET"])
 def knowledge_status():
     """Get the status of the knowledge base files."""

@@ -531,3 +531,118 @@
   align-items: center;
   gap: 6px;
 }
+
+/* Tab Navigation Styles */
+.tabNav {
+  display: flex;
+  gap: 0;
+  max-width: 1000px;
+  margin: 30px auto 0;
+  padding: 0 20px;
+}
+
+@media (min-width: 1040px) {
+  .tabNav {
+    padding: 0;
+  }
+}
+
+.tabButton {
+  flex: 1;
+  padding: 16px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  background: #f5f7fa;
+  border: 2px solid #e4e8ed;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tabButton:first-child {
+  border-radius: 12px 0 0 12px;
+  border-right: 1px solid #e4e8ed;
+}
+
+.tabButton:last-child {
+  border-radius: 0 12px 12px 0;
+  border-left: 1px solid #e4e8ed;
+}
+
+.tabButton:hover:not(.tabActive) {
+  background: #e8ebef;
+  color: #333;
+}
+
+.tabActive {
+  background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
+  border-color: #0078d4;
+  color: white;
+}
+
+.tabActive:hover {
+  background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
+}
+
+/* Resource Card Styles */
+.resourceCard {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  border: 2px solid #e8e8e8;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.resourceCard:hover {
+  border-color: #0078d4;
+  box-shadow: 0 4px 12px rgba(0, 120, 212, 0.15);
+  transform: translateY(-2px);
+}
+
+.resourceCard:focus {
+  outline: 2px solid #0078d4;
+  outline-offset: 2px;
+}
+
+.resourceTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 10px 0;
+}
+
+.resourceDescription {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+  margin: 0 0 15px 0;
+}
+
+.resourceLink {
+  font-size: 14px;
+  color: #0078d4;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.previewBadge {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+  color: #856404;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
