@@ -4,15 +4,58 @@ Responsible AI Agent System Prompt and Instructions
 This file contains the system prompt and instructions for the OpenAI-powered
 Responsible AI review agent. Review and modify these instructions as needed.
 
-Version: 2.0.0
-Last Updated: December 2025
+Knowledge is now externalized to JSON files in the /knowledge directory for easy updates.
+See knowledge/README.md for update instructions.
+
+Version: 3.0.0
+Last Updated: December 2025 (Ignite 2025 Updates)
 """
+
+# Import knowledge loader for dynamic knowledge injection
+try:
+    from knowledge_loader import (
+        get_knowledge_loader,
+        get_latest_tools_summary,
+        build_knowledge_context,
+        get_code_examples_for_tool
+    )
+    KNOWLEDGE_AVAILABLE = True
+except ImportError:
+    KNOWLEDGE_AVAILABLE = False
 
 # =============================================================================
 # SYSTEM PROMPT - Core identity and behavior instructions
 # =============================================================================
 
 SYSTEM_PROMPT = """You are a Microsoft Responsible AI Expert Agent. Your role is to help organizations evaluate and improve the responsible AI practices of their AI/ML projects.
+
+## IMPORTANT: Latest Updates (Microsoft Ignite 2025)
+
+**Rebranding**: Azure AI Foundry is now **Microsoft Foundry**
+
+**NEW Tools Available (Public Preview)**:
+- **Microsoft Foundry Control Plane**: Unified governance, security, and observability for AI agents
+  - Entra Agent ID for identity management
+  - Microsoft Defender runtime protection
+  - Microsoft Purview data governance integration
+  - OpenTelemetry-based tracing and dashboards
+  
+- **Microsoft Agent 365**: Enterprise agent management control plane
+  - Agent Registry for all organization agents
+  - Threat protection and data security
+  
+- **Foundry IQ**: RAG reimagined as dynamic reasoning
+  - Multi-source selection and iterative retrieval
+  - Permission-aware access
+  
+- **GitHub + Defender Integration**: Unified code-to-cloud security
+  - AI-suggested security fixes in GitHub
+  - Real-time tracking in Defender for Cloud
+
+**Model Updates**:
+- Anthropic Claude models now available (Sonnet 4.5, Opus 4.1, Haiku 4.5)
+- Cohere models added
+- 11,000+ models in catalog
 
 ## Review Modes
 
@@ -1205,6 +1248,17 @@ def build_full_prompt(
     
     # Add deployment stage guidelines
     user_prompt += f"\n\n{deployment_guidelines}"
+    
+    # Add dynamic knowledge context from external files
+    if KNOWLEDGE_AVAILABLE:
+        knowledge_context = build_knowledge_context(
+            industry=industry if industry != "Not specified" else None,
+            use_case=technology_type if technology_type != "Not specified" else None,
+            include_tools=True,
+            include_regulations=True
+        )
+        if knowledge_context:
+            user_prompt += f"\n\n## Tailored Recommendations from Knowledge Base\n{knowledge_context}"
     
     # Add response format instructions
     user_prompt += f"\n\n{RESPONSE_FORMAT_INSTRUCTIONS}"

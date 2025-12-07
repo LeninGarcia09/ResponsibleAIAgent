@@ -1,325 +1,428 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './catalog.module.css'
 
-interface Tool {
-  name: string
-  description: string
-  useCases: string[]
-  projectPhase: string
-  principles: string[]
-  availability: string
-  url?: string
+// Types matching the backend knowledge structure
+interface ToolCapabilities {
+  [key: string]: string[] | undefined
 }
 
-interface Category {
-  id: string
-  title: string
-  icon: string
+interface Tool {
+  name: string
+  type?: string
+  status?: string
+  announced?: string
+  description: string
+  capabilities?: ToolCapabilities | string[]
+  integration_points?: string[]
+  use_cases?: string[]
+  documentation_url?: string
+  github_url?: string
+  install?: string
+  url?: string
+  category?: string
+}
+
+interface CategoryData {
   description: string
   tools: Tool[]
 }
 
-const categories: Category[] = [
-  {
-    id: 'fairness',
-    title: 'Fairness & Bias Mitigation',
-    icon: '⚖️',
-    description: 'Tools and resources focused on identifying and mitigating biases in AI systems to ensure fairness in outcomes.',
-    tools: [
-      {
-        name: 'Fairlearn',
-        description: 'Python toolkit to assess and improve model fairness. Includes metrics and mitigation algorithms.',
-        useCases: ['Detecting bias in hiring models', 'Testing fairness in lending algorithms'],
-        projectPhase: 'Model evaluation',
-        principles: ['Fairness'],
-        availability: 'External',
-        url: 'https://github.com/fairlearn/fairlearn'
-      },
-      {
-        name: 'Responsible AI Dashboard',
-        description: 'Integrated UI for fairness, explainability, and error analysis. Combines Fairlearn, InterpretML, and other tools.',
-        useCases: ['Holistic model assessment', 'Bias and accuracy debugging'],
-        projectPhase: 'Model evaluation',
-        principles: ['Fairness', 'Transparency', 'Reliability'],
-        availability: 'External',
-        url: 'https://learn.microsoft.com/en-us/azure/machine-learning/concept-responsible-ai-dashboard'
-      }
-    ]
-  },
-  {
-    id: 'transparency',
-    title: 'Transparency & Explainability',
-    icon: '🔍',
-    description: 'Tools and practices that improve transparency of AI systems, making model behavior and decisions understandable to stakeholders.',
-    tools: [
-      {
-        name: 'InterpretML',
-        description: 'Toolkit for model interpretability. Supports glass-box and black-box explanation techniques.',
-        useCases: ['Explaining feature importance', 'Creating stakeholder reports'],
-        projectPhase: 'Model development',
-        principles: ['Transparency'],
-        availability: 'External',
-        url: 'https://github.com/interpretml/interpret'
-      },
-      {
-        name: 'Human-AI Experience (HAX) Toolkit',
-        description: 'Design toolkit for building human-centered AI systems. Includes guidelines, workbook, and playbook.',
-        useCases: ['Designing intuitive AI interfaces', 'Planning for user feedback and error recovery'],
-        projectPhase: 'Design',
-        principles: ['Transparency', 'Inclusiveness'],
-        availability: 'External',
-        url: 'https://www.microsoft.com/en-us/haxtoolkit/'
-      }
-    ]
-  },
-  {
-    id: 'reliability',
-    title: 'Reliability & Safety',
-    icon: '🛡️',
-    description: 'Tools to ensure models are reliable (accurate and robust) and safe from failures or misuse. This covers testing models for errors, monitoring performance, and safeguarding against harmful outputs or attacks.',
-    tools: [
-      {
-        name: 'Azure AI Content Safety',
-        description: 'Service to detect and mitigate harmful content in text and images.',
-        useCases: ['Moderating user-generated content', 'Filtering generative AI outputs'],
-        projectPhase: 'Deployment',
-        principles: ['Safety'],
-        availability: 'External',
-        url: 'https://learn.microsoft.com/en-us/azure/ai-services/content-safety/overview'
-      },
-      {
-        name: 'Counterfit',
-        description: 'Open-source tool for adversarial security testing of ML models.',
-        useCases: ['Testing model robustness', 'Simulating adversarial attacks'],
-        projectPhase: 'Security assessment',
-        principles: ['Reliability & Safety'],
-        availability: 'External',
-        url: 'https://github.com/Azure/counterfit'
-      },
-      {
-        name: 'PyRIT',
-        description: 'Python Risk Identification Toolkit for red teaming generative AI systems.',
-        useCases: ['Prompt injection testing', 'Failure mode discovery'],
-        projectPhase: 'Security assessment',
-        principles: ['Reliability & Safety'],
-        availability: 'External',
-        url: 'https://github.com/microsoft/PyRIT'
-      }
-    ]
-  },
-  {
-    id: 'privacy',
-    title: 'Privacy & Security',
-    icon: '🔒',
-    description: 'Tools and frameworks to protect privacy and ensure security of data and AI systems, aligning with the Privacy & Security principle.',
-    tools: [
-      {
-        name: 'Presidio',
-        description: 'Open-source SDK for detecting and anonymizing PII in text and images.',
-        useCases: ['Anonymizing chat logs', 'Redacting sensitive image data'],
-        projectPhase: 'Data preparation',
-        principles: ['Privacy & Security'],
-        availability: 'External',
-        url: 'https://github.com/microsoft/presidio'
-      }
-    ]
-  },
-  {
-    id: 'inclusiveness',
-    title: 'Inclusiveness & Accessibility',
-    icon: '🌍',
-    description: 'Resources that help make AI systems inclusive and accessible, ensuring they empower people of diverse backgrounds and abilities.',
-    tools: [
-      {
-        name: 'Human-AI Experience (HAX) Toolkit',
-        description: 'Design toolkit for building human-centered AI systems. Includes guidelines, workbook, and playbook. Also supports inclusiveness through accommodating diverse user needs.',
-        useCases: ['Designing intuitive AI interfaces', 'Planning for user feedback and error recovery'],
-        projectPhase: 'Design',
-        principles: ['Transparency', 'Inclusiveness'],
-        availability: 'External',
-        url: 'https://www.microsoft.com/en-us/haxtoolkit/'
-      }
-    ]
-  },
-  {
-    id: 'accountability',
-    title: 'Accountability & Governance',
-    icon: '📋',
-    description: 'Governance frameworks and tools that drive accountability in AI development – ensuring people are responsible for AI outcomes and AI systems comply with ethical and legal requirements.',
-    tools: [
-      {
-        name: 'Microsoft Responsible AI Standard (RAIS)',
-        description: 'Internal framework with 14 goals and requirements for responsible AI development.',
-        useCases: ['Governance and compliance', 'Project planning and review'],
-        projectPhase: 'All phases',
-        principles: ['All principles'],
-        availability: 'Internal',
-        url: 'https://blogs.microsoft.com/on-the-issues/2022/06/21/microsofts-framework-for-building-ai-systems-responsibly/'
-      }
-    ]
-  }
-]
+interface CategoriesMap {
+  [key: string]: CategoryData
+}
+
+interface QuickReference {
+  tool_by_risk?: { [key: string]: string }
+}
+
+interface CatalogMetadata {
+  version?: string
+  last_updated?: string
+  ignite_2025_updates?: boolean
+}
+
+interface ToolsApiResponse {
+  tools: CategoriesMap
+  quick_reference?: QuickReference
+  client_framework?: object
+  metadata?: CatalogMetadata
+  source: string
+}
+
+// Category display configuration with icons and friendly names
+const categoryConfig: { [key: string]: { title: string; icon: string; order: number } } = {
+  governance_and_control: { title: 'Governance & Control', icon: '🏛️', order: 1 },
+  content_safety: { title: 'Content Safety', icon: '🛡️', order: 2 },
+  evaluation_and_testing: { title: 'Evaluation & Testing', icon: '🧪', order: 3 },
+  fairness_and_bias: { title: 'Fairness & Bias', icon: '⚖️', order: 4 },
+  explainability_and_interpretability: { title: 'Explainability & Interpretability', icon: '🔍', order: 5 },
+  privacy: { title: 'Privacy', icon: '🔒', order: 6 },
+  design_and_ux: { title: 'Design & UX', icon: '🎨', order: 7 },
+  agent_development: { title: 'Agent Development', icon: '🤖', order: 8 },
+  security_integration: { title: 'Security Integration', icon: '🔐', order: 9 },
+  // Fallbacks for old-style categories
+  fairness: { title: 'Fairness & Bias Mitigation', icon: '⚖️', order: 10 },
+  transparency: { title: 'Transparency & Explainability', icon: '🔍', order: 11 },
+  safety: { title: 'Reliability & Safety', icon: '🛡️', order: 12 },
+  security: { title: 'Security', icon: '🔐', order: 13 },
+  accountability: { title: 'Accountability & Governance', icon: '📋', order: 14 },
+  llm_specific: { title: 'LLM & Generative AI', icon: '🧠', order: 15 },
+}
 
 export default function CatalogPage() {
   const router = useRouter()
-  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [categories, setCategories] = useState<CategoriesMap>({})
+  const [metadata, setMetadata] = useState<CatalogMetadata | null>(null)
+  const [quickReference, setQuickReference] = useState<QuickReference | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [expandedTools, setExpandedTools] = useState<Set<string>>(new Set())
 
-  const toggleTool = (toolName: string) => {
-    const newExpanded = new Set(expandedTools)
-    if (newExpanded.has(toolName)) {
-      newExpanded.delete(toolName)
-    } else {
-      newExpanded.add(toolName)
-    }
-    setExpandedTools(newExpanded)
-  }
+  // Fetch tools from API
+  useEffect(() => {
+    const fetchTools = async () => {
+      try {
+        setLoading(true)
+        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:7071/api'
+        const response = await fetch(apiUrl + '/tools')
 
-  const scrollToCategory = (categoryId: string) => {
-    setActiveCategory(categoryId)
+        if (!response.ok) {
+          throw new Error('Failed to fetch tools: ' + response.statusText)
+        }
+
+        const data: ToolsApiResponse = await response.json()
+        setCategories(data.tools || {})
+        setMetadata(data.metadata || null)
+        setQuickReference(data.quick_reference || null)
+        setError(null)
+      } catch (err) {
+        console.error('Error fetching tools:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load tools catalog')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchTools()
+  }, [])
+
+  const scrollToCategory = useCallback((categoryId: string) => {
     const element = document.getElementById(categoryId)
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
+  }, [])
+
+  const toggleToolExpanded = useCallback((toolKey: string) => {
+    setExpandedTools(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(toolKey)) {
+        newSet.delete(toolKey)
+      } else {
+        newSet.add(toolKey)
+      }
+      return newSet
+    })
+  }, [])
+
+  // Get sorted categories based on config order
+  const sortedCategoryIds = Object.keys(categories).sort((a, b) => {
+    const orderA = categoryConfig[a]?.order || 100
+    const orderB = categoryConfig[b]?.order || 100
+    return orderA - orderB
+  })
+
+  // Render capability section (handles both array and object formats)
+  const renderCapabilities = (capabilities: ToolCapabilities | string[] | undefined) => {
+    if (!capabilities) return null
+
+    if (Array.isArray(capabilities)) {
+      return (
+        <ul>
+          {capabilities.map((cap, idx) => (
+            <li key={idx}>{cap}</li>
+          ))}
+        </ul>
+      )
+    }
+
+    // Object format with sub-categories
+    return (
+      <div>
+        {Object.entries(capabilities).map(([key, values]) => (
+          <div key={key} style={{ marginBottom: '10px' }}>
+            <strong style={{ textTransform: 'capitalize' }}>{key.replace(/_/g, ' ')}:</strong>
+            <ul style={{ marginTop: '4px' }}>
+              {values?.map((v, idx) => (
+                <li key={idx}>{v}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  // Generate tool key
+  const getToolKey = (catId: string, toolName: string, idx: number) => {
+    return catId + '-' + toolName + '-' + idx
   }
 
   return (
     <div className={styles.container}>
+      {/* Pilot Banner */}
       <div className={styles.pilotBanner}>
-        <span className={styles.pilotIcon}>⚠️</span>
+        <span className={styles.pilotIcon}>🚀</span>
         <span>
-          <strong>PILOT ONLY</strong> — This is a pilot program. Please do not use this as official guidance for Responsible AI. 
-          For questions, contact: <a href="mailto:lesalgad@microsoft.com">Lenin Garcia (lesalgad@microsoft.com)</a>
+          <strong>Pilot Phase:</strong> This RAI Tools Catalog features the latest Microsoft Ignite 2025 announcements.{' '}
+          <a href="/submit">Submit your AI project</a> for a personalized review.
         </span>
       </div>
 
+      {/* Header */}
       <header className={styles.header}>
-        <button onClick={() => router.push('/')} className={styles.backButton}>
+        <button className={styles.backButton} onClick={() => router.push('/')}>
           ← Back to Home
         </button>
-        <h1 className={styles.title}>📚 Microsoft Responsible AI Tools & Resources</h1>
+        <h1 className={styles.title}>Microsoft Responsible AI Tools Catalog</h1>
         <p className={styles.subtitle}>
-          Comprehensive catalog of tools, frameworks, and practices to uphold Microsoft&apos;s six AI principles
+          Comprehensive toolkit for building AI solutions that are fair, reliable, safe, private, inclusive, transparent, and accountable
         </p>
+        {metadata?.last_updated && (
+          <p style={{ fontSize: '14px', opacity: 0.8, marginTop: '10px' }}>
+            Last Updated: {metadata.last_updated} {metadata.ignite_2025_updates && '• Includes Ignite 2025 Updates'}
+          </p>
+        )}
       </header>
 
+      {/* Introduction */}
       <div className={styles.intro}>
         <p>
-          Microsoft provides a robust ecosystem of Responsible AI (RAI) tools, frameworks, and practices to uphold its 
-          <strong> six AI principles</strong> – fairness, reliability & safety, privacy & security, inclusiveness, 
-          transparency, and accountability.
+          This catalog provides a comprehensive overview of <strong>Microsoft Responsible AI tools and services</strong> to help you build AI solutions responsibly.
+          Each tool is mapped to Microsoft&apos;s six core AI principles: Fairness, Reliability &amp; Safety, Privacy &amp; Security, Inclusiveness, Transparency, and Accountability.
         </p>
         <p>
-          Below is a comprehensive catalog of currently active, supported RAI tools and resources developed or integrated 
-          by Microsoft, organized by area of focus (principle) and indicating the project phase when each is used, 
-          typical use cases, the RAI principle(s) it supports, and whether it is for internal Microsoft use only or 
-          available to external users.
+          <strong>New for 2025:</strong> This catalog includes the latest announcements from Microsoft Ignite 2025, including the <strong>Foundry Control Plane</strong>,
+          <strong> Agent 365</strong>, <strong>Foundry IQ</strong>, and other enterprise governance capabilities.
         </p>
       </div>
 
-      <nav className={styles.categoryNav}>
-        <h3>Jump to Category:</h3>
-        <div className={styles.categoryButtons}>
-          {categories.map(cat => (
-            <button
-              key={cat.id}
-              onClick={() => scrollToCategory(cat.id)}
-              className={`${styles.categoryButton} ${activeCategory === cat.id ? styles.active : ''}`}
-            >
-              <span className={styles.catIcon}>{cat.icon}</span>
-              <span className={styles.catLabel}>{cat.title}</span>
-            </button>
-          ))}
+      {/* Loading State */}
+      {loading && (
+        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '20px' }}>⏳</div>
+          <p style={{ fontSize: '18px', color: '#666' }}>Loading tools catalog...</p>
         </div>
-      </nav>
+      )}
 
+      {/* Error State */}
+      {error && !loading && (
+        <div style={{ textAlign: 'center', padding: '60px 20px', background: '#fff3cd', margin: '20px', borderRadius: '12px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '20px' }}>⚠️</div>
+          <p style={{ fontSize: '18px', color: '#856404' }}>{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{ marginTop: '20px', padding: '10px 24px', background: '#0078d4', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Category Navigation */}
+      {!loading && !error && sortedCategoryIds.length > 0 && (
+        <nav className={styles.categoryNav}>
+          <h3>Quick Navigation</h3>
+          <div className={styles.categoryButtons}>
+            {sortedCategoryIds.map(catId => {
+              const config = categoryConfig[catId] || { title: catId.replace(/_/g, ' '), icon: '📦', order: 99 }
+              const category = categories[catId]
+              const toolCount = category?.tools?.length || 0
+
+              return (
+                <button
+                  key={catId}
+                  className={styles.categoryButton}
+                  onClick={() => scrollToCategory(catId)}
+                >
+                  <span className={styles.catIcon}>{config.icon}</span>
+                  <span className={styles.catLabel}>{config.title} ({toolCount})</span>
+                </button>
+              )
+            })}
+          </div>
+        </nav>
+      )}
+
+      {/* Main Content */}
       <main className={styles.main}>
-        {categories.map(category => (
-          <section key={category.id} id={category.id} className={styles.categorySection}>
+        {!loading && !error && sortedCategoryIds.map(catId => {
+          const config = categoryConfig[catId] || { title: catId.replace(/_/g, ' '), icon: '📦', order: 99 }
+          const category = categories[catId]
+          const tools = category?.tools || []
+
+          return (
+            <section key={catId} id={catId} className={styles.categorySection}>
+              <div className={styles.categoryHeader}>
+                <span className={styles.categoryIcon}>{config.icon}</span>
+                <div>
+                  <h2 className={styles.categoryTitle}>{config.title}</h2>
+                  <p className={styles.categoryDescription}>{category?.description || ''}</p>
+                </div>
+              </div>
+
+              <div className={styles.toolsGrid}>
+                {tools.map((tool, idx) => {
+                  const toolKey = getToolKey(catId, tool.name, idx)
+                  const isExpanded = expandedTools.has(toolKey)
+                  const isIgnite2025 = tool.announced?.includes('Ignite 2025') || tool.status?.includes('Preview')
+                  const docUrl = tool.documentation_url || tool.github_url || tool.url
+
+                  return (
+                    <div
+                      key={toolKey}
+                      className={styles.toolCard + (isExpanded ? ' ' + styles.expanded : '')}
+                    >
+                      <div className={styles.toolHeader} onClick={() => toggleToolExpanded(toolKey)}>
+                        <div>
+                          <h3 className={styles.toolName}>{tool.name}</h3>
+                          {isIgnite2025 && (
+                            <span style={{
+                              display: 'inline-block',
+                              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                              color: 'white',
+                              padding: '2px 8px',
+                              borderRadius: '12px',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              marginTop: '4px'
+                            }}>
+                              ✨ {tool.status || 'Ignite 2025'}
+                            </span>
+                          )}
+                        </div>
+                        <span className={styles.expandIcon}>{isExpanded ? '−' : '+'}</span>
+                      </div>
+
+                      <p className={styles.toolDescription}>{tool.description}</p>
+
+                      {isExpanded && (
+                        <div className={styles.toolDetails}>
+                          {tool.type && (
+                            <div className={styles.detailSection}>
+                              <h4>Type</h4>
+                              <p style={{ textTransform: 'capitalize' }}>{tool.type}</p>
+                            </div>
+                          )}
+
+                          {tool.capabilities && (
+                            <div className={styles.detailSection}>
+                              <h4>Capabilities</h4>
+                              {renderCapabilities(tool.capabilities)}
+                            </div>
+                          )}
+
+                          {tool.use_cases && tool.use_cases.length > 0 && (
+                            <div className={styles.detailSection}>
+                              <h4>Use Cases</h4>
+                              <ul>
+                                {tool.use_cases.map((uc, i) => (
+                                  <li key={i}>{uc}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {tool.integration_points && tool.integration_points.length > 0 && (
+                            <div className={styles.detailSection}>
+                              <h4>Integration Points</h4>
+                              <div className={styles.principles}>
+                                {tool.integration_points.map((ip, i) => (
+                                  <span key={i} className={styles.principleBadge}>{ip}</span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {tool.install && (
+                            <div className={styles.detailSection}>
+                              <h4>Installation</h4>
+                              <code style={{
+                                display: 'block',
+                                background: '#f5f5f5',
+                                padding: '8px 12px',
+                                borderRadius: '4px',
+                                fontSize: '13px',
+                                overflowX: 'auto'
+                              }}>
+                                {tool.install}
+                              </code>
+                            </div>
+                          )}
+
+                          {docUrl && (
+                            <a
+                              href={docUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={styles.toolLink}
+                            >
+                              View Documentation →
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+          )
+        })}
+
+        {/* Quick Reference Section */}
+        {!loading && !error && quickReference?.tool_by_risk && (
+          <section className={styles.categorySection}>
             <div className={styles.categoryHeader}>
-              <span className={styles.categoryIcon}>{category.icon}</span>
+              <span className={styles.categoryIcon}>⚡</span>
               <div>
-                <h2 className={styles.categoryTitle}>{category.title}</h2>
-                <p className={styles.categoryDescription}>{category.description}</p>
+                <h2 className={styles.categoryTitle}>Quick Reference: Tools by Risk Type</h2>
+                <p className={styles.categoryDescription}>
+                  Find the right tools based on the specific risks you need to address
+                </p>
               </div>
             </div>
 
             <div className={styles.toolsGrid}>
-              {category.tools.map(tool => (
-                <div 
-                  key={tool.name} 
-                  className={`${styles.toolCard} ${expandedTools.has(tool.name) ? styles.expanded : ''}`}
-                >
-                  <div 
-                    className={styles.toolHeader}
-                    onClick={() => toggleTool(tool.name)}
-                  >
-                    <h3 className={styles.toolName}>{tool.name}</h3>
-                    <span className={styles.expandIcon}>
-                      {expandedTools.has(tool.name) ? '−' : '+'}
-                    </span>
-                  </div>
-
-                  <p className={styles.toolDescription}>{tool.description}</p>
-
-                  {expandedTools.has(tool.name) && (
-                    <div className={styles.toolDetails}>
-                      <div className={styles.detailSection}>
-                        <h4>Use Cases:</h4>
-                        <ul>
-                          {tool.useCases.map((uc, i) => (
-                            <li key={i}>{uc}</li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      <div className={styles.detailSection}>
-                        <h4>Project Phase:</h4>
-                        <p>{tool.projectPhase}</p>
-                      </div>
-
-                      <div className={styles.detailSection}>
-                        <h4>RAI Principles:</h4>
-                        <div className={styles.principles}>
-                          {tool.principles.map(p => (
-                            <span key={p} className={styles.principleBadge}>{p}</span>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className={styles.detailSection}>
-                        <h4>Availability:</h4>
-                        <p>{tool.availability}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {tool.url && (
-                    <a 
-                      href={tool.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className={styles.toolLink}
-                    >
-                      View Documentation ↗
-                    </a>
-                  )}
+              {Object.entries(quickReference.tool_by_risk).map(([risk, tools]) => (
+                <div key={risk} className={styles.toolCard}>
+                  <h3 className={styles.toolName} style={{ textTransform: 'capitalize' }}>
+                    {risk.replace(/_/g, ' ')}
+                  </h3>
+                  <p className={styles.toolDescription}>
+                    Recommended tools: <strong>{tools}</strong>
+                  </p>
                 </div>
               ))}
             </div>
           </section>
-        ))}
+        )}
       </main>
 
+      {/* Footer */}
       <footer className={styles.footer}>
         <p>
-          For more information, visit the{' '}
+          Part of the <strong>Responsible AI Agent</strong> pilot program.{' '}
           <a href="https://www.microsoft.com/ai/responsible-ai" target="_blank" rel="noopener noreferrer">
-            Microsoft Responsible AI homepage
+            Learn more about Microsoft Responsible AI
           </a>
+        </p>
+        <p style={{ marginTop: '10px', fontSize: '13px' }}>
+          {metadata?.version && ('Catalog Version: ' + metadata.version + ' • ')}
+          Data sourced from Microsoft official documentation and Ignite 2025 announcements.
         </p>
       </footer>
     </div>

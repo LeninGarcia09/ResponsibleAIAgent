@@ -12,6 +12,17 @@ CORS(app)
 # Import system prompt
 from rai_system_prompt import SYSTEM_PROMPT, build_full_prompt, RESPONSE_FORMAT_INSTRUCTIONS, OPENAI_CONFIG
 
+# Import knowledge loader for dynamic knowledge access
+try:
+    from knowledge_loader import get_knowledge_loader, get_latest_tools_summary
+    knowledge_loader = get_knowledge_loader()
+    KNOWLEDGE_AVAILABLE = True
+    print("✓ Knowledge loader initialized")
+except ImportError as e:
+    KNOWLEDGE_AVAILABLE = False
+    knowledge_loader = None
+    print(f"⚠ Knowledge loader not available: {e}")
+
 # Azure OpenAI Configuration
 AZURE_OPENAI_ENDPOINT = os.environ.get("AZURE_OPENAI_ENDPOINT")  # e.g., https://your-resource.openai.azure.com/
 AZURE_OPENAI_DEPLOYMENT = os.environ.get("AZURE_OPENAI_DEPLOYMENT", "gpt-4o")  # Your deployment name
@@ -760,11 +771,120 @@ def submit_advanced_review():
 @app.route("/api/tools", methods=["GET"])
 def get_tools():
     """Return all available Microsoft RAI tools organized by category."""
+    # Use knowledge loader if available for dynamic tools
+    if KNOWLEDGE_AVAILABLE and knowledge_loader:
+        try:
+            catalog = knowledge_loader.tools_catalog
+            if catalog:
+                return jsonify({
+                    "tools": catalog.get("categories", {}),
+                    "quick_reference": catalog.get("quick_reference", {}),
+                    "client_framework": catalog.get("client_recommendation_framework", {}),
+                    "metadata": catalog.get("catalog_metadata", {}),
+                    "source": "knowledge_base"
+                })
+        except Exception as e:
+            print(f"Error loading from knowledge base: {e}")
+    
+    # Fallback to static tools
     return jsonify({
         "tools": MICROSOFT_RAI_TOOLS,
         "principles": {k: {"title": v["title"], "description": v["description"]} 
-                      for k, v in MICROSOFT_RAI_PRINCIPLES.items()}
+                      for k, v in MICROSOFT_RAI_PRINCIPLES.items()},
+        "source": "static"
     })
+
+
+@app.route("/api/knowledge/status", methods=["GET"])
+def knowledge_status():
+    """Get the status of the knowledge base files."""
+    if not KNOWLEDGE_AVAILABLE or not knowledge_loader:
+        return jsonify({
+            "available": False,
+            "message": "Knowledge loader not initialized"
+        })
+    
+    try:
+        status = knowledge_loader.get_knowledge_status()
+        return jsonify({
+            "available": True,
+            **status
+        })
+    except Exception as e:
+        return jsonify({
+            "available": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/knowledge/reload", methods=["POST"])
+def reload_knowledge():
+    """Reload all knowledge files from disk (hot reload)."""
+    if not KNOWLEDGE_AVAILABLE or not knowledge_loader:
+        return jsonify({
+            "success": False,
+            "message": "Knowledge loader not initialized"
+        }), 400
+    
+    try:
+        knowledge_loader.reload_all()
+        # Force reload by accessing properties
+        _ = knowledge_loader.tools_catalog
+        _ = knowledge_loader.microsoft_references
+        _ = knowledge_loader.regulatory_frameworks
+        _ = knowledge_loader.code_examples
+        
+        status = knowledge_loader.get_knowledge_status()
+        return jsonify({
+            "success": True,
+            "message": "Knowledge base reloaded successfully",
+            **status
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/knowledge/recommendations", methods=["POST"])
+def get_tailored_recommendations():
+    """Get tailored tool recommendations based on client context."""
+    if not KNOWLEDGE_AVAILABLE or not knowledge_loader:
+        return jsonify({
+            "error": "Knowledge loader not initialized"
+        }), 400
+    
+    try:
+        data = request.get_json() or {}
+        industry = data.get("industry")
+        use_case = data.get("use_case")
+        
+        recommendations = {}
+        
+        if industry:
+            ind_rec = knowledge_loader.get_industry_recommendation(industry)
+            if ind_rec:
+                recommendations["industry"] = ind_rec
+        
+        if use_case:
+            uc_rec = knowledge_loader.get_use_case_recommendation(use_case)
+            if uc_rec:
+                recommendations["use_case"] = uc_rec
+        
+        # Add implementation phases
+        recommendations["implementation_phases"] = knowledge_loader.get_implementation_phases()
+        
+        return jsonify({
+            "success": True,
+            "recommendations": recommendations
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)

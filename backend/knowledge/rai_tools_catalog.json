@@ -1,0 +1,330 @@
+{
+  "catalog_metadata": {
+    "version": "2.0.0",
+    "last_updated": "2025-12-06",
+    "description": "Comprehensive catalog of Microsoft Responsible AI tools and services for providing tailored recommendations and guidance to clients building AI solutions responsibly",
+    "ignite_2025_updates": true,
+    "purpose": "Enable AI practitioners to select appropriate RAI tools based on their use case, risk profile, and industry requirements"
+  },
+  "categories": {
+    "governance_and_control": {
+      "description": "Enterprise-grade governance, security, and observability for AI agents and applications",
+      "tools": [
+        {
+          "name": "Microsoft Foundry Control Plane",
+          "type": "platform",
+          "status": "Public Preview",
+          "announced": "Microsoft Ignite 2025",
+          "description": "Unified governance, security, and observability layer for AI agents across the entire lifecycle",
+          "capabilities": {
+            "controls": ["Unified guardrails across inputs, outputs, and tool interactions", "Centralized policy management", "Agent behavior constraints"],
+            "observability": ["Built-in evaluations and assessments", "OpenTelemetry-based tracing", "Continuous red teaming capabilities", "Comprehensive dashboards for monitoring"],
+            "security": ["Entra Agent ID for identity management", "Microsoft Defender runtime protection", "Microsoft Purview data governance integration"],
+            "fleet_operations": ["Unified health monitoring", "Cost tracking and optimization", "Performance metrics", "Risk assessment", "Policy coverage tracking"]
+          },
+          "integration_points": ["Microsoft Foundry", "Azure AI Services", "Microsoft Defender", "Microsoft Purview", "Microsoft Entra"],
+          "use_cases": ["Enterprise AI governance", "Multi-agent fleet management", "Compliance and audit trails", "Security-first AI deployments"],
+          "documentation_url": "https://azure.microsoft.com/en-us/blog/microsoft-foundry-scale-innovation-on-a-modular-interoperable-and-secure-agent-stack/"
+        },
+        {
+          "name": "Microsoft Agent 365",
+          "type": "platform",
+          "status": "Public Preview",
+          "announced": "Microsoft Ignite 2025",
+          "description": "Control plane for enterprise agent management across the organization",
+          "capabilities": ["Agent Registry for all organization agents", "Threat protection for AI agents", "Data security controls", "Access control and permissions", "Observability and monitoring"],
+          "integration_points": ["Microsoft 365", "Microsoft Copilot", "Microsoft Foundry"],
+          "use_cases": ["Enterprise agent inventory management", "Shadow AI prevention", "Centralized agent governance", "Cross-platform agent visibility"],
+          "documentation_url": "https://www.microsoft.com/en-us/microsoft-365/blog/"
+        }
+      ]
+    },
+    "content_safety": {
+      "description": "AI-powered content moderation and safety services",
+      "tools": [
+        {
+          "name": "Azure AI Content Safety",
+          "type": "service",
+          "status": "Generally Available",
+          "description": "AI-powered content moderation service that detects harmful content across text, images, and multi-modal content",
+          "capabilities": {
+            "text_analysis": ["Hate speech detection", "Violence detection", "Sexual content detection", "Self-harm detection", "Custom category training"],
+            "image_analysis": ["Adult content detection", "Violent content detection", "Hate symbols detection"],
+            "advanced_features": ["Prompt shield (jailbreak detection)", "Groundedness detection", "Protected material detection", "Custom blocklists"]
+          },
+          "severity_levels": [0, 2, 4, 6],
+          "integration_points": ["Azure OpenAI Service", "Microsoft Foundry", "Azure AI Services", "REST API"],
+          "pricing_model": "Pay-per-transaction",
+          "documentation_url": "https://learn.microsoft.com/en-us/azure/ai-services/content-safety/",
+          "sdk": {
+            "python": "azure-ai-contentsafety",
+            "dotnet": "Azure.AI.ContentSafety",
+            "javascript": "@azure-rest/ai-content-safety"
+          }
+        }
+      ]
+    },
+    "evaluation_and_testing": {
+      "description": "Tools for evaluating AI model quality, safety, and performance",
+      "tools": [
+        {
+          "name": "Azure AI Evaluation SDK",
+          "type": "library",
+          "status": "Generally Available",
+          "description": "Comprehensive evaluation framework for assessing AI application quality, safety, and performance",
+          "installation": "pip install azure-ai-evaluation",
+          "capabilities": {
+            "quality_evaluators": [
+              {"name": "GroundednessEvaluator", "description": "Measures how well responses are grounded in provided context"},
+              {"name": "RelevanceEvaluator", "description": "Assesses relevance of responses to queries"},
+              {"name": "CoherenceEvaluator", "description": "Evaluates logical flow and consistency"},
+              {"name": "FluencyEvaluator", "description": "Measures grammatical correctness and readability"}
+            ],
+            "safety_evaluators": [
+              {"name": "ViolenceEvaluator", "description": "Detects violent content"},
+              {"name": "SexualEvaluator", "description": "Detects sexual content"},
+              {"name": "SelfHarmEvaluator", "description": "Detects self-harm content"},
+              {"name": "HateUnfairnessEvaluator", "description": "Detects hate speech and unfairness"},
+              {"name": "ProtectedMaterialEvaluator", "description": "Detects copyrighted content"},
+              {"name": "IndirectAttackEvaluator", "description": "Detects XPIA and indirect prompt injection"}
+            ],
+            "agent_evaluators": [
+              {"name": "IntentResolutionEvaluator", "description": "Measures how well agent resolves user intent"},
+              {"name": "TaskAdherenceEvaluator", "description": "Evaluates agent task completion"},
+              {"name": "ToolCallAccuracyEvaluator", "description": "Assesses correct tool selection and usage"}
+            ]
+          },
+          "documentation_url": "https://learn.microsoft.com/en-us/azure/ai-studio/how-to/develop/evaluate-sdk"
+        },
+        {
+          "name": "PyRIT",
+          "type": "library",
+          "status": "Active Development",
+          "version": "0.10.0",
+          "license": "MIT",
+          "github_stars": 3200,
+          "description": "Python Risk Identification Tool for AI red teaming and security testing",
+          "installation": "pip install pyrit",
+          "repository": "https://github.com/Azure/PyRIT",
+          "capabilities": {
+            "attack_strategies": ["PromptSendingOrchestrator", "RedTeamingOrchestrator", "CrescendoOrchestrator", "FlipAttackOrchestrator", "TreeOfAttacksOrchestrator", "PAIROrchestrator", "SkeletonKeyOrchestrator"],
+            "converters": ["Base64Converter", "ROT13Converter", "UnicodeSubstitutionConverter", "TranslationConverter", "VariationConverter"],
+            "scorers": ["SelfAskTrueFalseScorer", "SelfAskLikertScorer", "AzureContentFilterScorer", "HumanInTheLoopScorer"]
+          },
+          "use_cases": ["Pre-deployment security testing", "Continuous red teaming", "Jailbreak resistance testing", "Prompt injection vulnerability assessment"],
+          "documentation_url": "https://azure.github.io/PyRIT/"
+        },
+        {
+          "name": "Counterfit",
+          "type": "cli_tool",
+          "status": "Stable",
+          "version": "1.1.0",
+          "license": "MIT",
+          "github_stars": 894,
+          "description": "Command-line tool for assessing ML model security through adversarial attacks",
+          "installation": "pip install counterfit",
+          "repository": "https://github.com/Azure/counterfit",
+          "capabilities": {
+            "attack_types": {"evasion": "Modify inputs to cause misclassification", "inference": "Extract model information", "inversion": "Reconstruct training data"},
+            "supported_frameworks": ["Adversarial Robustness Toolbox (ART)", "TextAttack", "Augly"],
+            "data_types": ["Tabular data", "Text data", "Image data"]
+          },
+          "documentation_url": "https://github.com/Azure/counterfit/wiki"
+        }
+      ]
+    },
+    "fairness_and_bias": {
+      "description": "Tools for assessing and mitigating algorithmic fairness issues",
+      "tools": [
+        {
+          "name": "Fairlearn",
+          "type": "library",
+          "status": "Stable",
+          "version": "0.13.0",
+          "license": "MIT",
+          "github_stars": 2200,
+          "description": "Open-source library for assessing and improving fairness of machine learning models",
+          "installation": "pip install fairlearn",
+          "repository": "https://github.com/fairlearn/fairlearn",
+          "capabilities": {
+            "fairness_metrics": ["Demographic Parity", "Equalized Odds", "True Positive Rate Parity", "False Positive Rate Parity", "Selection Rate"],
+            "mitigation_algorithms": {
+              "preprocessing": ["CorrelationRemover"],
+              "in_processing": ["ExponentiatedGradient", "GridSearch"],
+              "post_processing": ["ThresholdOptimizer"]
+            }
+          },
+          "documentation_url": "https://fairlearn.org/",
+          "use_cases": ["Hiring and recruitment systems", "Credit scoring models", "Healthcare risk prediction", "Criminal justice algorithms"]
+        }
+      ]
+    },
+    "explainability_and_interpretability": {
+      "description": "Tools for understanding and explaining AI model decisions",
+      "tools": [
+        {
+          "name": "InterpretML",
+          "type": "library",
+          "status": "Stable",
+          "version": "0.7.3",
+          "license": "MIT",
+          "github_stars": 6700,
+          "description": "Open-source library for training interpretable models and explaining blackbox models",
+          "installation": "pip install interpret",
+          "repository": "https://github.com/interpretml/interpret",
+          "capabilities": {
+            "glassbox_models": ["Explainable Boosting Machine (EBM)", "Decision Tree", "Linear/Logistic Regression", "Decision Rule Lists"],
+            "blackbox_explainers": ["SHAP", "LIME", "Partial Dependence", "Morris Sensitivity"]
+          },
+          "documentation_url": "https://interpret.ml/",
+          "use_cases": ["Regulated industries (finance, healthcare)", "High-stakes decision making", "Model debugging", "Stakeholder communication"]
+        }
+      ]
+    },
+    "privacy": {
+      "description": "Tools for protecting privacy and sensitive data",
+      "tools": [
+        {
+          "name": "Presidio",
+          "type": "library",
+          "status": "Stable",
+          "version": "2.2.0",
+          "license": "MIT",
+          "description": "Context-aware PII detection and anonymization",
+          "installation": "pip install presidio-analyzer presidio-anonymizer",
+          "repository": "https://github.com/microsoft/presidio",
+          "capabilities": {
+            "detection": ["Named Entity Recognition", "Pattern matching", "Custom recognizers"],
+            "anonymization": ["Redaction", "Masking", "Hashing", "Encryption", "Custom operators"],
+            "supported_entities": ["PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER", "US_SSN", "CREDIT_CARD", "IP_ADDRESS", "DATE_TIME", "LOCATION"]
+          },
+          "documentation_url": "https://microsoft.github.io/presidio/"
+        }
+      ]
+    },
+    "design_and_ux": {
+      "description": "Guidelines and tools for designing responsible human-AI experiences",
+      "tools": [
+        {
+          "name": "HAX Toolkit",
+          "type": "design_resources",
+          "status": "Available",
+          "description": "Comprehensive design guidelines and resources for creating responsible human-AI interactions",
+          "components": {
+            "guidelines": "18 design guidelines organized by interaction phase",
+            "workbook": "Structured planning tool for AI product development",
+            "playbook": "Practical implementation patterns and examples",
+            "design_library": "Reusable design components for AI interfaces"
+          },
+          "documentation_url": "https://www.microsoft.com/haxtoolkit/"
+        }
+      ]
+    },
+    "agent_development": {
+      "description": "Tools and services for building responsible AI agents",
+      "tools": [
+        {
+          "name": "Microsoft Foundry Agent Service",
+          "type": "service",
+          "status": "Public Preview",
+          "announced": "Microsoft Ignite 2025",
+          "description": "Comprehensive platform for building, deploying, and managing AI agents",
+          "capabilities": {
+            "hosted_agents": "Fully managed, serverless environment for running agents",
+            "multi_agent_workflows": "Coordinate multiple specialized agents",
+            "memory": "Secure context retention across sessions",
+            "knowledge_retrieval": "Foundry IQ - RAG as dynamic reasoning"
+          },
+          "supported_frameworks": ["Semantic Kernel", "LangChain", "OpenAI Agents SDK", "Custom implementations"],
+          "models_available": ["OpenAI GPT-4o, GPT-4.1, o3", "Anthropic Claude (Sonnet 4.5, Opus 4.1, Haiku 4.5)", "Cohere models", "11,000+ models in catalog"],
+          "documentation_url": "https://learn.microsoft.com/en-us/azure/ai-studio/agents/"
+        },
+        {
+          "name": "Foundry IQ",
+          "type": "service",
+          "status": "Public Preview",
+          "announced": "Microsoft Ignite 2025",
+          "description": "RAG reimagined as dynamic reasoning process for intelligent knowledge retrieval",
+          "capabilities": ["Multi-source selection across diverse data sources", "Iterative retrieval with progressive refinement", "Reflection to verify and improve responses", "User permission and data classification awareness"],
+          "documentation_url": "https://azure.microsoft.com/en-us/blog/microsoft-foundry-scale-innovation-on-a-modular-interoperable-and-secure-agent-stack/"
+        }
+      ]
+    },
+    "security_integration": {
+      "description": "Security tools and integrations for AI development",
+      "tools": [
+        {
+          "name": "GitHub Advanced Security + Microsoft Defender",
+          "type": "integration",
+          "status": "Public Preview",
+          "announced": "Microsoft Ignite 2025",
+          "description": "Unified security from code to cloud for AI development",
+          "capabilities": ["AI-suggested security fixes in GitHub", "Real-time vulnerability tracking in Defender for Cloud", "Code-to-cloud security posture management"],
+          "documentation_url": "https://learn.microsoft.com/en-us/defender-for-cloud/"
+        },
+        {
+          "name": "Microsoft Entra Agent ID",
+          "type": "service",
+          "status": "Available",
+          "description": "Identity management specifically designed for AI agents",
+          "capabilities": ["Agent identity provisioning", "Authentication and authorization", "Access control for agent actions", "Audit logging for agent activities"],
+          "documentation_url": "https://learn.microsoft.com/en-us/entra/"
+        }
+      ]
+    }
+  },
+  "client_recommendation_framework": {
+    "description": "Framework for providing tailored RAI recommendations to clients",
+    "assessment_dimensions": [
+      {
+        "dimension": "AI Maturity Level",
+        "levels": [
+          {"level": "Exploring", "recommended_focus": ["HAX Toolkit", "Guidelines for Human-AI Interaction"], "priority_tools": ["Azure AI Content Safety", "HAX Workbook"]},
+          {"level": "Developing", "recommended_focus": ["Basic safety and quality evaluation", "Fairness assessment"], "priority_tools": ["Azure AI Evaluation SDK", "Fairlearn", "InterpretML"]},
+          {"level": "Scaling", "recommended_focus": ["Governance and control", "Continuous evaluation"], "priority_tools": ["Foundry Control Plane", "PyRIT", "Agent 365"]},
+          {"level": "Optimizing", "recommended_focus": ["Advanced security", "Fleet management"], "priority_tools": ["All tools integrated", "Custom evaluators", "Red teaming"]}
+        ]
+      },
+      {
+        "dimension": "Use Case Type",
+        "types": [
+          {"type": "Conversational AI/Chatbots", "risks": ["Harmful content generation", "Prompt injection", "Hallucination"], "required_tools": ["Azure AI Content Safety", "Azure AI Evaluation SDK", "PyRIT"], "recommended_evaluators": ["GroundednessEvaluator", "SafetyEvaluators", "IndirectAttackEvaluator"]},
+          {"type": "AI Agents", "risks": ["Unintended actions", "Tool misuse", "Security breaches"], "required_tools": ["Foundry Control Plane", "Foundry Agent Service", "PyRIT", "Entra Agent ID"], "recommended_evaluators": ["TaskAdherenceEvaluator", "ToolCallAccuracyEvaluator", "IntentResolutionEvaluator"]},
+          {"type": "Decision Support Systems", "risks": ["Bias and fairness", "Lack of explainability", "Accountability"], "required_tools": ["Fairlearn", "InterpretML", "Azure AI Evaluation SDK"], "recommended_evaluators": ["Custom fairness metrics", "EBM models", "SHAP/LIME explanations"]},
+          {"type": "Content Generation", "risks": ["Copyright infringement", "Harmful content", "Misinformation"], "required_tools": ["Azure AI Content Safety", "Azure AI Evaluation SDK"], "recommended_evaluators": ["ProtectedMaterialEvaluator", "SafetyEvaluators", "GroundednessEvaluator"]},
+          {"type": "RAG Applications", "risks": ["Hallucination", "Data leakage", "Retrieval failures"], "required_tools": ["Azure AI Evaluation SDK", "Foundry IQ", "Microsoft Purview"], "recommended_evaluators": ["GroundednessProEvaluator", "RetrievalEvaluator", "RelevanceEvaluator"]}
+        ]
+      },
+      {
+        "dimension": "Industry Vertical",
+        "industries": [
+          {"industry": "Financial Services", "regulatory_requirements": ["Explainability mandates", "Fair lending laws", "Model risk management"], "priority_tools": ["InterpretML (EBM)", "Fairlearn", "Azure AI Evaluation SDK"], "special_considerations": ["Use glassbox models where possible", "Document all model decisions", "Regular fairness audits"]},
+          {"industry": "Healthcare", "regulatory_requirements": ["HIPAA compliance", "Clinical validation", "Patient safety"], "priority_tools": ["Azure AI Content Safety", "InterpretML", "Fairlearn", "Presidio"], "special_considerations": ["Protect PHI in AI interactions", "Validate clinical accuracy", "Ensure equitable outcomes"]},
+          {"industry": "Government/Public Sector", "regulatory_requirements": ["Transparency mandates", "Algorithmic accountability", "Accessibility"], "priority_tools": ["InterpretML", "Fairlearn", "HAX Toolkit"], "special_considerations": ["Public explainability", "Impact assessments", "Accessibility compliance"]},
+          {"industry": "Retail/E-commerce", "regulatory_requirements": ["Consumer protection", "Privacy regulations", "Fair advertising"], "priority_tools": ["Azure AI Content Safety", "Fairlearn", "Presidio"], "special_considerations": ["Personalization fairness", "Price discrimination prevention", "Content moderation"]},
+          {"industry": "Technology/SaaS", "regulatory_requirements": ["Platform liability", "Content policies", "Trust and safety"], "priority_tools": ["Full RAI stack", "Foundry Control Plane", "PyRIT"], "special_considerations": ["Scale-appropriate safety", "Continuous red teaming", "User trust"]}
+        ]
+      }
+    ],
+    "implementation_phases": [
+      {"phase": 1, "name": "Foundation", "duration": "2-4 weeks", "activities": ["RAI maturity assessment", "Use case risk analysis", "Tool selection and setup", "Basic safety integration"], "deliverables": ["RAI roadmap", "Tool configuration guide", "Initial safety baselines"]},
+      {"phase": 2, "name": "Integration", "duration": "4-8 weeks", "activities": ["Evaluation pipeline setup", "Red teaming program launch", "Fairness assessment", "Explainability implementation"], "deliverables": ["Automated evaluation pipeline", "Red team findings report", "Fairness audit results"]},
+      {"phase": 3, "name": "Governance", "duration": "4-6 weeks", "activities": ["Foundry Control Plane setup", "Policy definition and enforcement", "Monitoring and alerting", "Incident response procedures"], "deliverables": ["Governance framework", "Policy documentation", "Monitoring dashboards"]},
+      {"phase": 4, "name": "Optimization", "duration": "Ongoing", "activities": ["Continuous improvement", "Advanced red teaming", "Custom evaluator development", "Stakeholder reporting"], "deliverables": ["Regular RAI reports", "Improvement recommendations", "Updated baselines"]}
+    ]
+  },
+  "quick_reference": {
+    "tool_by_risk": {
+      "harmful_content": ["Azure AI Content Safety", "SafetyEvaluators"],
+      "prompt_injection": ["Azure AI Content Safety (Prompt Shield)", "IndirectAttackEvaluator", "PyRIT"],
+      "hallucination": ["GroundednessEvaluator", "GroundednessProEvaluator", "Foundry IQ"],
+      "bias_and_fairness": ["Fairlearn", "HateUnfairnessEvaluator"],
+      "lack_of_explainability": ["InterpretML", "EBM"],
+      "copyright_infringement": ["ProtectedMaterialEvaluator"],
+      "security_vulnerabilities": ["PyRIT", "Counterfit", "Microsoft Defender for AI"],
+      "governance_gaps": ["Foundry Control Plane", "Agent 365", "Microsoft Purview"],
+      "privacy_violations": ["Presidio", "SmartNoise", "Azure Confidential Computing"],
+      "agent_misuse": ["Foundry Control Plane", "Entra Agent ID", "TaskAdherenceEvaluator"]
+    }
+  }
+}

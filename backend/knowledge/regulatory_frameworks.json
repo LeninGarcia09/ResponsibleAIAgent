@@ -1,0 +1,90 @@
+{
+  "metadata": {
+    "version": "2.0.0",
+    "last_updated": "2025-12-06",
+    "update_source": "Official regulatory documents",
+    "next_review": "2026-06-01"
+  },
+  "eu_ai_act": {
+    "description": "European Union Artificial Intelligence Act",
+    "effective_date": "2024-08-01",
+    "full_enforcement": "2026-08-02",
+    "documentation_url": "https://artificialintelligenceact.eu/",
+    "risk_categories": {
+      "unacceptable_risk": {
+        "description": "Prohibited AI systems",
+        "examples": ["Social scoring by governments", "Real-time biometric ID in public spaces", "Subliminal manipulation causing harm", "Exploitation of vulnerabilities"],
+        "compliance_requirement": "PROHIBITED - Cannot deploy in EU"
+      },
+      "high_risk": {
+        "description": "AI systems requiring conformity assessment",
+        "annex_iii_categories": [
+          "1. Biometrics - Remote identification, categorization",
+          "2. Critical infrastructure - Road traffic, utilities",
+          "3. Education - Admissions, grading, proctoring",
+          "4. Employment - Recruitment, promotion, termination",
+          "5. Essential services - Credit scoring, insurance, emergency services",
+          "6. Law enforcement - Risk assessment, evidence evaluation",
+          "7. Migration - Risk assessment, document verification",
+          "8. Justice - Sentencing, dispute resolution"
+        ],
+        "compliance_requirements": ["Risk management system", "Data governance", "Technical documentation", "Human oversight", "Accuracy and robustness", "Conformity assessment", "CE marking"],
+        "tool_recommendations": ["Fairlearn", "InterpretML", "Azure AI Evaluation SDK", "Foundry Control Plane"]
+      },
+      "limited_risk": {
+        "description": "AI systems with transparency obligations",
+        "examples": ["Chatbots", "Emotion recognition", "AI-generated content"],
+        "compliance_requirements": ["Inform users they are interacting with AI", "Label AI-generated content"],
+        "tool_recommendations": ["Azure AI Content Safety", "HAX Toolkit"]
+      },
+      "minimal_risk": {
+        "description": "AI systems with no specific requirements",
+        "examples": ["Spam filters", "AI-enabled games", "Inventory management"],
+        "compliance_requirements": ["Voluntary codes of conduct"]
+      }
+    },
+    "penalties": {
+      "unacceptable_ai": "Up to €35M or 7% global turnover",
+      "high_risk_non_compliance": "Up to €15M or 3% global turnover"
+    }
+  },
+  "nist_ai_rmf": {
+    "description": "NIST AI Risk Management Framework",
+    "version": "1.0",
+    "release_date": "2023-01-26",
+    "documentation_url": "https://www.nist.gov/itl/ai-risk-management-framework",
+    "core_functions": {
+      "govern": {"description": "Cultivate a culture of risk management", "tool_mapping": ["Foundry Control Plane", "Azure Purview"]},
+      "map": {"description": "Establish context for AI risk framing", "tool_mapping": ["HAX Toolkit", "AI Impact Assessment"]},
+      "measure": {"description": "Analyze, assess, track risks", "tool_mapping": ["Azure AI Evaluation SDK", "Fairlearn", "InterpretML"]},
+      "manage": {"description": "Allocate resources for risk response", "tool_mapping": ["PyRIT", "Azure Monitor", "Error Analysis"]}
+    },
+    "trustworthy_characteristics": ["Valid and Reliable", "Safe", "Secure and Resilient", "Accountable and Transparent", "Explainable", "Privacy-Enhanced", "Fair"]
+  },
+  "sector_specific": {
+    "healthcare": {
+      "regulations": [
+        {"name": "HIPAA", "jurisdiction": "US", "focus": "PHI protection", "tools": ["Presidio", "Azure Confidential Computing"]},
+        {"name": "FDA SaMD", "jurisdiction": "US", "focus": "Medical device AI", "tools": ["InterpretML", "Error Analysis"]}
+      ]
+    },
+    "finance": {
+      "regulations": [
+        {"name": "ECOA/Fair Lending", "jurisdiction": "US", "focus": "Non-discrimination", "tools": ["Fairlearn", "InterpretML"]},
+        {"name": "SR 11-7", "jurisdiction": "US Banking", "focus": "Model risk management", "tools": ["Azure ML Model Registry", "Foundry Control Plane"]}
+      ]
+    },
+    "employment": {
+      "regulations": [
+        {"name": "NYC Local Law 144", "jurisdiction": "NYC", "focus": "Bias audits for AEDT", "tools": ["Fairlearn", "Azure AI Evaluation SDK"]},
+        {"name": "EEOC AI Guidance", "jurisdiction": "US", "focus": "Disparate impact", "tools": ["Fairlearn"]}
+      ]
+    }
+  },
+  "risk_to_tools_mapping": {
+    "discrimination": {"regulations": ["EU AI Act High Risk", "ECOA", "NYC LL 144"], "tools": ["Fairlearn", "Azure AI Evaluation SDK"]},
+    "lack_of_transparency": {"regulations": ["EU AI Act Limited Risk", "GDPR Article 22"], "tools": ["InterpretML", "HAX Toolkit"]},
+    "privacy_violations": {"regulations": ["GDPR", "HIPAA", "CCPA"], "tools": ["Presidio", "SmartNoise"]},
+    "safety_failures": {"regulations": ["EU AI Act High Risk", "FDA SaMD"], "tools": ["Azure AI Content Safety", "Error Analysis", "PyRIT"]}
+  }
+}
