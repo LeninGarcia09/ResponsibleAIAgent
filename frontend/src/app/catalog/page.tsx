@@ -126,7 +126,7 @@ export default function CatalogPage() {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:7071/api'
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
         
         // Fetch tools and resources in parallel
         const [toolsResponse, refsResponse] = await Promise.all([
