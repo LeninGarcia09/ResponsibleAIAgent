@@ -4,6 +4,40 @@
   padding-bottom: 40px;
 }
 
+/* Accessibility: Skip link for keyboard navigation */
+.skipLink {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #0078d4;
+  color: white;
+  padding: 8px 16px;
+  text-decoration: none;
+  font-weight: 600;
+  z-index: 100;
+  transition: top 0.2s;
+  border-radius: 0 0 4px 0;
+}
+
+.skipLink:focus {
+  top: 0;
+  outline: 3px solid #ffb900;
+  outline-offset: 2px;
+}
+
+/* Accessibility: Visually hidden but accessible to screen readers */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .header {
   background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
   color: white;
@@ -20,11 +54,16 @@
   cursor: pointer;
   margin-bottom: 20px;
   font-size: 14px;
-  transition: background 0.2s;
+  transition: background 0.2s, outline 0.2s;
 }
 
 .backButton:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+.backButton:focus {
+  outline: 3px solid #ffb900;
+  outline-offset: 2px;
 }
 
 .title {
@@ -100,14 +139,50 @@
   border-radius: 4px;
   font-size: 14px;
   font-family: inherit;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .input:focus,
 .select:focus,
 .textarea:focus {
-  outline: none;
+  outline: 2px solid #0078d4;
+  outline-offset: 2px;
   border-color: #0078d4;
+}
+
+/* Accessibility: High contrast focus for keyboard users */
+.input:focus-visible,
+.select:focus-visible,
+.textarea:focus-visible {
+  outline: 3px solid #0078d4;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(0, 120, 212, 0.2);
+}
+
+/* Accessibility: Error state for inputs */
+.inputError {
+  border-color: #d13438 !important;
+  background-color: #fef0f0;
+}
+
+.inputError:focus {
+  outline-color: #d13438;
+  box-shadow: 0 0 0 4px rgba(209, 52, 56, 0.2);
+}
+
+/* Accessibility: Field-level error message */
+.fieldError {
+  color: #d13438;
+  font-size: 13px;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fieldError::before {
+  content: "⚠";
+  font-size: 14px;
 }
 
 .textarea {
@@ -134,6 +209,12 @@
 
 .checkboxLabel:hover {
   background: #f5f5f5;
+  border-color: #0078d4;
+}
+
+.checkboxLabel:focus-within {
+  outline: 3px solid #0078d4;
+  outline-offset: 2px;
   border-color: #0078d4;
 }
 
@@ -168,6 +249,12 @@
   background: #106ebe;
 }
 
+.submitButton:focus-visible {
+  outline: 3px solid #ffb900;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(255, 185, 0, 0.3);
+}
+
 .submitButton:disabled {
   background: #ccc;
   cursor: not-allowed;
@@ -180,6 +267,11 @@
 
 .cancelButton:hover {
   background: #d0d0d0;
+}
+
+.cancelButton:focus-visible {
+  outline: 3px solid #0078d4;
+  outline-offset: 2px;
 }
 
 @media (max-width: 768px) {
@@ -552,6 +644,8 @@
   gap: 20px;
   max-width: 900px;
   margin: 0 auto 30px auto;
+  border: none;
+  padding: 0;
 }
 
 .modeButton {
@@ -570,6 +664,12 @@
 .modeButton:hover {
   border-color: #0078d4;
   background: #f8fbff;
+}
+
+.modeButton:focus-visible {
+  outline: 3px solid #0078d4;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(0, 120, 212, 0.2);
 }
 
 .modeActive {
@@ -646,6 +746,12 @@
   transform: scale(1.05);
 }
 
+.progressStep:focus-visible {
+  outline: 3px solid #0078d4;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px rgba(0, 120, 212, 0.2);
+}
+
 .progressActive {
   border-color: #0078d4;
   background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
@@ -697,6 +803,12 @@
 .navButton:hover:not(:disabled) {
   background: #0078d4;
   color: white;
+}
+
+.navButton:focus-visible {
+  outline: 3px solid #0078d4;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(0, 120, 212, 0.2);
 }
 
 .navButton:disabled {
@@ -1844,6 +1956,12 @@
   background: #f8f8f8;
 }
 
+.expandButton:focus-visible {
+  outline: 3px solid #0078d4;
+  outline-offset: -3px;
+  background: #f0f7ff;
+}
+
 .expandIcon {
   font-size: 12px;
   color: #666;
@@ -1923,6 +2041,8 @@
 .speedSelector {
   display: flex;
   gap: 12px;
+  border: none;
+  padding: 0;
 }
 
 .speedOption {
@@ -1944,13 +2064,28 @@
   background: #f8fbff;
 }
 
+.speedOption:focus-within {
+  outline: 3px solid #0078d4;
+  outline-offset: 2px;
+  border-color: #0078d4;
+}
+
 .speedActive {
   border-color: #0078d4;
   background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
 }
 
 .speedRadio {
-  display: none;
+  /* Visually hidden but still accessible */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .speedIcon {
@@ -1980,6 +2115,40 @@
   
   .speedSelector {
     flex-direction: column;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .progressStep,
+  .modeButton,
+  .navButton,
+  .submitButton,
+  .expandButton,
+  .speedOption,
+  .input,
+  .select,
+  .textarea {
+    transition: none;
+  }
+  
+  .progressStep:hover {
+    transform: none;
+  }
+}
+
+/* High contrast mode support */
+@media (forced-colors: active) {
+  .submitButton,
+  .navButton,
+  .modeButton {
+    border: 2px solid currentColor;
+  }
+  
+  .progressActive,
+  .modeActive,
+  .speedActive {
+    border: 3px solid Highlight;
   }
 }
 

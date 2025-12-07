@@ -1,11 +1,20 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiClient, AIReviewSubmission, AdvancedReviewSubmission, SubmissionResponse, Recommendation, isAIRecommendation } from '@/lib/api'
 import styles from './submit.module.css'
 
 type ReviewMode = 'basic' | 'advanced'
+
+// Field validation states for accessibility
+interface FieldError {
+  field: string
+  message: string
+}
+
+// Live region announcement types
+type AnnouncementType = 'polite' | 'assertive'
 
 // Industry options for domain-specific guidance
 const INDUSTRY_OPTIONS = [
@@ -71,6 +80,27 @@ export default function SubmitPage() {
   const [result, setResult] = useState<SubmissionResponse | null>(null)
   const [reviewMode, setReviewMode] = useState<ReviewMode>('basic')
   const [currentSection, setCurrentSection] = useState(0)
+  
+  // Accessibility: Field-level validation errors
+  const [fieldErrors, setFieldErrors] = useState<FieldError[]>([])
+  
+  // Accessibility: Refs for focus management
+  const formRef = useRef<HTMLFormElement>(null)
+  const errorRef = useRef<HTMLDivElement>(null)
+  const sectionRef = useRef<HTMLElement>(null)
+  const announcerRef = useRef<HTMLDivElement>(null)
+  
+  // Accessibility: Live region announcements for screen readers
+  const announce = useCallback((message: string, type: AnnouncementType = 'polite') => {
+    if (announcerRef.current) {
+      announcerRef.current.setAttribute('aria-live', type)
+      announcerRef.current.textContent = message
+      // Clear after announcement
+      setTimeout(() => {
+        if (announcerRef.current) announcerRef.current.textContent = ''
+      }, 1000)
+    }
+  }, [])
   
   // Basic form data with enhanced inputs
   const [formData, setFormData] = useState<Partial<AIReviewSubmission>>({
@@ -150,6 +180,50 @@ export default function SubmitPage() {
     { title: 'User Interaction', icon: '💬', fields: ['user_interaction_method', 'human_in_loop'] }
   ]
 
+  // Accessibility: Focus management when section changes
+  useEffect(() => {
+    if (reviewMode === 'advanced' && sectionRef.current) {
+      // Move focus to section heading for screen readers
+      sectionRef.current.focus()
+      announce(`Step ${currentSection + 1} of ${advancedSections.length}: ${advancedSections[currentSection].title}`)
+    }
+  }, [currentSection, reviewMode, announce, advancedSections])
+
+  // Accessibility: Focus error message when it appears
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.focus()
+      announce(error, 'assertive')
+    }
+  }, [error, announce])
+
+  // Accessibility: Validate field and return error message if invalid
+  const validateField = (fieldName: string, value: string, required: boolean = false): string | null => {
+    if (required && !value.trim()) {
+      return `${fieldName} is required`
+    }
+    return null
+  }
+
+  // Accessibility: Clear field error when user starts typing
+  const clearFieldError = (fieldName: string) => {
+    setFieldErrors(prev => prev.filter(e => e.field !== fieldName))
+  }
+
+  // Accessibility: Keyboard navigation for wizard
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (reviewMode !== 'advanced') return
+    
+    // Navigate between sections with Page Up/Down
+    if (e.key === 'PageDown' && currentSection < advancedSections.length - 1) {
+      e.preventDefault()
+      setCurrentSection(prev => prev + 1)
+    } else if (e.key === 'PageUp' && currentSection > 0) {
+      e.preventDefault()
+      setCurrentSection(prev => prev - 1)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -206,13 +280,19 @@ export default function SubmitPage() {
   }
 
   const renderModeSelector = () => (
-    <div className={styles.modeSelector}>
+    <fieldset className={styles.modeSelector} role="radiogroup" aria-label="Select review type">
+      <legend className={styles.visuallyHidden}>Review Type Selection</legend>
       <button
         type="button"
+        role="radio"
+        aria-checked={reviewMode === 'basic'}
         className={`${styles.modeButton} ${reviewMode === 'basic' ? styles.modeActive : ''}`}
-        onClick={() => setReviewMode('basic')}
+        onClick={() => {
+          setReviewMode('basic')
+          announce('Basic Review selected - quick assessment mode')
+        }}
       >
-        <span className={styles.modeIcon}>⚡</span>
+        <span className={styles.modeIcon} aria-hidden="true">⚡</span>
         <div className={styles.modeContent}>
           <span className={styles.modeTitle}>Basic Review</span>
           <span className={styles.modeDesc}>Quick assessment with project name and description</span>
@@ -220,16 +300,21 @@ export default function SubmitPage() {
       </button>
       <button
         type="button"
+        role="radio"
+        aria-checked={reviewMode === 'advanced'}
         className={`${styles.modeButton} ${reviewMode === 'advanced' ? styles.modeActive : ''}`}
-        onClick={() => setReviewMode('advanced')}
+        onClick={() => {
+          setReviewMode('advanced')
+          announce('Comprehensive Review selected - 10 step questionnaire')
+        }}
       >
-        <span className={styles.modeIcon}>🔬</span>
+        <span className={styles.modeIcon} aria-hidden="true">🔬</span>
         <div className={styles.modeContent}>
           <span className={styles.modeTitle}>Comprehensive Review</span>
           <span className={styles.modeDesc}>In-depth analysis with detailed questionnaire</span>
         </div>
       </button>
-    </div>
+    </fieldset>
   )
 
   // Track which optional sections are expanded
@@ -261,10 +346,10 @@ export default function SubmitPage() {
   const renderBasicForm = () => (
     <>
       {/* Encouraging intro message */}
-      <section className={styles.introSection}>
-        <div className={styles.introIcon}>💡</div>
+      <section className={styles.introSection} aria-labelledby="intro-title">
+        <div className={styles.introIcon} aria-hidden="true">💡</div>
         <div className={styles.introContent}>
-          <h2 className={styles.introTitle}>Tell us about your AI idea</h2>
+          <h2 id="intro-title" className={styles.introTitle}>Tell us about your AI idea</h2>
           <p className={styles.introText}>
             <strong>Only one field is required</strong> — just describe what you want to build. 
             The more details you add, the more accurate and tailored our recommendations will be.
@@ -272,19 +357,31 @@ export default function SubmitPage() {
         </div>
       </section>
 
-      {/* Accuracy Indicator */}
-      <div className={styles.accuracyIndicator}>
+      {/* Accuracy Indicator - Accessible progress bar */}
+      <div 
+        className={styles.accuracyIndicator}
+        role="region"
+        aria-label="Form completion progress"
+      >
         <div className={styles.accuracyHeader}>
-          <span className={styles.accuracyLabel}>Recommendation Accuracy</span>
-          <span className={styles.accuracyPercent}>{getFormCompleteness()}%</span>
+          <span id="accuracy-label" className={styles.accuracyLabel}>Recommendation Accuracy</span>
+          <span className={styles.accuracyPercent} aria-hidden="true">{getFormCompleteness()}%</span>
         </div>
-        <div className={styles.accuracyBar}>
+        <div 
+          className={styles.accuracyBar}
+          role="progressbar"
+          aria-valuenow={getFormCompleteness()}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-labelledby="accuracy-label"
+          aria-describedby="accuracy-hint"
+        >
           <div 
             className={styles.accuracyFill} 
             style={{ width: `${getFormCompleteness()}%` }}
           />
         </div>
-        <p className={styles.accuracyHint}>
+        <p id="accuracy-hint" className={styles.accuracyHint}>
           {getFormCompleteness() < 30 && "Add more details to improve recommendations"}
           {getFormCompleteness() >= 30 && getFormCompleteness() < 60 && "Good start! A few more details will help"}
           {getFormCompleteness() >= 60 && getFormCompleteness() < 85 && "Great! We have enough for solid recommendations"}
@@ -293,16 +390,25 @@ export default function SubmitPage() {
       </div>
 
       {/* Main Input - The Only Required Field */}
-      <section className={styles.section}>
+      <section className={styles.section} aria-labelledby="main-input-label">
         <div className={styles.formGroup}>
-          <label className={styles.label}>
-            Describe your AI idea <span className={styles.required}>*</span>
+          <label id="main-input-label" htmlFor="project-description" className={styles.label}>
+            Describe your AI idea <span className={styles.required} aria-label="required">*</span>
           </label>
           <textarea
+            id="project-description"
+            name="project_description"
             value={formData.project_description}
-            onChange={(e) => setFormData(prev => ({ ...prev, project_description: e.target.value }))}
-            className={styles.textareaLarge}
+            onChange={(e) => {
+              setFormData(prev => ({ ...prev, project_description: e.target.value }))
+              clearFieldError('project_description')
+            }}
+            className={`${styles.textareaLarge} ${fieldErrors.some(e => e.field === 'project_description') ? styles.inputError : ''}`}
             rows={6}
+            aria-required="true"
+            aria-describedby="description-hint description-error"
+            aria-invalid={fieldErrors.some(e => e.field === 'project_description')}
+            autoComplete="off"
             placeholder="Just tell us what you're trying to build. For example:
 
 • 'We want to create a chatbot that answers customer questions about our products'
@@ -312,30 +418,40 @@ export default function SubmitPage() {
 
 Don't worry about technical details - we'll help you figure those out!"
           />
-          <div className={styles.inputHintLight}>
-            ✨ Tip: Even a single sentence is enough to get started!
+          {fieldErrors.some(e => e.field === 'project_description') && (
+            <div id="description-error" className={styles.fieldError} role="alert">
+              {fieldErrors.find(e => e.field === 'project_description')?.message}
+            </div>
+          )}
+          <div id="description-hint" className={styles.inputHintLight}>
+            <span aria-hidden="true">✨</span> Tip: Even a single sentence is enough to get started!
           </div>
         </div>
 
         <div className={styles.formGroup}>
-          <label className={styles.label}>
+          <label htmlFor="project-name" className={styles.label}>
             Project Name <span className={styles.optional}>(optional)</span>
           </label>
           <input
+            id="project-name"
             type="text"
+            name="project_name"
             value={formData.project_name}
             onChange={(e) => setFormData(prev => ({ ...prev, project_name: e.target.value }))}
             className={styles.input}
+            autoComplete="off"
             placeholder="Give your project a name, or we'll use 'My AI Project'"
           />
         </div>
       </section>
 
       {/* Quick Context - Optional but helpful */}
-      <section className={styles.section}>
+      <section className={styles.section} aria-labelledby="quick-context-title">
         <div className={styles.sectionHeaderCollapsible}>
           <div>
-            <h2 className={styles.sectionTitle}>🎯 Quick Context</h2>
+            <h2 id="quick-context-title" className={styles.sectionTitle}>
+              <span aria-hidden="true">🎯</span> Quick Context
+            </h2>
             <p className={styles.sectionDescription}>
               These help us give you industry-specific guidance
             </p>
@@ -343,98 +459,117 @@ Don't worry about technical details - we'll help you figure those out!"
           <span className={styles.optionalBadge}>Optional</span>
         </div>
 
-        <div className={styles.quickContextGrid}>
+        <div className={styles.quickContextGrid} role="group" aria-label="Quick context options">
           <div className={styles.contextCard}>
-            <label className={styles.contextLabel}>Industry</label>
+            <label htmlFor="industry-select" className={styles.contextLabel}>Industry</label>
             <select
+              id="industry-select"
+              name="industry"
               value={formData.industry || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, industry: e.target.value }))}
               className={styles.selectCompact}
+              aria-describedby="industry-help"
             >
               {INDUSTRY_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
-            <span className={styles.contextHelp}>Helps with compliance requirements</span>
+            <span id="industry-help" className={styles.contextHelp}>Helps with compliance requirements</span>
           </div>
 
           <div className={styles.contextCard}>
-            <label className={styles.contextLabel}>Type of AI</label>
+            <label htmlFor="technology-select" className={styles.contextLabel}>Type of AI</label>
             <select
+              id="technology-select"
+              name="technology_type"
               value={formData.technology_type || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, technology_type: e.target.value }))}
               className={styles.selectCompact}
+              aria-describedby="technology-help"
             >
               {USE_CASE_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
-            <span className={styles.contextHelp}>Helps suggest reference architectures</span>
+            <span id="technology-help" className={styles.contextHelp}>Helps suggest reference architectures</span>
           </div>
 
           <div className={styles.contextCard}>
-            <label className={styles.contextLabel}>Data Sensitivity</label>
+            <label htmlFor="data-sensitivity-select" className={styles.contextLabel}>Data Sensitivity</label>
             <select
+              id="data-sensitivity-select"
+              name="data_types"
               value={formData.data_types || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, data_types: e.target.value }))}
               className={styles.selectCompact}
+              aria-describedby="data-help"
             >
               {DATA_SENSITIVITY_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
-            <span className={styles.contextHelp}>Helps with privacy recommendations</span>
+            <span id="data-help" className={styles.contextHelp}>Helps with privacy recommendations</span>
           </div>
 
           <div className={styles.contextCard}>
-            <label className={styles.contextLabel}>Project Stage</label>
+            <label htmlFor="stage-select" className={styles.contextLabel}>Project Stage</label>
             <select
+              id="stage-select"
+              name="deployment_stage"
               value={formData.deployment_stage}
               onChange={(e) => setFormData(prev => ({ ...prev, deployment_stage: e.target.value }))}
               className={styles.selectCompact}
+              aria-describedby="stage-help"
             >
               <option value="Planning">💡 Just an idea</option>
               <option value="Development">🔧 Building it</option>
               <option value="Testing">🧪 Testing</option>
               <option value="Production">🚀 Already live</option>
             </select>
-            <span className={styles.contextHelp}>Helps prioritize recommendations</span>
+            <span id="stage-help" className={styles.contextHelp}>Helps prioritize recommendations</span>
           </div>
         </div>
       </section>
 
       {/* Expandable: More Details */}
-      <section className={styles.expandableSection}>
+      <section className={styles.expandableSection} aria-labelledby="more-details-heading">
         <button 
           type="button"
           className={styles.expandButton}
           onClick={() => setShowMoreDetails(!showMoreDetails)}
+          aria-expanded={showMoreDetails}
+          aria-controls="more-details-content"
         >
-          <span className={styles.expandIcon}>{showMoreDetails ? '▼' : '▶'}</span>
-          <span className={styles.expandTitle}>Add more details</span>
-          <span className={styles.expandBadge}>+15% accuracy</span>
+          <span className={styles.expandIcon} aria-hidden="true">{showMoreDetails ? '▼' : '▶'}</span>
+          <span id="more-details-heading" className={styles.expandTitle}>Add more details</span>
+          <span className={styles.expandBadge} aria-label="improves accuracy by 15 percent">+15% accuracy</span>
         </button>
         
         {showMoreDetails && (
-          <div className={styles.expandContent}>
+          <div id="more-details-content" className={styles.expandContent}>
             <div className={styles.formGroup}>
-              <label className={styles.label}>
+              <label htmlFor="target-users" className={styles.label}>
                 Who will use this AI? <span className={styles.optional}>(optional)</span>
               </label>
               <input
+                id="target-users"
                 type="text"
+                name="target_users"
                 value={formData.target_users || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, target_users: e.target.value }))}
                 className={styles.input}
+                autoComplete="off"
                 placeholder="e.g., Customers, employees, students, healthcare providers..."
               />
             </div>
 
             <div className={styles.formGroup}>
-              <label className={styles.label}>
+              <label htmlFor="additional-context" className={styles.label}>
                 Any specific questions or concerns? <span className={styles.optional}>(optional)</span>
               </label>
               <textarea
+                id="additional-context"
+                name="additional_context"
                 value={formData.additional_context || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, additional_context: e.target.value }))}
                 className={styles.textarea}
@@ -447,23 +582,25 @@ Don't worry about technical details - we'll help you figure those out!"
       </section>
 
       {/* Expandable: Risk Factors */}
-      <section className={styles.expandableSection}>
+      <section className={styles.expandableSection} aria-labelledby="risk-factors-heading">
         <button 
           type="button"
           className={styles.expandButton}
           onClick={() => setShowRiskFactors(!showRiskFactors)}
+          aria-expanded={showRiskFactors}
+          aria-controls="risk-factors-content"
         >
-          <span className={styles.expandIcon}>{showRiskFactors ? '▼' : '▶'}</span>
-          <span className={styles.expandTitle}>Identify risk factors</span>
-          <span className={styles.expandBadge}>+20% accuracy</span>
+          <span className={styles.expandIcon} aria-hidden="true">{showRiskFactors ? '▼' : '▶'}</span>
+          <span id="risk-factors-heading" className={styles.expandTitle}>Identify risk factors</span>
+          <span className={styles.expandBadge} aria-label="improves accuracy by 20 percent">+20% accuracy</span>
         </button>
         
         {showRiskFactors && (
-          <div className={styles.expandContent}>
-            <p className={styles.expandDescription}>
+          <div id="risk-factors-content" className={styles.expandContent}>
+            <p id="risk-factors-description" className={styles.expandDescription}>
               Check any that apply to your AI system. This helps us identify potential compliance requirements and risks.
             </p>
-            <div className={styles.riskGrid}>
+            <div className={styles.riskGrid} role="group" aria-labelledby="risk-factors-heading" aria-describedby="risk-factors-description">
               {AI_CAPABILITIES.map(cap => (
                 <label
                   key={cap.id}
@@ -486,9 +623,12 @@ Don't worry about technical details - we'll help you figure those out!"
       </section>
 
       {/* Review Depth - Simplified */}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>⚡ Review Speed</h2>
-        <div className={styles.speedSelector}>
+      <section className={styles.section} aria-labelledby="review-speed-title">
+        <h2 id="review-speed-title" className={styles.sectionTitle}>
+          <span aria-hidden="true">⚡</span> Review Speed
+        </h2>
+        <fieldset className={styles.speedSelector} role="radiogroup" aria-labelledby="review-speed-title">
+          <legend className={styles.visuallyHidden}>Select review speed</legend>
           <label className={`${styles.speedOption} ${reviewDepth === 'quick_scan' ? styles.speedActive : ''}`}>
             <input
               type="radio"
@@ -497,9 +637,10 @@ Don't worry about technical details - we'll help you figure those out!"
               checked={reviewDepth === 'quick_scan'}
               onChange={() => setReviewDepth('quick_scan')}
               className={styles.speedRadio}
+              aria-describedby="quick-scan-desc"
             />
-            <span className={styles.speedIcon}>⚡</span>
-            <span className={styles.speedText}>Quick (1-2 min)</span>
+            <span className={styles.speedIcon} aria-hidden="true">⚡</span>
+            <span id="quick-scan-desc" className={styles.speedText}>Quick (1-2 min)</span>
           </label>
           <label className={`${styles.speedOption} ${reviewDepth === 'standard' ? styles.speedActive : ''}`}>
             <input
@@ -509,9 +650,10 @@ Don't worry about technical details - we'll help you figure those out!"
               checked={reviewDepth === 'standard'}
               onChange={() => setReviewDepth('standard')}
               className={styles.speedRadio}
+              aria-describedby="standard-desc"
             />
-            <span className={styles.speedIcon}>📋</span>
-            <span className={styles.speedText}>Standard (5-10 min)</span>
+            <span className={styles.speedIcon} aria-hidden="true">📋</span>
+            <span id="standard-desc" className={styles.speedText}>Standard (5-10 min)</span>
           </label>
           <label className={`${styles.speedOption} ${reviewDepth === 'deep_dive' ? styles.speedActive : ''}`}>
             <input
@@ -521,11 +663,12 @@ Don't worry about technical details - we'll help you figure those out!"
               checked={reviewDepth === 'deep_dive'}
               onChange={() => setReviewDepth('deep_dive')}
               className={styles.speedRadio}
+              aria-describedby="deep-dive-desc"
             />
-            <span className={styles.speedIcon}>🔬</span>
-            <span className={styles.speedText}>Deep Dive (15-30 min)</span>
+            <span className={styles.speedIcon} aria-hidden="true">🔬</span>
+            <span id="deep-dive-desc" className={styles.speedText}>Deep Dive (15-30 min)</span>
           </label>
-        </div>
+        </fieldset>
       </section>
     </>
   )
@@ -534,11 +677,16 @@ Don't worry about technical details - we'll help you figure those out!"
     const section = advancedSections[sectionIndex]
     
     return (
-      <section className={styles.section}>
+      <section 
+        ref={sectionRef}
+        className={styles.section}
+        tabIndex={-1}
+        aria-labelledby={`section-title-${sectionIndex}`}
+      >
         <div className={styles.sectionHeader}>
-          <span className={styles.sectionIcon}>{section.icon}</span>
+          <span className={styles.sectionIcon} aria-hidden="true">{section.icon}</span>
           <div>
-            <h2 className={styles.sectionTitle}>{section.title}</h2>
+            <h2 id={`section-title-${sectionIndex}`} className={styles.sectionTitle}>{section.title}</h2>
             <p className={styles.sectionDescription}>
               Step {sectionIndex + 1} of {advancedSections.length}
             </p>
@@ -852,52 +1000,81 @@ Don't worry about technical details - we'll help you figure those out!"
   }
 
   const renderProgressBar = () => (
-    <div className={styles.progressContainer}>
-      <div className={styles.progressBar}>
+    <nav 
+      className={styles.progressContainer}
+      aria-label="Form progress"
+      role="navigation"
+    >
+      <div 
+        className={styles.progressBar}
+        role="tablist"
+        aria-label="Review sections"
+      >
         {advancedSections.map((section, index) => (
           <button
             key={index}
             type="button"
+            role="tab"
+            aria-selected={index === currentSection}
+            aria-label={`Step ${index + 1}: ${section.title}${index < currentSection ? ' (completed)' : ''}`}
             className={`${styles.progressStep} ${index === currentSection ? styles.progressActive : ''} ${index < currentSection ? styles.progressComplete : ''}`}
-            onClick={() => setCurrentSection(index)}
-            title={section.title}
+            onClick={() => {
+              setCurrentSection(index)
+              announce(`Navigated to step ${index + 1}: ${section.title}`)
+            }}
           >
-            <span className={styles.progressIcon}>{section.icon}</span>
+            <span className={styles.progressIcon} aria-hidden="true">{section.icon}</span>
           </button>
         ))}
       </div>
-      <div className={styles.progressLabel}>
+      <div className={styles.progressLabel} aria-live="polite">
+        <span className={styles.visuallyHidden}>Current step: </span>
         {advancedSections[currentSection].title}
       </div>
-    </div>
+    </nav>
   )
 
   const renderAdvancedNavigation = () => (
-    <div className={styles.navigationButtons}>
+    <div 
+      className={styles.navigationButtons}
+      role="navigation"
+      aria-label="Form navigation"
+    >
       <button
         type="button"
-        onClick={() => setCurrentSection(prev => prev - 1)}
+        onClick={() => {
+          setCurrentSection(prev => prev - 1)
+          announce(`Going to previous step`)
+        }}
         disabled={currentSection === 0}
         className={styles.navButton}
+        aria-label={currentSection > 0 ? `Go to previous step: ${advancedSections[currentSection - 1]?.title}` : 'Previous (disabled - at first step)'}
       >
-        ← Previous
+        <span aria-hidden="true">←</span> Previous
       </button>
-      <span className={styles.stepIndicator}>
-        {currentSection + 1} / {advancedSections.length}
+      <span className={styles.stepIndicator} aria-live="polite">
+        <span className={styles.visuallyHidden}>Step </span>
+        {currentSection + 1} <span className={styles.visuallyHidden}>of</span><span aria-hidden="true">/</span> {advancedSections.length}
       </span>
       {currentSection < advancedSections.length - 1 ? (
         <button
           type="button"
-          onClick={() => setCurrentSection(prev => prev + 1)}
+          onClick={() => {
+            setCurrentSection(prev => prev + 1)
+            announce(`Going to next step`)
+          }}
           className={styles.navButton}
+          aria-label={`Go to next step: ${advancedSections[currentSection + 1]?.title}`}
         >
-          Next →
+          Next <span aria-hidden="true">→</span>
         </button>
       ) : (
         <button
           type="submit"
           disabled={loading}
           className={styles.submitButton}
+          aria-busy={loading}
+          aria-label={loading ? 'Analyzing your submission, please wait' : 'Submit form to get AI recommendations'}
         >
           {loading ? 'Analyzing...' : 'Get AI Recommendations'}
         </button>
@@ -1004,7 +1181,8 @@ Don't worry about technical details - we'll help you figure those out!"
                         rel="noopener noreferrer"
                         className={styles.toolName}
                       >
-                        {tool.name} ↗
+                        {tool.name} <span aria-hidden="true">↗</span>
+                        <span className={styles.visuallyHidden}>(opens in new tab)</span>
                       </a>
                       <p className={styles.toolDescription}>{tool.description}</p>
                     </div>
@@ -1020,9 +1198,26 @@ Don't worry about technical details - we'll help you figure those out!"
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <button onClick={() => router.push('/')} className={styles.backButton}>
-          ← Back to Home
+      {/* Screen reader live region for announcements */}
+      <div 
+        ref={announcerRef}
+        className={styles.visuallyHidden}
+        aria-live="polite"
+        aria-atomic="true"
+        role="status"
+      />
+      
+      <a href="#main-form" className={styles.skipLink}>
+        Skip to main form
+      </a>
+      
+      <header className={styles.header} role="banner">
+        <button 
+          onClick={() => router.push('/')} 
+          className={styles.backButton}
+          aria-label="Go back to home page"
+        >
+          <span aria-hidden="true">←</span> Back to Home
         </button>
         <h1 className={styles.title}>AI Solution Review</h1>
         <p className={styles.subtitle}>
@@ -1031,19 +1226,40 @@ Don't worry about technical details - we'll help you figure those out!"
       </header>
 
       {!result ? (
-        <form onSubmit={handleSubmit} className={styles.form}>
-          {error && <div className={styles.error}>{error}</div>}
+        <form 
+          id="main-form"
+          ref={formRef}
+          onSubmit={handleSubmit} 
+          className={styles.form}
+          onKeyDown={handleKeyDown}
+          aria-label="AI Solution Review Form"
+          noValidate
+        >
+          {error && (
+            <div 
+              ref={errorRef}
+              className={styles.error}
+              role="alert"
+              aria-live="assertive"
+              tabIndex={-1}
+            >
+              <span className={styles.visuallyHidden}>Error: </span>
+              {error}
+            </div>
+          )}
 
           {renderModeSelector()}
 
           {reviewMode === 'basic' ? (
             <>
               {renderBasicForm()}
-              <div className={styles.submitSection}>
+              <div className={styles.submitSection} role="group" aria-label="Form actions">
                 <button
                   type="submit"
                   disabled={loading}
                   className={styles.submitButton}
+                  aria-busy={loading}
+                  aria-label={loading ? 'Analyzing your submission, please wait' : 'Submit form to get AI recommendations'}
                 >
                   {loading ? 'Analyzing with AI...' : 'Get AI Recommendations'}
                 </button>
@@ -1051,6 +1267,7 @@ Don't worry about technical details - we'll help you figure those out!"
                   type="button"
                   onClick={() => router.push('/')}
                   className={styles.cancelButton}
+                  aria-label="Cancel and return to home page"
                 >
                   Cancel
                 </button>
