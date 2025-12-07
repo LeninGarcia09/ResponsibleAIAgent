@@ -280,41 +280,90 @@ export default function SubmitPage() {
   }
 
   const renderModeSelector = () => (
-    <fieldset className={styles.modeSelector} role="radiogroup" aria-label="Select review type">
-      <legend className={styles.visuallyHidden}>Review Type Selection</legend>
-      <button
-        type="button"
-        role="radio"
-        aria-checked={reviewMode === 'basic'}
-        className={`${styles.modeButton} ${reviewMode === 'basic' ? styles.modeActive : ''}`}
-        onClick={() => {
-          setReviewMode('basic')
-          announce('Basic Review selected - quick assessment mode')
-        }}
-      >
-        <span className={styles.modeIcon} aria-hidden="true">⚡</span>
-        <div className={styles.modeContent}>
-          <span className={styles.modeTitle}>Basic Review</span>
-          <span className={styles.modeDesc}>Quick assessment with project name and description</span>
+    <div className={styles.modeSelectorWrapper}>
+      <fieldset className={styles.modeSelector} role="radiogroup" aria-label="Select review type">
+        <legend className={styles.visuallyHidden}>Review Type Selection</legend>
+        <div className={`${styles.modeCard} ${reviewMode === 'basic' ? styles.modeCardActive : ''}`}>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={reviewMode === 'basic'}
+            className={`${styles.modeButton} ${reviewMode === 'basic' ? styles.modeActive : ''}`}
+            onClick={() => {
+              setReviewMode('basic')
+              announce('Basic Review selected - quick assessment mode')
+            }}
+          >
+            <span className={styles.modeIcon} aria-hidden="true">⚡</span>
+            <div className={styles.modeContent}>
+              <span className={styles.modeTitle}>Basic Review</span>
+              <span className={styles.modeDesc}>Quick assessment with project name and description</span>
+            </div>
+          </button>
+          
+          {/* Speed submenu - only shown when basic is selected */}
+          {reviewMode === 'basic' && (
+            <div className={styles.speedSubmenu} role="group" aria-label="Review speed options">
+              <span className={styles.speedSubmenuLabel}>Analysis Depth:</span>
+              <div className={styles.speedSubmenuOptions}>
+                <label className={`${styles.speedChip} ${reviewDepth === 'quick_scan' ? styles.speedChipActive : ''}`}>
+                  <input
+                    type="radio"
+                    name="reviewDepth"
+                    value="quick_scan"
+                    checked={reviewDepth === 'quick_scan'}
+                    onChange={() => setReviewDepth('quick_scan')}
+                    className={styles.speedRadio}
+                  />
+                  <span aria-hidden="true">⚡</span> Quick
+                </label>
+                <label className={`${styles.speedChip} ${reviewDepth === 'standard' ? styles.speedChipActive : ''}`}>
+                  <input
+                    type="radio"
+                    name="reviewDepth"
+                    value="standard"
+                    checked={reviewDepth === 'standard'}
+                    onChange={() => setReviewDepth('standard')}
+                    className={styles.speedRadio}
+                  />
+                  <span aria-hidden="true">📋</span> Standard
+                </label>
+                <label className={`${styles.speedChip} ${reviewDepth === 'deep_dive' ? styles.speedChipActive : ''}`}>
+                  <input
+                    type="radio"
+                    name="reviewDepth"
+                    value="deep_dive"
+                    checked={reviewDepth === 'deep_dive'}
+                    onChange={() => setReviewDepth('deep_dive')}
+                    className={styles.speedRadio}
+                  />
+                  <span aria-hidden="true">🔬</span> Deep Dive
+                </label>
+              </div>
+            </div>
+          )}
         </div>
-      </button>
-      <button
-        type="button"
-        role="radio"
-        aria-checked={reviewMode === 'advanced'}
-        className={`${styles.modeButton} ${reviewMode === 'advanced' ? styles.modeActive : ''}`}
-        onClick={() => {
-          setReviewMode('advanced')
-          announce('Comprehensive Review selected - 10 step questionnaire')
-        }}
-      >
-        <span className={styles.modeIcon} aria-hidden="true">🔬</span>
-        <div className={styles.modeContent}>
-          <span className={styles.modeTitle}>Comprehensive Review</span>
-          <span className={styles.modeDesc}>In-depth analysis with detailed questionnaire</span>
+        
+        <div className={`${styles.modeCard} ${reviewMode === 'advanced' ? styles.modeCardActive : ''}`}>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={reviewMode === 'advanced'}
+            className={`${styles.modeButton} ${reviewMode === 'advanced' ? styles.modeActive : ''}`}
+            onClick={() => {
+              setReviewMode('advanced')
+              announce('Comprehensive Review selected - 10 step questionnaire')
+            }}
+          >
+            <span className={styles.modeIcon} aria-hidden="true">🔬</span>
+            <div className={styles.modeContent}>
+              <span className={styles.modeTitle}>Comprehensive Review</span>
+              <span className={styles.modeDesc}>In-depth analysis with detailed questionnaire</span>
+            </div>
+          </button>
         </div>
-      </button>
-    </fieldset>
+      </fieldset>
+    </div>
   )
 
   // Track which optional sections are expanded
@@ -620,55 +669,6 @@ Don't worry about technical details - we'll help you figure those out!"
             </div>
           </div>
         )}
-      </section>
-
-      {/* Review Depth - Simplified */}
-      <section className={styles.section} aria-labelledby="review-speed-title">
-        <h2 id="review-speed-title" className={styles.sectionTitle}>
-          <span aria-hidden="true">⚡</span> Review Speed
-        </h2>
-        <fieldset className={styles.speedSelector} role="radiogroup" aria-labelledby="review-speed-title">
-          <legend className={styles.visuallyHidden}>Select review speed</legend>
-          <label className={`${styles.speedOption} ${reviewDepth === 'quick_scan' ? styles.speedActive : ''}`}>
-            <input
-              type="radio"
-              name="reviewDepth"
-              value="quick_scan"
-              checked={reviewDepth === 'quick_scan'}
-              onChange={() => setReviewDepth('quick_scan')}
-              className={styles.speedRadio}
-              aria-describedby="quick-scan-desc"
-            />
-            <span className={styles.speedIcon} aria-hidden="true">⚡</span>
-            <span id="quick-scan-desc" className={styles.speedText}>Quick (1-2 min)</span>
-          </label>
-          <label className={`${styles.speedOption} ${reviewDepth === 'standard' ? styles.speedActive : ''}`}>
-            <input
-              type="radio"
-              name="reviewDepth"
-              value="standard"
-              checked={reviewDepth === 'standard'}
-              onChange={() => setReviewDepth('standard')}
-              className={styles.speedRadio}
-              aria-describedby="standard-desc"
-            />
-            <span className={styles.speedIcon} aria-hidden="true">📋</span>
-            <span id="standard-desc" className={styles.speedText}>Standard (5-10 min)</span>
-          </label>
-          <label className={`${styles.speedOption} ${reviewDepth === 'deep_dive' ? styles.speedActive : ''}`}>
-            <input
-              type="radio"
-              name="reviewDepth"
-              value="deep_dive"
-              checked={reviewDepth === 'deep_dive'}
-              onChange={() => setReviewDepth('deep_dive')}
-              className={styles.speedRadio}
-              aria-describedby="deep-dive-desc"
-            />
-            <span className={styles.speedIcon} aria-hidden="true">🔬</span>
-            <span id="deep-dive-desc" className={styles.speedText}>Deep Dive (15-30 min)</span>
-          </label>
-        </fieldset>
       </section>
     </>
   )
