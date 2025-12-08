@@ -45,7 +45,7 @@ jobs:
             echo "backend_url=https://rai-backend.graymoss-a8a3aef8.westus3.azurecontainerapps.io" >> $GITHUB_OUTPUT
             echo "frontend_url=https://rai-frontend.graymoss-a8a3aef8.westus3.azurecontainerapps.io" >> $GITHUB_OUTPUT
           else
-            echo "environment=development" >> $GITHUB_OUTPUT
+            echo "environment=dev" >> $GITHUB_OUTPUT
             echo "backend_app=rai-backend-dev" >> $GITHUB_OUTPUT
             echo "frontend_app=rai-frontend-dev" >> $GITHUB_OUTPUT
             echo "backend_url=https://rai-backend-dev.blackdesert-120a609f.westus3.azurecontainerapps.io" >> $GITHUB_OUTPUT
