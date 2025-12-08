@@ -1948,5 +1948,157 @@
         {"tool": "Entra Agent ID", "reason": "Identity and access management for agents"}
       ]
     }
+  },
+  "cross_reference": {
+    "description": "Cross-reference guide showing how tools relate across RAI pillars and when to use multiple tools together",
+    "tools_by_rai_pillar": {
+      "Safety": {
+        "description": "Tools that help ensure AI systems operate safely and don't cause harm",
+        "primary_tools": ["Azure AI Content Safety", "Prompt Shields", "Groundedness Detection", "Protected Material Detection"],
+        "supporting_tools": ["PyRIT", "Counterfit", "Microsoft Defender for AI"],
+        "common_combinations": [
+          {
+            "scenario": "Production chatbot safety",
+            "tools": ["Azure AI Content Safety", "Prompt Shields", "Groundedness Detection"],
+            "why": "Multi-layer protection: filter harmful content, block attacks, prevent hallucinations"
+          }
+        ]
+      },
+      "Fairness": {
+        "description": "Tools that help ensure AI systems treat all people fairly",
+        "primary_tools": ["Fairlearn"],
+        "supporting_tools": ["Responsible AI Dashboard", "InterpretML"],
+        "common_combinations": [
+          {
+            "scenario": "Loan approval model fairness",
+            "tools": ["Fairlearn", "InterpretML EBM", "Responsible AI Dashboard"],
+            "why": "Assess bias, build interpretable model, visualize fairness metrics"
+          }
+        ]
+      },
+      "Privacy & Security": {
+        "description": "Tools that protect personal data and secure AI systems",
+        "primary_tools": ["Microsoft Presidio", "SmartNoise SDK", "Azure Confidential Computing", "Azure Key Vault", "Microsoft Purview"],
+        "supporting_tools": ["Entra Agent ID", "Microsoft Defender for AI"],
+        "common_combinations": [
+          {
+            "scenario": "Healthcare AI with patient data",
+            "tools": ["Presidio", "Azure Confidential Computing", "Microsoft Purview"],
+            "why": "Anonymize PII, protect data in use, ensure governance compliance"
+          }
+        ]
+      },
+      "Transparency": {
+        "description": "Tools that help explain how AI systems work and make decisions",
+        "primary_tools": ["InterpretML"],
+        "supporting_tools": ["Responsible AI Dashboard", "Azure AI Evaluation SDK"],
+        "common_combinations": [
+          {
+            "scenario": "Regulated decision system",
+            "tools": ["InterpretML EBM", "Responsible AI Dashboard", "Fairlearn"],
+            "why": "Inherently explainable model, visual analysis, bias documentation"
+          }
+        ]
+      },
+      "Accountability": {
+        "description": "Tools that enable governance, audit trails, and oversight",
+        "primary_tools": ["Microsoft Foundry Control Plane", "Microsoft Agent 365", "Microsoft Purview"],
+        "supporting_tools": ["Azure AI Evaluation SDK", "Entra Agent ID"],
+        "common_combinations": [
+          {
+            "scenario": "Enterprise AI governance",
+            "tools": ["Foundry Control Plane", "Agent 365", "Entra Agent ID", "Purview"],
+            "why": "Unified governance, agent inventory, identity management, data governance"
+          }
+        ]
+      },
+      "Reliability": {
+        "description": "Tools that ensure AI systems work correctly and consistently",
+        "primary_tools": ["Azure AI Evaluation SDK", "Groundedness Detection"],
+        "supporting_tools": ["PyRIT", "Counterfit"],
+        "common_combinations": [
+          {
+            "scenario": "RAG application quality",
+            "tools": ["Groundedness Detection", "Azure AI Evaluation SDK", "PyRIT"],
+            "why": "Real-time grounding check, systematic quality evaluation, security testing"
+          }
+        ]
+      }
+    },
+    "tools_appearing_in_multiple_pillars": {
+      "description": "Some tools address multiple RAI principles. Here's why they appear in different contexts.",
+      "tools": [
+        {
+          "name": "Azure AI Content Safety",
+          "pillars": ["Safety", "Fairness", "Inclusiveness"],
+          "explanation": "Primary focus is Safety (harmful content), but also promotes Fairness (hate speech detection) and Inclusiveness (protecting vulnerable groups)"
+        },
+        {
+          "name": "Microsoft Foundry Control Plane",
+          "pillars": ["Accountability", "Transparency", "Safety"],
+          "explanation": "Provides governance (Accountability), observability dashboards (Transparency), and guardrails (Safety) for AI agents"
+        },
+        {
+          "name": "Presidio",
+          "pillars": ["Privacy & Security", "Accountability"],
+          "explanation": "Protects personal data (Privacy) while enabling audit trails of PII handling (Accountability)"
+        },
+        {
+          "name": "InterpretML",
+          "pillars": ["Transparency", "Fairness", "Accountability"],
+          "explanation": "Provides model explanations (Transparency), enables bias detection (Fairness), and supports regulatory documentation (Accountability)"
+        },
+        {
+          "name": "Azure AI Evaluation SDK",
+          "pillars": ["Reliability", "Safety", "Accountability", "Transparency"],
+          "explanation": "Measures quality (Reliability), safety (Safety evaluators), enables documentation (Accountability), and provides metrics visibility (Transparency)"
+        }
+      ]
+    },
+    "tool_selection_matrix": {
+      "description": "Which tools to use based on your AI application type and primary concern",
+      "matrix": [
+        {
+          "application_type": "Chatbot / Conversational AI",
+          "safety_concern": ["Azure AI Content Safety", "Prompt Shields"],
+          "fairness_concern": ["HateUnfairnessEvaluator"],
+          "privacy_concern": ["Presidio"],
+          "reliability_concern": ["Groundedness Detection", "Azure AI Evaluation SDK"],
+          "governance_need": ["Foundry Control Plane"]
+        },
+        {
+          "application_type": "AI Agent",
+          "safety_concern": ["Azure AI Content Safety", "PyRIT"],
+          "fairness_concern": ["TaskAdherenceEvaluator"],
+          "privacy_concern": ["Entra Agent ID", "Presidio"],
+          "reliability_concern": ["ToolCallAccuracyEvaluator"],
+          "governance_need": ["Foundry Control Plane", "Agent 365", "Entra Agent ID"]
+        },
+        {
+          "application_type": "Decision Support / ML Model",
+          "safety_concern": ["Counterfit"],
+          "fairness_concern": ["Fairlearn", "Responsible AI Dashboard"],
+          "privacy_concern": ["Presidio", "SmartNoise"],
+          "reliability_concern": ["Responsible AI Dashboard"],
+          "governance_need": ["Microsoft Purview", "InterpretML"]
+        },
+        {
+          "application_type": "Content Generation",
+          "safety_concern": ["Azure AI Content Safety", "Protected Material Detection"],
+          "fairness_concern": ["Custom Categories"],
+          "privacy_concern": ["Presidio"],
+          "reliability_concern": ["ProtectedMaterialEvaluator"],
+          "governance_need": ["Blocklists", "Custom Categories"]
+        },
+        {
+          "application_type": "RAG / Enterprise Search",
+          "safety_concern": ["Prompt Shields", "Groundedness Detection"],
+          "fairness_concern": ["Access controls"],
+          "privacy_concern": ["Presidio", "Microsoft Purview"],
+          "reliability_concern": ["GroundednessEvaluator", "RelevanceEvaluator"],
+          "governance_need": ["Microsoft Purview"]
+        }
+      ]
+    }
   }
 }
