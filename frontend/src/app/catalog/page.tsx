@@ -15,14 +15,31 @@ interface Tool {
   status?: string
   announced?: string
   description: string
+  primary_purpose?: string
   capabilities?: ToolCapabilities | string[]
   integration_points?: string[]
   use_cases?: string[]
   documentation_url?: string
   github_url?: string
   install?: string
+  installation?: string
   url?: string
   category?: string
+  // New consistent schema fields
+  maturity_tier?: 'emerging' | 'established' | 'mature'
+  adoption?: string
+  when_to_use?: string[]
+  when_not_to_use?: string[]
+  prerequisites?: string[]
+  rai_pillars?: string[]
+  related_tools?: {
+    integrates_with?: string[]
+    complements?: string[]
+    alternative_to?: string[]
+  }
+  implementation_effort?: string
+  pricing?: string
+  parent_service?: string
 }
 
 interface CategoryData {
@@ -234,6 +251,34 @@ export default function CatalogPage() {
     const orderB = categoryConfig[b]?.order || 100
     return orderA - orderB
   })
+
+  // Maturity tier badge colors
+  const getMaturityStyle = (tier?: string) => {
+    switch (tier) {
+      case 'mature':
+        return { background: '#28a745', color: 'white' }
+      case 'established':
+        return { background: '#17a2b8', color: 'white' }
+      case 'emerging':
+        return { background: '#6f42c1', color: 'white' }
+      default:
+        return { background: '#6c757d', color: 'white' }
+    }
+  }
+
+  // RAI pillar colors
+  const getPillarStyle = (pillar: string) => {
+    const colors: { [key: string]: { bg: string; text: string } } = {
+      'Safety': { bg: '#dc3545', text: 'white' },
+      'Fairness': { bg: '#28a745', text: 'white' },
+      'Privacy & Security': { bg: '#6f42c1', text: 'white' },
+      'Transparency': { bg: '#17a2b8', text: 'white' },
+      'Accountability': { bg: '#fd7e14', text: 'white' },
+      'Reliability': { bg: '#007bff', text: 'white' },
+      'Inclusiveness': { bg: '#e83e8c', text: 'white' },
+    }
+    return colors[pillar] || { bg: '#6c757d', text: 'white' }
+  }
 
   // Render capability section (handles both array and object formats)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -627,28 +672,116 @@ export default function CatalogPage() {
                       <div className={styles.toolHeader} onClick={() => toggleToolExpanded(toolKey)}>
                         <div>
                           <h3 className={styles.toolName}>{tool.name}</h3>
-                          {isIgnite2025 && (
-                            <span style={{
-                              display: 'inline-block',
-                              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                              color: 'white',
-                              padding: '2px 8px',
-                              borderRadius: '12px',
-                              fontSize: '11px',
-                              fontWeight: 600,
-                              marginTop: '4px'
-                            }}>
-                              ✨ {tool.status || 'Ignite 2025'}
-                            </span>
-                          )}
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
+                            {tool.maturity_tier && (
+                              <span style={{
+                                display: 'inline-block',
+                                ...getMaturityStyle(tool.maturity_tier),
+                                padding: '2px 8px',
+                                borderRadius: '12px',
+                                fontSize: '10px',
+                                fontWeight: 600,
+                                textTransform: 'uppercase'
+                              }}>
+                                {tool.maturity_tier}
+                              </span>
+                            )}
+                            {isIgnite2025 && (
+                              <span style={{
+                                display: 'inline-block',
+                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                color: 'white',
+                                padding: '2px 8px',
+                                borderRadius: '12px',
+                                fontSize: '10px',
+                                fontWeight: 600
+                              }}>
+                                ✨ {tool.status || 'Ignite 2025'}
+                              </span>
+                            )}
+                            {tool.parent_service && (
+                              <span style={{
+                                display: 'inline-block',
+                                background: '#e9ecef',
+                                color: '#495057',
+                                padding: '2px 8px',
+                                borderRadius: '12px',
+                                fontSize: '10px'
+                              }}>
+                                Part of {tool.parent_service}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <span className={styles.expandIcon}>{isExpanded ? '−' : '+'}</span>
                       </div>
 
-                      <p className={styles.toolDescription}>{tool.description}</p>
+                      <p className={styles.toolDescription}>{tool.primary_purpose || tool.description}</p>
+                      
+                      {/* RAI Pillars - always visible */}
+                      {tool.rai_pillars && tool.rai_pillars.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
+                          {tool.rai_pillars.map((pillar, i) => (
+                            <span key={i} style={{
+                              background: getPillarStyle(pillar).bg,
+                              color: getPillarStyle(pillar).text,
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              fontSize: '10px',
+                              fontWeight: 500
+                            }}>
+                              {pillar}
+                            </span>
+                          ))}
+                        </div>
+                      )}
 
                       {isExpanded && (
                         <div className={styles.toolDetails}>
+                          {/* Adoption info */}
+                          {tool.adoption && (
+                            <div className={styles.detailSection}>
+                              <h4>📊 Adoption</h4>
+                              <p>{tool.adoption}</p>
+                            </div>
+                          )}
+
+                          {/* When to use */}
+                          {tool.when_to_use && tool.when_to_use.length > 0 && (
+                            <div className={styles.detailSection}>
+                              <h4>✅ When to Use</h4>
+                              <ul style={{ paddingLeft: '20px', margin: 0 }}>
+                                {tool.when_to_use.map((scenario, i) => (
+                                  <li key={i} style={{ marginBottom: '4px', fontSize: '14px', color: '#28a745' }}>{scenario}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* When NOT to use */}
+                          {tool.when_not_to_use && tool.when_not_to_use.length > 0 && (
+                            <div className={styles.detailSection}>
+                              <h4>⚠️ When NOT to Use</h4>
+                              <ul style={{ paddingLeft: '20px', margin: 0 }}>
+                                {tool.when_not_to_use.map((scenario, i) => (
+                                  <li key={i} style={{ marginBottom: '4px', fontSize: '14px', color: '#dc3545' }}>{scenario}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Prerequisites */}
+                          {tool.prerequisites && tool.prerequisites.length > 0 && (
+                            <div className={styles.detailSection}>
+                              <h4>📋 Prerequisites</h4>
+                              <ul style={{ paddingLeft: '20px', margin: 0 }}>
+                                {tool.prerequisites.map((prereq, i) => (
+                                  <li key={i} style={{ marginBottom: '4px', fontSize: '14px' }}>{prereq}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
                           {tool.type && (
                             <div className={styles.detailSection}>
                               <h4>Type</h4>
@@ -658,8 +791,63 @@ export default function CatalogPage() {
 
                           {tool.capabilities && (
                             <div className={styles.detailSection}>
-                              <h4>Capabilities</h4>
+                              <h4>🔧 Capabilities</h4>
                               {renderCapabilities(tool.capabilities)}
+                            </div>
+                          )}
+
+                          {/* Implementation effort and pricing */}
+                          {(tool.implementation_effort || tool.pricing) && (
+                            <div className={styles.detailSection} style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                              {tool.implementation_effort && (
+                                <div>
+                                  <h4>⏱️ Implementation Effort</h4>
+                                  <p>{tool.implementation_effort}</p>
+                                </div>
+                              )}
+                              {tool.pricing && (
+                                <div>
+                                  <h4>💰 Pricing</h4>
+                                  <p>{tool.pricing}</p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Related tools */}
+                          {tool.related_tools && (
+                            <div className={styles.detailSection}>
+                              <h4>🔗 Related Tools</h4>
+                              {tool.related_tools.integrates_with && tool.related_tools.integrates_with.length > 0 && (
+                                <div style={{ marginBottom: '8px' }}>
+                                  <strong style={{ fontSize: '12px', color: '#0078d4' }}>Integrates with:</strong>
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
+                                    {tool.related_tools.integrates_with.map((t, i) => (
+                                      <span key={i} style={{ background: '#e7f3ff', color: '#0078d4', padding: '2px 8px', borderRadius: '4px', fontSize: '12px' }}>{t}</span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {tool.related_tools.complements && tool.related_tools.complements.length > 0 && (
+                                <div style={{ marginBottom: '8px' }}>
+                                  <strong style={{ fontSize: '12px', color: '#28a745' }}>Complements:</strong>
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
+                                    {tool.related_tools.complements.map((t, i) => (
+                                      <span key={i} style={{ background: '#d4edda', color: '#155724', padding: '2px 8px', borderRadius: '4px', fontSize: '12px' }}>{t}</span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {tool.related_tools.alternative_to && tool.related_tools.alternative_to.length > 0 && (
+                                <div>
+                                  <strong style={{ fontSize: '12px', color: '#856404' }}>Alternative to:</strong>
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
+                                    {tool.related_tools.alternative_to.map((t, i) => (
+                                      <span key={i} style={{ background: '#fff3cd', color: '#856404', padding: '2px 8px', borderRadius: '4px', fontSize: '12px' }}>{t}</span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           )}
 
@@ -685,9 +873,9 @@ export default function CatalogPage() {
                             </div>
                           )}
 
-                          {tool.install && (
+                          {(tool.install || tool.installation) && (
                             <div className={styles.detailSection}>
-                              <h4>Installation</h4>
+                              <h4>📦 Installation</h4>
                               <code style={{
                                 display: 'block',
                                 background: '#f5f5f5',
@@ -696,7 +884,7 @@ export default function CatalogPage() {
                                 fontSize: '13px',
                                 overflowX: 'auto'
                               }}>
-                                {tool.install}
+                                {tool.install || tool.installation}
                               </code>
                             </div>
                           )}
