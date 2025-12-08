@@ -4,11 +4,18 @@ WORKDIR /app
 
 # Copy requirements and install dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir flask flask-cors gunicorn openai azure-identity
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY app.py .
 COPY rai_system_prompt.py .
+COPY knowledge_loader.py .
+
+# Copy knowledge base files
+COPY knowledge/ ./knowledge/
+
+# Copy shared folder if exists
+COPY shared/ ./shared/
 
 EXPOSE 8080
 
