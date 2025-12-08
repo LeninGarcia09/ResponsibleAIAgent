@@ -126,7 +126,10 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     environment: ${{ needs.setup.outputs.environment }}
-    
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
