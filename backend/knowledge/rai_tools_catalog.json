@@ -1,10 +1,12 @@
 {
   "catalog_metadata": {
-    "version": "2.1.0",
-    "last_updated": "2025-12-07",
+    "version": "2.2.0",
+    "last_updated": "2025-01-24",
     "description": "Comprehensive catalog of Microsoft Responsible AI tools and services for providing tailored recommendations and guidance to clients building AI solutions responsibly",
     "ignite_2025_updates": true,
-    "purpose": "Enable AI practitioners to select appropriate RAI tools based on their use case, risk profile, and industry requirements"
+    "purpose": "Enable AI practitioners to select appropriate RAI tools based on their use case, risk profile, and industry requirements",
+    "schema_version": "2.0",
+    "schema_notes": "Consistent structure across all tools with maturity_tier, adoption, when_to_use, when_not_to_use, prerequisites, and rai_pillars fields"
   },
   "actionable_use_cases": {
     "description": "Real-world scenarios with step-by-step tool recommendations and implementation guidance",
@@ -335,34 +337,203 @@
   },
   "categories": {
     "governance_and_control": {
-      "description": "Enterprise-grade governance, security, and observability for AI agents and applications",
+      "description": "Enterprise-grade governance, security, and observability for AI agents and applications. These tools provide the foundation for safe, compliant, and auditable AI deployments.",
+      "category_guidance": {
+        "when_to_use": "Any AI agent deployment, multi-agent systems, enterprise AI applications requiring compliance, audit trails, or centralized management",
+        "key_considerations": ["Regulatory compliance requirements", "Agent action boundaries", "Identity and access management", "Audit and observability needs"]
+      },
       "tools": [
         {
           "name": "Microsoft Foundry Control Plane",
           "type": "platform",
           "status": "Public Preview",
+          "maturity_tier": "emerging",
+          "adoption": "Early adopter - Enterprise customers with AI agent deployments",
           "announced": "Microsoft Ignite 2025",
-          "description": "Unified governance, security, and observability layer for AI agents across the entire lifecycle",
-          "capabilities": {
-            "controls": ["Unified guardrails across inputs, outputs, and tool interactions", "Centralized policy management", "Agent behavior constraints"],
-            "observability": ["Built-in evaluations and assessments", "OpenTelemetry-based tracing", "Continuous red teaming capabilities", "Comprehensive dashboards for monitoring"],
-            "security": ["Entra Agent ID for identity management", "Microsoft Defender runtime protection", "Microsoft Purview data governance integration"],
-            "fleet_operations": ["Unified health monitoring", "Cost tracking and optimization", "Performance metrics", "Risk assessment", "Policy coverage tracking"]
+          "description": "Unified governance, security, and observability layer for AI agents across the entire lifecycle. The central nervous system for managing AI agent fleets at scale.",
+          "primary_purpose": "Provide centralized control, monitoring, and guardrails for AI agents across the organization",
+          "when_to_use": [
+            "Deploying AI agents that take real-world actions",
+            "Managing multiple AI agents across different teams or applications",
+            "Requiring comprehensive audit trails for compliance",
+            "Need unified guardrails across all agent interactions",
+            "Enterprise-scale AI deployments requiring fleet management"
+          ],
+          "when_not_to_use": [
+            "Simple chatbots without action-taking capabilities",
+            "Single-agent prototypes in early development",
+            "Non-agentic AI applications (traditional ML models)",
+            "Cost-sensitive projects where simpler governance suffices"
+          ],
+          "prerequisites": [
+            "Azure subscription with Microsoft Foundry access",
+            "Understanding of AI agent architecture",
+            "Defined governance policies and action boundaries",
+            "Microsoft Entra ID for identity management"
+          ],
+          "capabilities": [
+            "Unified guardrails across inputs, outputs, and tool interactions",
+            "Centralized policy management with inheritance",
+            "Agent behavior constraints and action boundaries",
+            "OpenTelemetry-based distributed tracing",
+            "Built-in evaluations and continuous assessments",
+            "Integrated red teaming capabilities",
+            "Fleet-wide health monitoring dashboards",
+            "Cost tracking and optimization",
+            "Risk assessment scoring per agent",
+            "Policy coverage and compliance tracking"
+          ],
+          "rai_pillars": ["Accountability", "Transparency", "Safety"],
+          "related_tools": {
+            "integrates_with": ["Entra Agent ID", "Microsoft Defender for AI", "Microsoft Purview", "Azure AI Evaluation SDK"],
+            "complements": ["PyRIT for pre-deployment red teaming", "Azure AI Content Safety for content guardrails"],
+            "alternative_to": []
           },
-          "integration_points": ["Microsoft Foundry", "Azure AI Services", "Microsoft Defender", "Microsoft Purview", "Microsoft Entra"],
-          "use_cases": ["Enterprise AI governance", "Multi-agent fleet management", "Compliance and audit trails", "Security-first AI deployments"],
+          "implementation_effort": "High - Requires architectural planning and governance policy definition",
+          "pricing": "Preview pricing - Contact Microsoft for enterprise agreements",
           "documentation_url": "https://azure.microsoft.com/en-us/blog/microsoft-foundry-scale-innovation-on-a-modular-interoperable-and-secure-agent-stack/"
         },
         {
           "name": "Microsoft Agent 365",
           "type": "platform",
           "status": "Public Preview",
+          "maturity_tier": "emerging",
+          "adoption": "Early adopter - M365 enterprise customers with Copilot and custom agents",
           "announced": "Microsoft Ignite 2025",
-          "description": "Control plane for enterprise agent management across the organization",
-          "capabilities": ["Agent Registry for all organization agents", "Threat protection for AI agents", "Data security controls", "Access control and permissions", "Observability and monitoring"],
-          "integration_points": ["Microsoft 365", "Microsoft Copilot", "Microsoft Foundry"],
-          "use_cases": ["Enterprise agent inventory management", "Shadow AI prevention", "Centralized agent governance", "Cross-platform agent visibility"],
+          "description": "Control plane for enterprise agent management within the Microsoft 365 ecosystem. Provides visibility into all agents across the organization and prevents shadow AI deployments.",
+          "primary_purpose": "Centralized inventory, governance, and security for all agents across Microsoft 365 and Copilot",
+          "when_to_use": [
+            "Organizations using Microsoft 365 with Copilot",
+            "Need to discover and inventory all agents in the organization",
+            "Preventing shadow AI and unauthorized agent deployments",
+            "Requiring unified access control across M365 agents",
+            "IT/Security teams needing visibility into agent usage"
+          ],
+          "when_not_to_use": [
+            "Non-Microsoft 365 environments",
+            "Azure-only deployments (use Foundry Control Plane instead)",
+            "Small teams without enterprise M365 licenses",
+            "Pure development/testing scenarios"
+          ],
+          "prerequisites": [
+            "Microsoft 365 E3/E5 or equivalent license",
+            "Microsoft Copilot deployment",
+            "Admin access to Microsoft 365 Admin Center",
+            "Security & Compliance team involvement"
+          ],
+          "capabilities": [
+            "Agent Registry for organization-wide visibility",
+            "Threat protection for AI agents",
+            "Data security controls and DLP integration",
+            "Access control and permissions management",
+            "Observability and usage monitoring",
+            "Shadow AI detection and prevention",
+            "Cross-platform agent inventory"
+          ],
+          "rai_pillars": ["Accountability", "Privacy & Security", "Transparency"],
+          "related_tools": {
+            "integrates_with": ["Microsoft Foundry Control Plane", "Microsoft Copilot", "Microsoft Defender", "Microsoft Purview"],
+            "complements": ["Entra Agent ID for identity management"],
+            "alternative_to": []
+          },
+          "implementation_effort": "Medium - Requires M365 admin configuration and policy definition",
+          "pricing": "Included with Microsoft 365 E5 or Security add-ons",
           "documentation_url": "https://www.microsoft.com/en-us/microsoft-365/blog/"
+        },
+        {
+          "name": "Entra Agent ID",
+          "type": "service",
+          "status": "Public Preview",
+          "maturity_tier": "emerging",
+          "adoption": "Early adopter - Organizations deploying AI agents with action capabilities",
+          "announced": "Microsoft Ignite 2025",
+          "description": "Managed identity solution specifically designed for AI agents. Provides unique identities for agents with proper access controls, audit logging, and lifecycle management.",
+          "primary_purpose": "Give AI agents proper identity, authentication, and authorization with full audit trail",
+          "when_to_use": [
+            "AI agents that access APIs or take actions on behalf of users",
+            "Multi-agent systems requiring distinct identity per agent",
+            "Compliance requirements for audit trails of agent actions",
+            "Need to apply least-privilege permissions to agents",
+            "Organizations requiring lifecycle management for agent identities"
+          ],
+          "when_not_to_use": [
+            "Simple chatbots without action-taking capabilities",
+            "Agents running only in isolated development environments",
+            "Short-lived demo or POC agents",
+            "When shared service account suffices (not recommended for production)"
+          ],
+          "prerequisites": [
+            "Microsoft Entra ID (Azure AD) tenant",
+            "Understanding of identity and access management concepts",
+            "Defined permission scopes for agent actions",
+            "Integration with Microsoft Foundry or Azure services"
+          ],
+          "capabilities": [
+            "Unique managed identity per agent",
+            "Fine-grained permission scoping",
+            "Comprehensive audit logging of all agent actions",
+            "Lifecycle management (create, rotate, revoke)",
+            "Integration with Conditional Access policies",
+            "Cross-tenant agent identity federation",
+            "Time-bound and scoped access tokens"
+          ],
+          "rai_pillars": ["Accountability", "Privacy & Security", "Transparency"],
+          "related_tools": {
+            "integrates_with": ["Microsoft Foundry Control Plane", "Microsoft Defender for AI", "Azure AI Services"],
+            "complements": ["Microsoft Purview for data governance"],
+            "alternative_to": ["Managed Identity (for simpler non-agent scenarios)"]
+          },
+          "implementation_effort": "Medium - Requires identity architecture planning and permission modeling",
+          "pricing": "Preview pricing - Part of Microsoft Entra ID P1/P2",
+          "documentation_url": "https://learn.microsoft.com/entra/"
+        },
+        {
+          "name": "Microsoft Defender for AI",
+          "type": "service",
+          "status": "Public Preview",
+          "maturity_tier": "emerging",
+          "adoption": "Early adopter - Security-conscious enterprises with AI deployments",
+          "announced": "Microsoft Ignite 2025",
+          "description": "Runtime threat detection and protection for AI applications and agents. Monitors for attacks, anomalous behavior, and security threats specific to AI systems.",
+          "primary_purpose": "Protect AI applications and agents from runtime attacks, abuse, and security threats",
+          "when_to_use": [
+            "Production AI deployments exposed to users",
+            "AI agents with access to sensitive data or systems",
+            "Organizations with security compliance requirements",
+            "Need for real-time threat detection and response",
+            "AI systems in regulated industries"
+          ],
+          "when_not_to_use": [
+            "Development and testing environments only",
+            "Isolated internal-only AI applications",
+            "Budget-constrained projects where basic logging suffices",
+            "Non-production prototypes and demos"
+          ],
+          "prerequisites": [
+            "Microsoft Defender for Cloud subscription",
+            "Azure AI services or Microsoft Foundry deployment",
+            "Security team involvement for alert response",
+            "Integration with SIEM/SOAR for incident response"
+          ],
+          "capabilities": [
+            "Real-time threat detection for AI systems",
+            "Prompt injection attack detection",
+            "Anomalous agent behavior monitoring",
+            "Data exfiltration attempt detection",
+            "Credential and secret exposure alerts",
+            "Integration with Microsoft Defender XDR",
+            "Automated response and remediation",
+            "AI-specific security recommendations"
+          ],
+          "rai_pillars": ["Safety", "Privacy & Security"],
+          "related_tools": {
+            "integrates_with": ["Microsoft Foundry Control Plane", "Azure AI Content Safety", "Microsoft Sentinel"],
+            "complements": ["PyRIT for pre-deployment testing", "Prompt Shields for input filtering"],
+            "alternative_to": []
+          },
+          "implementation_effort": "Medium - Requires security integration and alert response procedures",
+          "pricing": "Part of Microsoft Defender for Cloud - Contact Microsoft for AI-specific pricing",
+          "documentation_url": "https://learn.microsoft.com/azure/defender-for-cloud/"
         }
       ]
     },
