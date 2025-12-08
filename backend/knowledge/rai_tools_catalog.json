@@ -538,129 +538,330 @@
       ]
     },
     "content_safety": {
-      "description": "AI-powered content moderation and safety services",
+      "description": "AI-powered content moderation and safety services for detecting and preventing harmful, inappropriate, or policy-violating content in AI applications.",
+      "category_guidance": {
+        "when_to_use": "Any AI application that generates content, processes user inputs, or interacts with end users",
+        "key_considerations": ["Severity thresholds for your audience", "Regulatory requirements (COPPA, GDPR)", "Brand safety policies", "Industry-specific content rules"]
+      },
       "tools": [
         {
           "name": "Azure AI Content Safety",
           "type": "service",
           "status": "Generally Available",
-          "description": "AI-powered content moderation service that detects harmful content across text, images, and multi-modal content. Essential for any customer-facing AI application.",
-          "when_to_use": "Use this for ANY AI application that generates or processes user content. Required for chatbots, content generation, image analysis, and customer-facing AI.",
-          "capabilities": {
-            "text_analysis": {
-              "description": "Analyze text for harmful content with configurable severity thresholds",
-              "categories": [
-                {"name": "Hate", "description": "Detects hate speech, slurs, and discriminatory language", "use_when": "Building any public-facing chatbot or content system"},
-                {"name": "Violence", "description": "Detects violent content, threats, and graphic descriptions", "use_when": "Content moderation, social platforms, gaming"},
-                {"name": "Sexual", "description": "Detects sexually explicit or suggestive content", "use_when": "Any platform accessible by minors or workplace tools"},
-                {"name": "Self-Harm", "description": "Detects content promoting self-injury or suicide", "use_when": "Mental health apps, social platforms, any user-generated content"}
-              ],
-              "severity_levels": {
-                "0": "Safe - No harmful content detected",
-                "2": "Low - Mildly concerning, may need review",
-                "4": "Medium - Clearly problematic, should be filtered",
-                "6": "High - Severely harmful, must be blocked"
-              }
-            },
-            "image_analysis": {
-              "description": "Analyze images for inappropriate visual content",
-              "categories": ["Adult content", "Violent imagery", "Hate symbols", "Gore"],
-              "use_when": "Any application accepting image uploads or generating images"
-            }
-          },
-          "advanced_features": [
-            {
-              "name": "Prompt Shields",
-              "status": "Generally Available",
-              "description": "Detects and blocks jailbreak attempts and prompt injection attacks in real-time",
-              "when_to_use": "REQUIRED for any LLM-powered application exposed to users. Protects against users trying to bypass safety guardrails.",
-              "attack_types_detected": [
-                "Direct jailbreak attempts (e.g., 'ignore previous instructions')",
-                "Role-playing exploits (e.g., 'pretend you have no restrictions')",
-                "Encoding attacks (Base64, Unicode tricks)",
-                "Multi-turn manipulation attempts"
-              ],
-              "integration": "Add as input filter before sending prompts to LLM",
-              "documentation_url": "https://learn.microsoft.com/azure/ai-services/content-safety/concepts/jailbreak-detection"
-            },
-            {
-              "name": "Groundedness Detection",
-              "status": "Generally Available",
-              "description": "Detects when AI responses contain hallucinations or information not grounded in provided context",
-              "when_to_use": "CRITICAL for RAG applications, customer support bots, and any system providing factual information",
-              "how_it_works": "Compares AI response against source documents to identify fabricated or unsupported claims",
-              "use_cases": ["Enterprise search", "Document Q&A", "Customer support", "Knowledge bases"],
-              "documentation_url": "https://learn.microsoft.com/azure/ai-services/content-safety/concepts/groundedness"
-            },
-            {
-              "name": "Protected Material Detection",
-              "status": "Generally Available",
-              "description": "Detects copyrighted content, song lyrics, news articles, and other protected material in AI outputs",
-              "when_to_use": "Content generation applications, creative writing tools, any system that might reproduce copyrighted text",
-              "protects_against": ["Copyright infringement", "Plagiarism", "Reproducing licensed content"],
-              "documentation_url": "https://learn.microsoft.com/azure/ai-services/content-safety/concepts/protected-material"
-            },
-            {
-              "name": "Custom Categories",
-              "status": "Generally Available",
-              "description": "Train custom content classifiers for your specific domain needs",
-              "when_to_use": "When standard categories don't cover your industry-specific content policies",
-              "examples": ["Competitor mentions", "Off-topic responses", "Brand safety", "Industry jargon misuse"],
-              "documentation_url": "https://learn.microsoft.com/azure/ai-services/content-safety/concepts/custom-categories"
-            },
-            {
-              "name": "Blocklists",
-              "status": "Generally Available",
-              "description": "Create custom word/phrase blocklists for exact-match filtering",
-              "when_to_use": "Block specific terms, competitor names, profanity lists, or sensitive internal terms",
-              "documentation_url": "https://learn.microsoft.com/azure/ai-services/content-safety/how-to/use-blocklist"
-            }
+          "maturity_tier": "mature",
+          "adoption": "Mainstream - Required for any customer-facing AI application",
+          "description": "AI-powered content moderation service that detects harmful content across text, images, and multi-modal content. The foundational safety layer for AI applications.",
+          "primary_purpose": "Detect and filter harmful content in AI inputs and outputs across multiple modalities",
+          "when_to_use": [
+            "Any AI application that generates or processes user content",
+            "Chatbots and conversational AI systems",
+            "Content generation platforms",
+            "Image generation or analysis applications",
+            "Social platforms and community features",
+            "Customer-facing AI of any kind"
           ],
-          "implementation_guide": {
-            "basic_setup": {
-              "description": "Minimum protection for any AI application",
-              "steps": [
-                "1. Create Azure AI Content Safety resource in Azure Portal",
-                "2. Enable text analysis with severity threshold of 2 (Low) for all categories",
-                "3. Integrate SDK into your application pipeline",
-                "4. Log all flagged content for review and improvement"
-              ],
-              "time_to_implement": "1-2 hours"
-            },
-            "recommended_setup": {
-              "description": "Comprehensive protection for production applications",
-              "steps": [
-                "1. Basic setup plus Prompt Shields for jailbreak protection",
-                "2. Add Groundedness Detection if using RAG or providing factual info",
-                "3. Enable Protected Material Detection for content generation",
-                "4. Create blocklists for brand-specific terms",
-                "5. Set up monitoring dashboard for content safety metrics"
-              ],
-              "time_to_implement": "4-8 hours"
-            },
-            "enterprise_setup": {
-              "description": "Full protection with custom policies and monitoring",
-              "steps": [
-                "1. Recommended setup plus Custom Categories for domain-specific content",
-                "2. Integrate with Azure Monitor for alerting",
-                "3. Set up human review workflow for edge cases",
-                "4. Regular model updates based on flagged content analysis",
-                "5. Quarterly red teaming with PyRIT"
-              ],
-              "time_to_implement": "2-4 weeks"
-            }
+          "when_not_to_use": [
+            "Internal-only tools with trusted users (still recommended but lower priority)",
+            "When content is already pre-filtered by another system",
+            "Batch processing where real-time filtering isn't critical"
+          ],
+          "prerequisites": [
+            "Azure subscription",
+            "Azure AI Services resource",
+            "Understanding of content moderation thresholds",
+            "Content policy defined for your application"
+          ],
+          "capabilities": [
+            "Text analysis for Hate, Violence, Sexual, and Self-Harm content",
+            "Configurable severity thresholds (0-6 scale)",
+            "Image analysis for adult content, violence, hate symbols",
+            "Multi-modal content analysis",
+            "Real-time and batch processing modes",
+            "Detailed reasoning for flagged content"
+          ],
+          "severity_levels": {
+            "0": "Safe - No harmful content detected",
+            "2": "Low - Mildly concerning, may need review",
+            "4": "Medium - Clearly problematic, should be filtered",
+            "6": "High - Severely harmful, must be blocked"
           },
-          "pricing_model": "Pay-per-transaction (see Azure pricing calculator)",
-          "integration_points": ["Azure OpenAI Service", "Microsoft Foundry", "Azure AI Services", "REST API", "Any LLM via API"],
-          "documentation_url": "https://learn.microsoft.com/en-us/azure/ai-services/content-safety/",
-          "quickstart_url": "https://learn.microsoft.com/azure/ai-services/content-safety/quickstart-text",
+          "harm_categories": [
+            {"name": "Hate", "description": "Hate speech, slurs, discriminatory language", "typical_threshold": 2},
+            {"name": "Violence", "description": "Violent content, threats, graphic descriptions", "typical_threshold": 2},
+            {"name": "Sexual", "description": "Sexually explicit or suggestive content", "typical_threshold": 2},
+            {"name": "Self-Harm", "description": "Content promoting self-injury or suicide", "typical_threshold": 0}
+          ],
+          "rai_pillars": ["Safety", "Fairness", "Inclusiveness"],
+          "related_tools": {
+            "integrates_with": ["Azure OpenAI Service", "Microsoft Foundry", "Any LLM via REST API"],
+            "complements": ["PyRIT for testing", "Azure AI Evaluation SDK for metrics"],
+            "alternative_to": []
+          },
+          "implementation_effort": "Low - SDK integration in 1-2 hours for basic setup",
+          "pricing": "Pay-per-transaction - See Azure pricing calculator",
           "sdk": {
             "python": "pip install azure-ai-contentsafety",
             "dotnet": "dotnet add package Azure.AI.ContentSafety",
             "javascript": "npm install @azure-rest/ai-content-safety"
-          }
+          },
+          "documentation_url": "https://learn.microsoft.com/en-us/azure/ai-services/content-safety/",
+          "quickstart_url": "https://learn.microsoft.com/azure/ai-services/content-safety/quickstart-text"
+        },
+        {
+          "name": "Prompt Shields",
+          "type": "feature",
+          "status": "Generally Available",
+          "maturity_tier": "established",
+          "adoption": "Mainstream - Required for any LLM application exposed to users",
+          "parent_service": "Azure AI Content Safety",
+          "description": "Real-time detection and blocking of jailbreak attempts and prompt injection attacks. Critical security layer for LLM applications.",
+          "primary_purpose": "Protect LLMs from prompt injection and jailbreak attacks",
+          "when_to_use": [
+            "Any LLM-powered application exposed to end users",
+            "Chatbots and conversational AI",
+            "AI agents that take actions based on user input",
+            "Applications where users can influence LLM prompts",
+            "RAG applications with user-provided queries"
+          ],
+          "when_not_to_use": [
+            "Fully internal applications with trusted users only",
+            "Batch processing without user interaction",
+            "When using a different prompt injection detection system"
+          ],
+          "prerequisites": [
+            "Azure AI Content Safety resource",
+            "Integration point before LLM calls",
+            "Error handling for blocked inputs"
+          ],
+          "capabilities": [
+            "Direct jailbreak attempt detection",
+            "Role-playing exploit detection",
+            "Encoding attack detection (Base64, Unicode)",
+            "Multi-turn manipulation detection",
+            "Indirect prompt injection (XPIA) detection",
+            "Real-time blocking with low latency"
+          ],
+          "attack_types_detected": [
+            "Ignore previous instructions",
+            "Pretend you have no restrictions",
+            "DAN (Do Anything Now) variants",
+            "Encoded/obfuscated attacks",
+            "Context manipulation"
+          ],
+          "rai_pillars": ["Safety", "Reliability"],
+          "related_tools": {
+            "integrates_with": ["Azure OpenAI Service", "Any LLM API"],
+            "complements": ["PyRIT for testing jailbreak resistance", "Microsoft Defender for AI for runtime monitoring"],
+            "alternative_to": []
+          },
+          "implementation_effort": "Low - Add as input filter before LLM calls",
+          "pricing": "Included with Azure AI Content Safety",
+          "documentation_url": "https://learn.microsoft.com/azure/ai-services/content-safety/concepts/jailbreak-detection"
+        },
+        {
+          "name": "Groundedness Detection",
+          "type": "feature",
+          "status": "Generally Available",
+          "maturity_tier": "established",
+          "adoption": "Mainstream - Critical for any RAG or factual information system",
+          "parent_service": "Azure AI Content Safety",
+          "description": "Detects when AI responses contain hallucinations or information not grounded in provided source documents. Essential for factual accuracy.",
+          "primary_purpose": "Identify and prevent AI hallucinations in responses",
+          "when_to_use": [
+            "RAG (Retrieval Augmented Generation) applications",
+            "Customer support bots with knowledge bases",
+            "Enterprise search and document Q&A",
+            "Any system providing factual information",
+            "Legal, medical, or financial AI applications"
+          ],
+          "when_not_to_use": [
+            "Creative writing or brainstorming applications",
+            "Applications where novel content is desired",
+            "Chat applications without a source knowledge base"
+          ],
+          "prerequisites": [
+            "Azure AI Content Safety resource",
+            "Source documents/context for comparison",
+            "Understanding of groundedness thresholds"
+          ],
+          "capabilities": [
+            "Response vs source document comparison",
+            "Fabricated claim detection",
+            "Unsupported statement identification",
+            "Groundedness scoring (1-5 scale)",
+            "Detailed reasoning for low scores"
+          ],
+          "rai_pillars": ["Reliability", "Transparency", "Safety"],
+          "related_tools": {
+            "integrates_with": ["Azure OpenAI Service", "Azure AI Search", "Any RAG pipeline"],
+            "complements": ["GroundednessEvaluator for batch testing"],
+            "alternative_to": []
+          },
+          "implementation_effort": "Medium - Requires source document context integration",
+          "pricing": "Included with Azure AI Content Safety",
+          "documentation_url": "https://learn.microsoft.com/azure/ai-services/content-safety/concepts/groundedness"
+        },
+        {
+          "name": "Protected Material Detection",
+          "type": "feature",
+          "status": "Generally Available",
+          "maturity_tier": "established",
+          "adoption": "Growing - Important for content generation applications",
+          "parent_service": "Azure AI Content Safety",
+          "description": "Detects copyrighted content, song lyrics, news articles, and other protected material in AI outputs. Protects against copyright infringement.",
+          "primary_purpose": "Prevent reproduction of copyrighted or protected content",
+          "when_to_use": [
+            "Content generation applications",
+            "Creative writing tools",
+            "Marketing copy generation",
+            "Any system generating text that could match protected content",
+            "Publishing and media applications"
+          ],
+          "when_not_to_use": [
+            "Internal analysis or summarization only",
+            "When explicit licenses exist for content reproduction",
+            "Chat applications unlikely to generate long-form content"
+          ],
+          "prerequisites": [
+            "Azure AI Content Safety resource",
+            "Output filtering pipeline",
+            "Policy for handling detected protected material"
+          ],
+          "capabilities": [
+            "Copyrighted text detection",
+            "Song lyrics identification",
+            "News article matching",
+            "Licensed content detection",
+            "Partial match detection"
+          ],
+          "rai_pillars": ["Safety", "Reliability"],
+          "related_tools": {
+            "integrates_with": ["Azure OpenAI Service", "Content generation pipelines"],
+            "complements": ["ProtectedMaterialEvaluator for batch testing"],
+            "alternative_to": []
+          },
+          "implementation_effort": "Low - Add as output filter",
+          "pricing": "Included with Azure AI Content Safety",
+          "documentation_url": "https://learn.microsoft.com/azure/ai-services/content-safety/concepts/protected-material"
+        },
+        {
+          "name": "Custom Categories",
+          "type": "feature",
+          "status": "Generally Available",
+          "maturity_tier": "established",
+          "adoption": "Growing - Enterprises with specific content policies",
+          "parent_service": "Azure AI Content Safety",
+          "description": "Train custom content classifiers for domain-specific content moderation needs that go beyond standard harm categories.",
+          "primary_purpose": "Extend content safety with industry or brand-specific policies",
+          "when_to_use": [
+            "Standard categories don't cover your content policies",
+            "Industry-specific content rules (financial advice, medical claims)",
+            "Brand safety requirements",
+            "Competitor mention filtering",
+            "Custom compliance requirements"
+          ],
+          "when_not_to_use": [
+            "Standard harm categories are sufficient",
+            "Limited training data for custom categories",
+            "Rapidly changing policy requirements"
+          ],
+          "prerequisites": [
+            "Azure AI Content Safety resource",
+            "Training examples for custom categories",
+            "Clear definition of category boundaries"
+          ],
+          "capabilities": [
+            "Custom classifier training",
+            "Multi-class categorization",
+            "Threshold configuration",
+            "Integration with standard categories"
+          ],
+          "rai_pillars": ["Safety", "Reliability"],
+          "related_tools": {
+            "integrates_with": ["Azure AI Content Safety standard categories"],
+            "complements": ["Blocklists for exact-match filtering"],
+            "alternative_to": []
+          },
+          "implementation_effort": "Medium - Requires training data and classifier tuning",
+          "pricing": "Additional charges for custom training - See Azure pricing",
+          "documentation_url": "https://learn.microsoft.com/azure/ai-services/content-safety/concepts/custom-categories"
+        },
+        {
+          "name": "Blocklists",
+          "type": "feature",
+          "status": "Generally Available",
+          "maturity_tier": "mature",
+          "adoption": "Mainstream - Simple and effective for exact-match filtering",
+          "parent_service": "Azure AI Content Safety",
+          "description": "Create custom word and phrase blocklists for exact-match filtering. Simple but effective for specific terms.",
+          "primary_purpose": "Block specific terms, names, or phrases from AI content",
+          "when_to_use": [
+            "Block competitor names or brands",
+            "Filter profanity or slurs",
+            "Block sensitive internal terms",
+            "Compliance with specific word restrictions",
+            "Quick policy enforcement without ML training"
+          ],
+          "when_not_to_use": [
+            "Need semantic understanding (use Custom Categories)",
+            "Terms have legitimate uses in context",
+            "High false positive risk"
+          ],
+          "prerequisites": [
+            "Azure AI Content Safety resource",
+            "List of terms/phrases to block"
+          ],
+          "capabilities": [
+            "Exact-match term blocking",
+            "Phrase matching",
+            "Multiple blocklists support",
+            "Real-time filtering"
+          ],
+          "rai_pillars": ["Safety"],
+          "related_tools": {
+            "integrates_with": ["Azure AI Content Safety"],
+            "complements": ["Custom Categories for semantic filtering"],
+            "alternative_to": []
+          },
+          "implementation_effort": "Low - Simple list configuration",
+          "pricing": "Included with Azure AI Content Safety",
+          "documentation_url": "https://learn.microsoft.com/azure/ai-services/content-safety/how-to/use-blocklist"
         }
-      ]
+      ],
+      "implementation_guide": {
+        "basic_setup": {
+          "description": "Minimum protection for any AI application",
+          "steps": [
+            "Create Azure AI Content Safety resource in Azure Portal",
+            "Enable text analysis with severity threshold of 2 for all categories",
+            "Integrate SDK into your application pipeline",
+            "Log all flagged content for review and improvement"
+          ],
+          "time_to_implement": "1-2 hours"
+        },
+        "recommended_setup": {
+          "description": "Comprehensive protection for production applications",
+          "steps": [
+            "Basic setup plus Prompt Shields for jailbreak protection",
+            "Add Groundedness Detection if using RAG or providing factual info",
+            "Enable Protected Material Detection for content generation",
+            "Create blocklists for brand-specific terms",
+            "Set up monitoring dashboard for content safety metrics"
+          ],
+          "time_to_implement": "4-8 hours"
+        },
+        "enterprise_setup": {
+          "description": "Full protection with custom policies and monitoring",
+          "steps": [
+            "Recommended setup plus Custom Categories for domain-specific content",
+            "Integrate with Azure Monitor for alerting",
+            "Set up human review workflow for edge cases",
+            "Regular model updates based on flagged content analysis",
+            "Quarterly red teaming with PyRIT"
+          ],
+          "time_to_implement": "2-4 weeks"
+        }
+      }
     },
     "evaluation_and_testing": {
       "description": "Tools for evaluating AI model quality, safety, and performance",
