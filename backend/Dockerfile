@@ -19,4 +19,5 @@ COPY shared/ ./shared/
 
 EXPOSE 8080
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]
+# Increase timeout to 120s for Azure OpenAI calls which can take 60-90s
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--timeout", "120", "--workers", "2", "app:app"]
