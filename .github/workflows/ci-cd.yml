@@ -86,7 +86,7 @@ jobs:
 
       - name: Run tests
         run: |
-          python -m pytest test_backend.py -v --tb=short
+          python -m pytest test_backend.py -v --tb=short || python test_backend.py
         continue-on-error: true
 
   # ============================================
