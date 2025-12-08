@@ -1,0 +1,183 @@
+.feedbackTrigger {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 120, 212, 0.4);
+  transition: all 0.2s ease;
+  z-index: 1000;
+}
+
+.feedbackTrigger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 120, 212, 0.5);
+}
+
+.feedbackPanel {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 320px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.feedbackHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+  color: white;
+}
+
+.feedbackHeader h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.closeBtn {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.closeBtn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.feedbackTypes {
+  padding: 16px 20px;
+}
+
+.typeLabel {
+  margin: 0 0 12px 0;
+  font-size: 0.9rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.typeButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.typeBtn {
+  flex: 1;
+  padding: 10px 8px;
+  border: 2px solid #e0e0e0;
+  background: white;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.typeBtn:hover {
+  border-color: #0078d4;
+  background: #f5f9ff;
+}
+
+.typeBtn.selected {
+  border-color: #0078d4;
+  background: #e5f1ff;
+}
+
+.feedbackInput {
+  padding: 0 20px 16px;
+}
+
+.feedbackInput label {
+  display: block;
+  font-size: 0.85rem;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.feedbackInput textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  resize: vertical;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.feedbackInput textarea:focus {
+  outline: none;
+  border-color: #0078d4;
+  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.1);
+}
+
+.submitBtn {
+  margin: 0 20px 16px;
+  width: calc(100% - 40px);
+  padding: 12px;
+  background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.submitBtn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.submitBtn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.privacyNote {
+  padding: 0 20px 16px;
+  margin: 0;
+  font-size: 0.75rem;
+  color: #888;
+  text-align: center;
+}
+
+.successMessage {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.successIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: #10b981;
+  color: white;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  margin-bottom: 12px;
+}
+
+.successMessage p {
+  margin: 0;
+  color: #333;
+  font-weight: 500;
+}

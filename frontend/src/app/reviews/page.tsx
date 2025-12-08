@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Footer from '../../components/Footer'
+import FeedbackButton from '../../components/FeedbackButton'
 import styles from './reviews.module.css'
 
 interface Review {
@@ -250,3 +252,4 @@ export default function ReviewsPage() {
     </div>
   )
 }
+

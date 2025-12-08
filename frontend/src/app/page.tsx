@@ -1,6 +1,8 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import Footer from '../components/Footer'
+import FeedbackButton from '../components/FeedbackButton'
 import styles from './page.module.css'
 
 // Example use cases for users who don't know where to start
@@ -327,12 +329,10 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className={styles.footer}>
-        <p>
-          © {new Date().getFullYear()} Microsoft Corporation. All rights reserved. | 
-          Confidential - Internal Use Only
-        </p>
-      </footer>
+      <Footer />
+      <FeedbackButton context="home" />
     </div>
   )
 }
+
+

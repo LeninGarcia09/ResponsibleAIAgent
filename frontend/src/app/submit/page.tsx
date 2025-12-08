@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Footer from '../../components/Footer'
+import FeedbackButton from '../../components/FeedbackButton'
 import { apiClient, AIReviewSubmission, AdvancedReviewSubmission, SubmissionResponse, Recommendation, isAIRecommendation } from '@/lib/api'
 import styles from './submit.module.css'
 
@@ -1715,6 +1717,9 @@ Don't worry about technical details - we'll help you figure those out!"
           </div>
         </div>
       )}
+      <Footer />
+      <FeedbackButton context="submit" />
     </div>
   )
 }
+

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Footer from '../../components/Footer'
+import FeedbackButton from '../../components/FeedbackButton'
 import styles from './catalog.module.css'
 
 // Types matching the backend knowledge structure
@@ -1097,19 +1099,11 @@ export default function CatalogPage() {
         </main>
       )}
 
-      {/* Footer */}
-      <footer className={styles.footer}>
-        <p>
-          Part of the <strong>Responsible AI Agent</strong> pilot program.{' '}
-          <a href="https://www.microsoft.com/ai/responsible-ai" target="_blank" rel="noopener noreferrer">
-            Learn more about Microsoft Responsible AI
-          </a>
-        </p>
-        <p style={{ marginTop: '10px', fontSize: '13px' }}>
-          {metadata?.version && ('Catalog Version: ' + metadata.version + ' • ')}
-          Data sourced from Microsoft official documentation and Ignite 2025 announcements.
-        </p>
-      </footer>
+            <Footer />
+      <FeedbackButton context="catalog" />
     </div>
   )
 }
+
+
+
