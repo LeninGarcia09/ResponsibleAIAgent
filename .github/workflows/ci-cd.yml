@@ -129,7 +129,6 @@ jobs:
     needs: [setup, build-backend, build-frontend]
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-    environment: dev
     permissions:
       id-token: write
       contents: read
