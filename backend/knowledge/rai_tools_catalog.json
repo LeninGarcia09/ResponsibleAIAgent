@@ -864,71 +864,231 @@
       }
     },
     "evaluation_and_testing": {
-      "description": "Tools for evaluating AI model quality, safety, and performance",
+      "description": "Tools for evaluating AI model quality, safety, security, and performance throughout the development lifecycle.",
+      "category_guidance": {
+        "when_to_use": "Every AI project should use evaluation and testing tools before deployment and continuously in production",
+        "key_considerations": ["Pre-deployment vs continuous evaluation", "Quality metrics vs safety metrics", "Red teaming requirements", "Adversarial robustness needs"]
+      },
       "tools": [
         {
           "name": "Azure AI Evaluation SDK",
           "type": "library",
           "status": "Generally Available",
-          "description": "Comprehensive evaluation framework for assessing AI application quality, safety, and performance",
-          "installation": "pip install azure-ai-evaluation",
-          "capabilities": {
-            "quality_evaluators": [
-              {"name": "GroundednessEvaluator", "description": "Measures how well responses are grounded in provided context"},
-              {"name": "RelevanceEvaluator", "description": "Assesses relevance of responses to queries"},
-              {"name": "CoherenceEvaluator", "description": "Evaluates logical flow and consistency"},
-              {"name": "FluencyEvaluator", "description": "Measures grammatical correctness and readability"}
-            ],
-            "safety_evaluators": [
-              {"name": "ViolenceEvaluator", "description": "Detects violent content"},
-              {"name": "SexualEvaluator", "description": "Detects sexual content"},
-              {"name": "SelfHarmEvaluator", "description": "Detects self-harm content"},
-              {"name": "HateUnfairnessEvaluator", "description": "Detects hate speech and unfairness"},
-              {"name": "ProtectedMaterialEvaluator", "description": "Detects copyrighted content"},
-              {"name": "IndirectAttackEvaluator", "description": "Detects XPIA and indirect prompt injection"}
-            ],
-            "agent_evaluators": [
-              {"name": "IntentResolutionEvaluator", "description": "Measures how well agent resolves user intent"},
-              {"name": "TaskAdherenceEvaluator", "description": "Evaluates agent task completion"},
-              {"name": "ToolCallAccuracyEvaluator", "description": "Assesses correct tool selection and usage"}
-            ]
+          "maturity_tier": "mature",
+          "adoption": "Mainstream - Standard evaluation framework for Azure AI applications",
+          "description": "Comprehensive evaluation framework for assessing AI application quality, safety, and performance. The primary tool for systematic AI evaluation.",
+          "primary_purpose": "Systematic evaluation of AI applications across quality, safety, and performance dimensions",
+          "when_to_use": [
+            "Pre-deployment quality gates",
+            "Continuous production monitoring",
+            "A/B testing of AI models",
+            "Regulatory compliance documentation",
+            "AI agent behavior evaluation",
+            "RAG pipeline quality assessment"
+          ],
+          "when_not_to_use": [
+            "Real-time content filtering (use Azure AI Content Safety)",
+            "Adversarial security testing (use PyRIT)",
+            "ML model robustness testing (use Counterfit)"
+          ],
+          "prerequisites": [
+            "Python environment",
+            "Azure AI project (optional but recommended)",
+            "Test dataset with expected outputs",
+            "Understanding of evaluation metrics"
+          ],
+          "capabilities": [
+            "GroundednessEvaluator - Measures response grounding in context",
+            "RelevanceEvaluator - Assesses response relevance to queries",
+            "CoherenceEvaluator - Evaluates logical flow and consistency",
+            "FluencyEvaluator - Measures grammatical correctness",
+            "ViolenceEvaluator - Detects violent content",
+            "SexualEvaluator - Detects sexual content",
+            "SelfHarmEvaluator - Detects self-harm content",
+            "HateUnfairnessEvaluator - Detects hate speech and bias",
+            "ProtectedMaterialEvaluator - Detects copyrighted content",
+            "IndirectAttackEvaluator - Detects XPIA attacks",
+            "IntentResolutionEvaluator - Agent intent resolution",
+            "TaskAdherenceEvaluator - Agent task completion",
+            "ToolCallAccuracyEvaluator - Agent tool usage accuracy"
+          ],
+          "evaluator_categories": {
+            "quality": ["GroundednessEvaluator", "RelevanceEvaluator", "CoherenceEvaluator", "FluencyEvaluator"],
+            "safety": ["ViolenceEvaluator", "SexualEvaluator", "SelfHarmEvaluator", "HateUnfairnessEvaluator", "ProtectedMaterialEvaluator", "IndirectAttackEvaluator"],
+            "agent": ["IntentResolutionEvaluator", "TaskAdherenceEvaluator", "ToolCallAccuracyEvaluator"]
           },
+          "rai_pillars": ["Reliability", "Safety", "Accountability", "Transparency"],
+          "related_tools": {
+            "integrates_with": ["Azure AI Studio", "Microsoft Foundry", "MLflow"],
+            "complements": ["PyRIT for adversarial testing", "Azure AI Content Safety for real-time filtering"],
+            "alternative_to": []
+          },
+          "implementation_effort": "Low - pip install and integrate with test pipeline",
+          "pricing": "Open source - Free to use",
+          "installation": "pip install azure-ai-evaluation",
           "documentation_url": "https://learn.microsoft.com/en-us/azure/ai-studio/how-to/develop/evaluate-sdk"
         },
         {
           "name": "PyRIT",
           "type": "library",
           "status": "Active Development",
+          "maturity_tier": "established",
+          "adoption": "Growing - Standard for AI red teaming at Microsoft and partners",
           "version": "0.10.0",
           "license": "MIT",
           "github_stars": 3200,
-          "description": "Python Risk Identification Tool for AI red teaming and security testing",
-          "installation": "pip install pyrit",
-          "repository": "https://github.com/Azure/PyRIT",
-          "capabilities": {
-            "attack_strategies": ["PromptSendingOrchestrator", "RedTeamingOrchestrator", "CrescendoOrchestrator", "FlipAttackOrchestrator", "TreeOfAttacksOrchestrator", "PAIROrchestrator", "SkeletonKeyOrchestrator"],
+          "description": "Python Risk Identification Tool for AI red teaming and security testing. The go-to tool for systematically probing AI systems for vulnerabilities.",
+          "primary_purpose": "Automated red teaming and security testing of AI systems",
+          "when_to_use": [
+            "Pre-deployment security assessment",
+            "Testing jailbreak resistance",
+            "Prompt injection vulnerability assessment",
+            "Continuous red teaming in production",
+            "AI agent security testing",
+            "Compliance with security standards"
+          ],
+          "when_not_to_use": [
+            "Real-time production filtering (use Prompt Shields)",
+            "Quality evaluation (use Azure AI Evaluation SDK)",
+            "Traditional ML model testing (use Counterfit)",
+            "Non-LLM AI systems"
+          ],
+          "prerequisites": [
+            "Python environment",
+            "Target AI system accessible via API",
+            "Understanding of AI attack vectors",
+            "Azure OpenAI or other LLM for attack generation"
+          ],
+          "capabilities": [
+            "PromptSendingOrchestrator - Basic prompt testing",
+            "RedTeamingOrchestrator - Multi-turn attacks",
+            "CrescendoOrchestrator - Escalating attacks",
+            "FlipAttackOrchestrator - Semantic manipulation",
+            "TreeOfAttacksOrchestrator - Branching attack strategies",
+            "PAIROrchestrator - Prompt Automatic Iterative Refinement",
+            "SkeletonKeyOrchestrator - Jailbreak testing",
+            "Base64/ROT13/Unicode converters",
+            "Custom scorer integration"
+          ],
+          "attack_categories": {
+            "strategies": ["PromptSendingOrchestrator", "RedTeamingOrchestrator", "CrescendoOrchestrator", "FlipAttackOrchestrator", "TreeOfAttacksOrchestrator", "PAIROrchestrator", "SkeletonKeyOrchestrator"],
             "converters": ["Base64Converter", "ROT13Converter", "UnicodeSubstitutionConverter", "TranslationConverter", "VariationConverter"],
             "scorers": ["SelfAskTrueFalseScorer", "SelfAskLikertScorer", "AzureContentFilterScorer", "HumanInTheLoopScorer"]
           },
-          "use_cases": ["Pre-deployment security testing", "Continuous red teaming", "Jailbreak resistance testing", "Prompt injection vulnerability assessment"],
+          "rai_pillars": ["Safety", "Reliability", "Accountability"],
+          "related_tools": {
+            "integrates_with": ["Azure OpenAI", "Azure AI Content Safety", "Any LLM API"],
+            "complements": ["Prompt Shields for runtime protection", "Microsoft Defender for AI for monitoring"],
+            "alternative_to": ["Manual red teaming", "Custom attack scripts"]
+          },
+          "implementation_effort": "Medium - Requires security expertise and attack scenario design",
+          "pricing": "Open source - Free to use",
+          "installation": "pip install pyrit",
+          "repository": "https://github.com/Azure/PyRIT",
           "documentation_url": "https://azure.github.io/PyRIT/"
         },
         {
           "name": "Counterfit",
           "type": "cli_tool",
           "status": "Stable",
+          "maturity_tier": "established",
+          "adoption": "Specialized - ML security researchers and security-focused teams",
           "version": "1.1.0",
           "license": "MIT",
           "github_stars": 894,
-          "description": "Command-line tool for assessing ML model security through adversarial attacks",
+          "description": "Command-line tool for assessing traditional ML model security through adversarial attacks. Focuses on evasion, inference, and inversion attacks.",
+          "primary_purpose": "Security testing of traditional ML models (not LLMs)",
+          "when_to_use": [
+            "Testing ML model robustness to adversarial inputs",
+            "Assessing model vulnerability to evasion attacks",
+            "Testing for model inference/extraction vulnerabilities",
+            "Image classification security testing",
+            "Tabular ML model security assessment"
+          ],
+          "when_not_to_use": [
+            "LLM/generative AI testing (use PyRIT)",
+            "Content safety filtering (use Azure AI Content Safety)",
+            "Quality evaluation (use Azure AI Evaluation SDK)",
+            "Real-time protection"
+          ],
+          "prerequisites": [
+            "Python environment",
+            "Target ML model accessible for testing",
+            "Understanding of adversarial ML concepts",
+            "Test datasets for attack generation"
+          ],
+          "capabilities": [
+            "Evasion attacks - Modify inputs to cause misclassification",
+            "Inference attacks - Extract model information",
+            "Inversion attacks - Reconstruct training data",
+            "Adversarial Robustness Toolbox (ART) integration",
+            "TextAttack framework support",
+            "Augly data augmentation integration",
+            "Support for tabular, text, and image data"
+          ],
+          "attack_types": {
+            "evasion": "Modify inputs to cause misclassification",
+            "inference": "Extract model information or parameters",
+            "inversion": "Reconstruct training data from model"
+          },
+          "supported_frameworks": ["Adversarial Robustness Toolbox (ART)", "TextAttack", "Augly"],
+          "data_types": ["Tabular data", "Text data", "Image data"],
+          "rai_pillars": ["Safety", "Reliability"],
+          "related_tools": {
+            "integrates_with": ["ART", "TextAttack", "Augly"],
+            "complements": ["PyRIT for LLM testing", "Fairlearn for bias testing"],
+            "alternative_to": ["Manual adversarial testing"]
+          },
+          "implementation_effort": "Medium - Requires ML security knowledge",
+          "pricing": "Open source - Free to use",
           "installation": "pip install counterfit",
           "repository": "https://github.com/Azure/counterfit",
-          "capabilities": {
-            "attack_types": {"evasion": "Modify inputs to cause misclassification", "inference": "Extract model information", "inversion": "Reconstruct training data"},
-            "supported_frameworks": ["Adversarial Robustness Toolbox (ART)", "TextAttack", "Augly"],
-            "data_types": ["Tabular data", "Text data", "Image data"]
-          },
           "documentation_url": "https://github.com/Azure/counterfit/wiki"
+        },
+        {
+          "name": "Responsible AI Dashboard",
+          "type": "tool",
+          "status": "Generally Available",
+          "maturity_tier": "mature",
+          "adoption": "Mainstream - Integrated into Azure ML Studio",
+          "description": "Unified dashboard for understanding ML model behavior across error analysis, fairness, explainability, and causal analysis. Visual interface for model debugging.",
+          "primary_purpose": "Visual debugging and analysis of ML model behavior",
+          "when_to_use": [
+            "Understanding model errors and failure modes",
+            "Analyzing fairness across demographic groups",
+            "Explaining model predictions to stakeholders",
+            "Causal analysis of model behavior",
+            "Regulatory documentation and audit"
+          ],
+          "when_not_to_use": [
+            "LLM/generative AI evaluation (use Azure AI Evaluation SDK)",
+            "Real-time monitoring",
+            "Security testing (use PyRIT or Counterfit)",
+            "Non-Azure ML deployments"
+          ],
+          "prerequisites": [
+            "Azure ML workspace",
+            "Trained model registered in Azure ML",
+            "Test dataset with ground truth labels",
+            "Optional: demographic features for fairness analysis"
+          ],
+          "capabilities": [
+            "Error Analysis - Identify error patterns and cohorts",
+            "Fairness Assessment - Measure fairness across groups",
+            "Model Interpretability - SHAP-based explanations",
+            "Causal Analysis - What-if counterfactual analysis",
+            "Data Explorer - Visualize data distributions",
+            "Cohort-based analysis"
+          ],
+          "rai_pillars": ["Transparency", "Fairness", "Accountability"],
+          "related_tools": {
+            "integrates_with": ["Azure ML Studio", "Fairlearn", "InterpretML", "Error Analysis"],
+            "complements": ["Azure AI Evaluation SDK", "Fairlearn for mitigation"],
+            "alternative_to": ["Manual model analysis"]
+          },
+          "implementation_effort": "Low - Integrated into Azure ML Studio",
+          "pricing": "Included with Azure ML",
+          "documentation_url": "https://learn.microsoft.com/azure/machine-learning/concept-responsible-ai-dashboard"
         }
       ]
     },
