@@ -14,6 +14,10 @@ on:
   pull_request:
     branches: [master, dev]
 
+permissions:
+  id-token: write
+  contents: read
+
 env:
   AZURE_CONTAINER_REGISTRY: raisimpleacr.azurecr.io
   RESOURCE_GROUP: rg-rai-simple
