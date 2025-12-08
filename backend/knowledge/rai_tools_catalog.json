@@ -1508,71 +1508,345 @@
     },
     "design_and_ux": {
       "description": "Guidelines and tools for designing responsible human-AI experiences",
+      "category_guidance": {
+        "when_to_focus": "When designing AI-powered user interfaces, planning human-AI interactions, or building products that users will interact with directly",
+        "key_considerations": ["User mental models of AI capabilities", "Appropriate failure modes and error handling", "Transparency about AI limitations", "Inclusive design for diverse users"]
+      },
       "tools": [
         {
           "name": "HAX Toolkit",
           "type": "design_resources",
-          "status": "Available",
+          "status": "Generally Available",
+          "maturity_tier": "mature",
+          "adoption": "Mainstream adoption across Microsoft product teams, partners, and AI practitioners",
           "description": "Comprehensive design guidelines and resources for creating responsible human-AI interactions",
+          "primary_purpose": "Design guidelines and structured planning tools for building responsible human-AI experiences",
+          "when_to_use": [
+            "Designing user interfaces for AI-powered products",
+            "Planning human-AI interaction patterns in new products",
+            "Ensuring AI products meet accessibility and inclusivity standards",
+            "Creating transparent AI experiences that set appropriate user expectations",
+            "Training design teams on responsible AI interaction patterns"
+          ],
+          "when_not_to_use": [
+            "Backend AI infrastructure without user-facing components",
+            "Pure ML model development without UI/UX considerations",
+            "Security testing and red teaming activities",
+            "Compliance and governance framework implementation"
+          ],
+          "prerequisites": [
+            "UX/product design background or interest",
+            "Understanding of AI capabilities and limitations",
+            "Stakeholder alignment on responsible AI goals"
+          ],
           "components": {
-            "guidelines": "18 design guidelines organized by interaction phase",
-            "workbook": "Structured planning tool for AI product development",
-            "playbook": "Practical implementation patterns and examples",
-            "design_library": "Reusable design components for AI interfaces"
+            "guidelines": "18 design guidelines organized by interaction phase (initial, during, when wrong, over time)",
+            "workbook": "Structured planning tool for AI product development with team exercises",
+            "playbook": "Practical implementation patterns and real-world examples",
+            "design_library": "Reusable design components and patterns for AI interfaces"
           },
+          "capabilities": [
+            "18 research-backed guidelines for human-AI interaction",
+            "Structured planning workbook for product teams",
+            "Implementation playbook with practical examples",
+            "Reusable design component library",
+            "Guidelines for handling AI failures gracefully",
+            "Patterns for building user trust in AI systems"
+          ],
+          "rai_pillars": ["Transparency", "Inclusiveness", "Fairness", "Reliability"],
+          "related_tools": {
+            "complements": ["Azure AI Content Safety", "Responsible AI Dashboard"],
+            "use_together": ["Guidelines for Human-AI Interaction research", "Microsoft Inclusive Design principles"],
+            "supports": ["Foundry Agent Service UX design", "Copilot experience design"]
+          },
+          "implementation_effort": "Low - Reference materials integrated into design process over 1-2 weeks",
           "documentation_url": "https://www.microsoft.com/haxtoolkit/"
+        },
+        {
+          "name": "Guidelines for Human-AI Interaction",
+          "type": "research_guidelines",
+          "status": "Generally Available",
+          "maturity_tier": "mature",
+          "adoption": "Foundational research used across industry, published in CHI 2019",
+          "description": "Research-backed design guidelines for human-AI interaction based on extensive user research and academic study",
+          "primary_purpose": "18 evidence-based guidelines for designing AI systems that work well with humans",
+          "when_to_use": [
+            "Early product design phases for AI features",
+            "Evaluating existing AI product designs",
+            "Training design teams on AI UX best practices",
+            "Academic research on human-AI interaction",
+            "Creating design review checklists for AI products"
+          ],
+          "when_not_to_use": [
+            "Implementation-level technical decisions",
+            "Model training and fine-tuning",
+            "Backend system architecture"
+          ],
+          "prerequisites": [
+            "Basic understanding of UX design principles",
+            "Familiarity with AI/ML product concepts"
+          ],
+          "capabilities": [
+            "Initial interaction guidelines (make clear what system can do)",
+            "During interaction guidelines (show contextually relevant information)",
+            "When wrong guidelines (support efficient correction)",
+            "Over time guidelines (learn from user behavior)"
+          ],
+          "rai_pillars": ["Transparency", "Reliability", "Inclusiveness"],
+          "related_tools": {
+            "implemented_by": ["HAX Toolkit"],
+            "research_basis_for": ["Microsoft Copilot design", "Azure AI product UX"]
+          },
+          "implementation_effort": "Low - Design review checklist integration in 1 week",
+          "documentation_url": "https://www.microsoft.com/research/project/guidelines-for-human-ai-interaction/"
         }
       ]
     },
     "agent_development": {
-      "description": "Tools and services for building responsible AI agents",
+      "description": "Tools and services for building responsible AI agents with proper governance and safety",
+      "category_guidance": {
+        "when_to_focus": "When building AI agents that take autonomous actions, interact with external systems, or operate in multi-agent environments",
+        "key_considerations": ["Agent identity and authentication", "Action boundaries and permissions", "Multi-agent coordination safety", "Human oversight and intervention capabilities"]
+      },
       "tools": [
         {
           "name": "Microsoft Foundry Agent Service",
-          "type": "service",
+          "type": "platform",
           "status": "Public Preview",
+          "maturity_tier": "emerging",
+          "adoption": "Early adopter enterprise customers, announced Microsoft Ignite 2025",
           "announced": "Microsoft Ignite 2025",
-          "description": "Comprehensive platform for building, deploying, and managing AI agents",
-          "capabilities": {
-            "hosted_agents": "Fully managed, serverless environment for running agents",
-            "multi_agent_workflows": "Coordinate multiple specialized agents",
-            "memory": "Secure context retention across sessions",
-            "knowledge_retrieval": "Foundry IQ - RAG as dynamic reasoning"
+          "description": "Comprehensive platform for building, deploying, and managing AI agents with built-in responsible AI capabilities",
+          "primary_purpose": "Enterprise platform for developing, deploying, and governing AI agents at scale",
+          "when_to_use": [
+            "Building production-grade AI agents for enterprise use",
+            "Deploying multi-agent workflows with coordination",
+            "Requiring managed infrastructure for agent hosting",
+            "Needing built-in memory and context management",
+            "Enterprise scenarios requiring security and compliance",
+            "Teams wanting framework flexibility (Semantic Kernel, LangChain, OpenAI SDK)"
+          ],
+          "when_not_to_use": [
+            "Simple single-turn chatbots without autonomous actions",
+            "Experimental prototypes (consider direct SDK usage first)",
+            "Non-Azure cloud deployments",
+            "Scenarios where fully custom infrastructure is required"
+          ],
+          "prerequisites": [
+            "Azure subscription with appropriate permissions",
+            "Understanding of agent architecture patterns",
+            "Familiarity with at least one supported framework",
+            "Security team alignment for agent identity setup"
+          ],
+          "capabilities": [
+            "Fully managed serverless agent hosting environment",
+            "Multi-agent workflow orchestration and coordination",
+            "Secure memory and context retention across sessions",
+            "Foundry IQ integration for intelligent knowledge retrieval",
+            "Support for Semantic Kernel, LangChain, OpenAI Agents SDK",
+            "Access to 11,000+ models including GPT-4o, Claude, Cohere",
+            "Built-in safety evaluations and monitoring",
+            "Integration with Foundry Control Plane for governance"
+          ],
+          "supported_frameworks": ["Semantic Kernel", "LangChain", "OpenAI Agents SDK", "AutoGen", "Custom implementations"],
+          "models_available": ["OpenAI GPT-4o, GPT-4.1, o3", "Anthropic Claude (Sonnet 4.5, Opus 4.1, Haiku 4.5)", "Cohere models", "Meta Llama models", "11,000+ models in catalog"],
+          "rai_pillars": ["Safety", "Reliability", "Accountability", "Transparency"],
+          "related_tools": {
+            "integrates_with": ["Foundry Control Plane", "Entra Agent ID", "Foundry IQ", "Azure AI Evaluation SDK"],
+            "complements": ["PyRIT for red teaming", "Microsoft Defender for AI"],
+            "governed_by": ["Agent 365 for enterprise registry"]
           },
-          "supported_frameworks": ["Semantic Kernel", "LangChain", "OpenAI Agents SDK", "Custom implementations"],
-          "models_available": ["OpenAI GPT-4o, GPT-4.1, o3", "Anthropic Claude (Sonnet 4.5, Opus 4.1, Haiku 4.5)", "Cohere models", "11,000+ models in catalog"],
+          "implementation_effort": "Medium - 4-6 weeks for production agent deployment with governance",
           "documentation_url": "https://learn.microsoft.com/en-us/azure/ai-studio/agents/"
         },
         {
           "name": "Foundry IQ",
           "type": "service",
           "status": "Public Preview",
+          "maturity_tier": "emerging",
+          "adoption": "Early adopter enterprise customers, announced Microsoft Ignite 2025",
           "announced": "Microsoft Ignite 2025",
-          "description": "RAG reimagined as dynamic reasoning process for intelligent knowledge retrieval",
-          "capabilities": ["Multi-source selection across diverse data sources", "Iterative retrieval with progressive refinement", "Reflection to verify and improve responses", "User permission and data classification awareness"],
+          "description": "RAG reimagined as dynamic reasoning process for intelligent, permission-aware knowledge retrieval",
+          "primary_purpose": "Intelligent knowledge retrieval with dynamic reasoning and permission awareness for AI agents",
+          "when_to_use": [
+            "Building RAG applications requiring multi-source knowledge",
+            "Agents needing permission-aware data access",
+            "Complex queries requiring iterative refinement",
+            "Enterprise scenarios with data classification requirements",
+            "Replacing static RAG with dynamic reasoning capabilities"
+          ],
+          "when_not_to_use": [
+            "Simple single-document retrieval",
+            "Scenarios without permission/classification requirements",
+            "Non-Azure knowledge bases",
+            "Real-time streaming data requirements"
+          ],
+          "prerequisites": [
+            "Azure Foundry environment",
+            "Configured data sources with proper access controls",
+            "Understanding of RAG patterns",
+            "Data classification setup (recommended)"
+          ],
+          "capabilities": [
+            "Multi-source selection across diverse data sources",
+            "Iterative retrieval with progressive query refinement",
+            "Reflection to verify and improve response accuracy",
+            "User permission and data classification awareness",
+            "Integration with Microsoft Graph and enterprise data",
+            "Dynamic reasoning beyond static retrieval"
+          ],
+          "rai_pillars": ["Privacy & Security", "Reliability", "Transparency"],
+          "related_tools": {
+            "integrates_with": ["Foundry Agent Service", "Microsoft Graph", "Azure AI Search"],
+            "complements": ["Microsoft Purview for data governance"],
+            "replaces": ["Traditional static RAG implementations"]
+          },
+          "implementation_effort": "Medium - 3-4 weeks for integration with existing data sources",
           "documentation_url": "https://azure.microsoft.com/en-us/blog/microsoft-foundry-scale-innovation-on-a-modular-interoperable-and-secure-agent-stack/"
+        },
+        {
+          "name": "Agent 365",
+          "type": "platform",
+          "status": "Public Preview",
+          "maturity_tier": "emerging",
+          "adoption": "Enterprise early adopters, announced Microsoft Ignite 2025",
+          "announced": "Microsoft Ignite 2025",
+          "description": "Enterprise-wide agent registry and governance platform for managing the lifecycle of AI agents across the organization",
+          "primary_purpose": "Enterprise agent registry, discovery, and lifecycle management to prevent shadow AI and ensure governance",
+          "when_to_use": [
+            "Organizations deploying multiple AI agents across teams",
+            "Need for enterprise-wide agent inventory and discovery",
+            "Preventing shadow AI and ungoverned agent deployments",
+            "Requiring agent interaction tracking and audit trails",
+            "Implementing agent lifecycle management policies"
+          ],
+          "when_not_to_use": [
+            "Single team with one or two agents",
+            "Early prototype and experimentation phases",
+            "Non-Microsoft 365 environments",
+            "Scenarios not requiring cross-organization visibility"
+          ],
+          "prerequisites": [
+            "Microsoft 365 enterprise subscription",
+            "IT/governance team sponsorship",
+            "Defined agent governance policies",
+            "Cross-team coordination for agent registration"
+          ],
+          "capabilities": [
+            "Enterprise-wide agent registry and discovery",
+            "Agent interaction tracking and analytics",
+            "Shadow AI prevention through visibility",
+            "Agent lifecycle management (create, deploy, retire)",
+            "Integration with Microsoft 365 admin center",
+            "Compliance reporting for agent deployments"
+          ],
+          "rai_pillars": ["Accountability", "Transparency", "Safety"],
+          "related_tools": {
+            "integrates_with": ["Foundry Control Plane", "Microsoft 365 Admin", "Microsoft Purview"],
+            "complements": ["Entra Agent ID for identity", "Microsoft Defender for AI"],
+            "provides_visibility_for": ["Foundry Agent Service deployments", "Custom agent implementations"]
+          },
+          "implementation_effort": "Medium - 4-6 weeks for enterprise-wide rollout with policy definition",
+          "documentation_url": "https://learn.microsoft.com/en-us/microsoft-365-copilot/extensibility/"
         }
       ]
     },
     "security_integration": {
-      "description": "Security tools and integrations for AI development",
+      "description": "Security tools and integrations for protecting AI development lifecycle from code to cloud",
+      "category_guidance": {
+        "when_to_focus": "When implementing security measures across the AI development lifecycle, from secure coding to cloud deployment protection",
+        "key_considerations": ["Shift-left security in AI development", "Code-to-cloud security posture", "AI-specific vulnerability scanning", "Integration with existing security tools"]
+      },
       "tools": [
         {
-          "name": "GitHub Advanced Security + Microsoft Defender",
+          "name": "GitHub Advanced Security + Microsoft Defender Integration",
           "type": "integration",
           "status": "Public Preview",
+          "maturity_tier": "emerging",
+          "adoption": "Enterprise DevSecOps teams, announced Microsoft Ignite 2025",
           "announced": "Microsoft Ignite 2025",
-          "description": "Unified security from code to cloud for AI development",
-          "capabilities": ["AI-suggested security fixes in GitHub", "Real-time vulnerability tracking in Defender for Cloud", "Code-to-cloud security posture management"],
+          "description": "Unified security from code to cloud for AI development, connecting GitHub security findings with Defender for Cloud",
+          "primary_purpose": "End-to-end security visibility from code repositories to cloud runtime for AI applications",
+          "when_to_use": [
+            "Organizations using GitHub for AI code repositories",
+            "Requiring code-to-cloud security posture management",
+            "Teams wanting AI-suggested security fixes",
+            "Need for unified security dashboard across development and production",
+            "DevSecOps implementations for AI projects"
+          ],
+          "when_not_to_use": [
+            "Non-GitHub source control environments",
+            "Organizations not using Azure/Defender for Cloud",
+            "Simple scripts without cloud deployment",
+            "Air-gapped or fully on-premises environments"
+          ],
+          "prerequisites": [
+            "GitHub Enterprise with Advanced Security enabled",
+            "Microsoft Defender for Cloud subscription",
+            "Azure environment for cloud workload protection",
+            "DevSecOps practices and CI/CD pipelines"
+          ],
+          "capabilities": [
+            "AI-suggested security fixes in GitHub pull requests",
+            "Real-time vulnerability tracking in Defender for Cloud",
+            "Code-to-cloud security posture visualization",
+            "Secret scanning and credential detection",
+            "Dependency vulnerability scanning for AI libraries",
+            "Container image scanning for AI workloads",
+            "Unified security dashboard across code and cloud"
+          ],
+          "rai_pillars": ["Privacy & Security", "Reliability", "Accountability"],
+          "related_tools": {
+            "integrates_with": ["Microsoft Defender for Cloud", "GitHub Copilot", "Azure DevOps"],
+            "complements": ["Microsoft Defender for AI", "Azure Key Vault"],
+            "supports": ["Foundry Agent Service deployments", "Azure AI Studio projects"]
+          },
+          "implementation_effort": "Medium - 3-4 weeks for full integration with existing DevSecOps pipelines",
           "documentation_url": "https://learn.microsoft.com/en-us/defender-for-cloud/"
         },
         {
-          "name": "Microsoft Entra Agent ID",
+          "name": "Microsoft Security Copilot",
           "type": "service",
-          "status": "Available",
-          "description": "Identity management specifically designed for AI agents",
-          "capabilities": ["Agent identity provisioning", "Authentication and authorization", "Access control for agent actions", "Audit logging for agent activities"],
-          "documentation_url": "https://learn.microsoft.com/en-us/entra/"
+          "status": "Generally Available",
+          "maturity_tier": "established",
+          "adoption": "Enterprise security teams, GA since April 2024",
+          "description": "AI-powered security analysis assistant that helps security teams investigate threats and respond to incidents",
+          "primary_purpose": "AI-assisted security investigation, threat analysis, and incident response for security operations",
+          "when_to_use": [
+            "Security operations center (SOC) threat investigation",
+            "Incident response and remediation planning",
+            "Threat intelligence analysis and correlation",
+            "Security posture assessment and recommendations",
+            "Training and upskilling security analysts"
+          ],
+          "when_not_to_use": [
+            "Automated security response without human oversight",
+            "Replacement for security monitoring infrastructure",
+            "Non-security AI development tasks",
+            "Organizations without established security operations"
+          ],
+          "prerequisites": [
+            "Microsoft 365 E5 or standalone Security Copilot license",
+            "Microsoft Defender XDR or Sentinel integration",
+            "Security team with analyst capabilities",
+            "Established security monitoring and alerting"
+          ],
+          "capabilities": [
+            "Natural language security investigation queries",
+            "Threat intelligence correlation and analysis",
+            "Incident summarization and timeline generation",
+            "Script and command analysis for threat detection",
+            "Integration with Microsoft security product suite",
+            "Custom promptbook creation for repeatable investigations"
+          ],
+          "rai_pillars": ["Safety", "Reliability", "Transparency", "Accountability"],
+          "related_tools": {
+            "integrates_with": ["Microsoft Defender XDR", "Microsoft Sentinel", "Microsoft Intune", "Microsoft Purview"],
+            "complements": ["Microsoft Defender for AI", "Azure Security Center"],
+            "enhances": ["Security operations workflows", "Threat hunting capabilities"]
+          },
+          "implementation_effort": "Medium - 2-4 weeks for deployment and security team onboarding",
+          "documentation_url": "https://learn.microsoft.com/en-us/security-copilot/"
         }
       ]
     }
@@ -1954,13 +2228,18 @@
     "tools_by_rai_pillar": {
       "Safety": {
         "description": "Tools that help ensure AI systems operate safely and don't cause harm",
-        "primary_tools": ["Azure AI Content Safety", "Prompt Shields", "Groundedness Detection", "Protected Material Detection"],
-        "supporting_tools": ["PyRIT", "Counterfit", "Microsoft Defender for AI"],
+        "primary_tools": ["Azure AI Content Safety", "Prompt Shields", "Groundedness Detection", "Protected Material Detection", "Microsoft Foundry Agent Service"],
+        "supporting_tools": ["PyRIT", "Counterfit", "Microsoft Defender for AI", "Microsoft Security Copilot"],
         "common_combinations": [
           {
             "scenario": "Production chatbot safety",
             "tools": ["Azure AI Content Safety", "Prompt Shields", "Groundedness Detection"],
             "why": "Multi-layer protection: filter harmful content, block attacks, prevent hallucinations"
+          },
+          {
+            "scenario": "AI agent with autonomous actions",
+            "tools": ["Foundry Agent Service", "Foundry Control Plane", "PyRIT"],
+            "why": "Managed agent runtime, governance guardrails, and red teaming for action safety"
           }
         ]
       },
@@ -1990,37 +2269,64 @@
       },
       "Transparency": {
         "description": "Tools that help explain how AI systems work and make decisions",
-        "primary_tools": ["InterpretML"],
+        "primary_tools": ["InterpretML", "HAX Toolkit", "Guidelines for Human-AI Interaction"],
         "supporting_tools": ["Responsible AI Dashboard", "Azure AI Evaluation SDK"],
         "common_combinations": [
           {
             "scenario": "Regulated decision system",
             "tools": ["InterpretML EBM", "Responsible AI Dashboard", "Fairlearn"],
             "why": "Inherently explainable model, visual analysis, bias documentation"
+          },
+          {
+            "scenario": "User-facing AI product design",
+            "tools": ["HAX Toolkit", "Guidelines for Human-AI Interaction", "Azure AI Content Safety"],
+            "why": "Design clear AI interactions, follow research guidelines, ensure safe outputs"
           }
         ]
       },
       "Accountability": {
         "description": "Tools that enable governance, audit trails, and oversight",
         "primary_tools": ["Microsoft Foundry Control Plane", "Microsoft Agent 365", "Microsoft Purview"],
-        "supporting_tools": ["Azure AI Evaluation SDK", "Entra Agent ID"],
+        "supporting_tools": ["Azure AI Evaluation SDK", "Entra Agent ID", "GitHub Advanced Security + Microsoft Defender Integration"],
         "common_combinations": [
           {
             "scenario": "Enterprise AI governance",
             "tools": ["Foundry Control Plane", "Agent 365", "Entra Agent ID", "Purview"],
             "why": "Unified governance, agent inventory, identity management, data governance"
+          },
+          {
+            "scenario": "Secure AI development lifecycle",
+            "tools": ["GitHub Advanced Security + Microsoft Defender", "Foundry Control Plane", "Microsoft Defender for AI"],
+            "why": "Code-to-cloud security, deployment governance, runtime protection"
           }
         ]
       },
       "Reliability": {
         "description": "Tools that ensure AI systems work correctly and consistently",
-        "primary_tools": ["Azure AI Evaluation SDK", "Groundedness Detection"],
-        "supporting_tools": ["PyRIT", "Counterfit"],
+        "primary_tools": ["Azure AI Evaluation SDK", "Groundedness Detection", "Microsoft Foundry Agent Service", "Foundry IQ"],
+        "supporting_tools": ["PyRIT", "Counterfit", "HAX Toolkit"],
         "common_combinations": [
           {
             "scenario": "RAG application quality",
             "tools": ["Groundedness Detection", "Azure AI Evaluation SDK", "PyRIT"],
             "why": "Real-time grounding check, systematic quality evaluation, security testing"
+          },
+          {
+            "scenario": "Enterprise knowledge agent",
+            "tools": ["Foundry Agent Service", "Foundry IQ", "Azure AI Evaluation SDK"],
+            "why": "Managed agent runtime, intelligent retrieval, quality measurement"
+          }
+        ]
+      },
+      "Inclusiveness": {
+        "description": "Tools that ensure AI systems are accessible and work for everyone",
+        "primary_tools": ["HAX Toolkit", "Guidelines for Human-AI Interaction"],
+        "supporting_tools": ["Azure AI Content Safety", "Fairlearn"],
+        "common_combinations": [
+          {
+            "scenario": "Accessible AI product design",
+            "tools": ["HAX Toolkit", "Guidelines for Human-AI Interaction", "Azure AI Content Safety"],
+            "why": "Inclusive design patterns, research-based guidelines, protection from harmful content"
           }
         ]
       }
@@ -2039,6 +2345,16 @@
           "explanation": "Provides governance (Accountability), observability dashboards (Transparency), and guardrails (Safety) for AI agents"
         },
         {
+          "name": "Microsoft Foundry Agent Service",
+          "pillars": ["Safety", "Reliability", "Accountability", "Transparency"],
+          "explanation": "Built-in safety evaluations (Safety), managed infrastructure (Reliability), governance integration (Accountability), and observability (Transparency)"
+        },
+        {
+          "name": "HAX Toolkit",
+          "pillars": ["Transparency", "Inclusiveness", "Fairness", "Reliability"],
+          "explanation": "Designs for clear AI communication (Transparency), accessible experiences (Inclusiveness), unbiased interactions (Fairness), and appropriate error handling (Reliability)"
+        },
+        {
           "name": "Presidio",
           "pillars": ["Privacy & Security", "Accountability"],
           "explanation": "Protects personal data (Privacy) while enabling audit trails of PII handling (Accountability)"
@@ -2052,6 +2368,16 @@
           "name": "Azure AI Evaluation SDK",
           "pillars": ["Reliability", "Safety", "Accountability", "Transparency"],
           "explanation": "Measures quality (Reliability), safety (Safety evaluators), enables documentation (Accountability), and provides metrics visibility (Transparency)"
+        },
+        {
+          "name": "Foundry IQ",
+          "pillars": ["Privacy & Security", "Reliability", "Transparency"],
+          "explanation": "Permission-aware retrieval (Privacy), consistent quality (Reliability), and clear data sourcing (Transparency)"
+        },
+        {
+          "name": "Microsoft Security Copilot",
+          "pillars": ["Safety", "Reliability", "Transparency", "Accountability"],
+          "explanation": "Threat detection (Safety), consistent investigation (Reliability), clear analysis explanations (Transparency), and audit trails (Accountability)"
         }
       ]
     },
