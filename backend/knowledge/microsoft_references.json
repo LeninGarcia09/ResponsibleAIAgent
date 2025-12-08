@@ -98,12 +98,72 @@
     "presidio_main": {
       "title": "Presidio Documentation",
       "url": "https://microsoft.github.io/presidio/",
-      "description": "PII detection and anonymization"
+      "description": "Comprehensive guide to PII detection and anonymization"
     },
     "presidio_github": {
       "title": "Presidio GitHub",
       "url": "https://github.com/microsoft/presidio",
-      "description": "Source code and examples"
+      "description": "Source code, examples, and custom recognizer development"
+    },
+    "presidio_samples": {
+      "title": "Presidio Samples and Notebooks",
+      "url": "https://github.com/microsoft/presidio/tree/main/docs/samples",
+      "description": "Jupyter notebooks demonstrating various use cases"
+    },
+    "smartnoise_main": {
+      "title": "SmartNoise Documentation",
+      "url": "https://smartnoise.org/",
+      "description": "Differential privacy toolkit overview and getting started"
+    },
+    "smartnoise_github": {
+      "title": "SmartNoise SDK GitHub",
+      "url": "https://github.com/opendp/smartnoise-sdk",
+      "description": "Source code for SQL and synthesizer components"
+    },
+    "opendp_main": {
+      "title": "OpenDP Project",
+      "url": "https://opendp.org/",
+      "description": "Harvard-Microsoft differential privacy collaboration"
+    },
+    "azure_confidential_computing": {
+      "title": "Azure Confidential Computing",
+      "url": "https://learn.microsoft.com/azure/confidential-computing/",
+      "description": "TEE-based data protection for highest security requirements"
+    },
+    "confidential_vms": {
+      "title": "Confidential VMs Documentation",
+      "url": "https://learn.microsoft.com/azure/confidential-computing/confidential-vm-overview",
+      "description": "Deploy VMs with hardware-based memory encryption"
+    },
+    "confidential_containers": {
+      "title": "Confidential Containers on AKS",
+      "url": "https://learn.microsoft.com/azure/aks/confidential-containers-overview",
+      "description": "Run containerized workloads in TEEs on Kubernetes"
+    },
+    "microsoft_purview": {
+      "title": "Microsoft Purview Documentation",
+      "url": "https://learn.microsoft.com/purview/",
+      "description": "Enterprise data governance and compliance platform"
+    },
+    "purview_information_protection": {
+      "title": "Microsoft Purview Information Protection",
+      "url": "https://learn.microsoft.com/purview/information-protection",
+      "description": "Sensitivity labels and data classification"
+    },
+    "purview_dlp": {
+      "title": "Microsoft Purview DLP",
+      "url": "https://learn.microsoft.com/purview/dlp-learn-about-dlp",
+      "description": "Data loss prevention policies and implementation"
+    },
+    "azure_key_vault": {
+      "title": "Azure Key Vault Documentation",
+      "url": "https://learn.microsoft.com/azure/key-vault/",
+      "description": "Secrets, keys, and certificate management"
+    },
+    "key_vault_best_practices": {
+      "title": "Key Vault Best Practices",
+      "url": "https://learn.microsoft.com/azure/key-vault/general/best-practices",
+      "description": "Security best practices for key management"
     }
   },
   "security": {

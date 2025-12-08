@@ -282,23 +282,209 @@
       ]
     },
     "privacy": {
-      "description": "Tools for protecting privacy and sensitive data",
+      "description": "Comprehensive tools for protecting privacy, sensitive data, and implementing privacy-preserving AI solutions",
+      "guidance": {
+        "overview": "Privacy protection in AI requires a multi-layered approach: (1) PII detection and anonymization for input/output data, (2) Differential privacy for model training and analytics, (3) Secure computation for data-in-use protection, (4) Data governance for enterprise compliance",
+        "when_to_use": {
+          "pii_handling": "Use Presidio when your AI processes user data, customer records, documents, or any text/images that may contain personal information",
+          "analytics_on_sensitive_data": "Use SmartNoise when you need statistical analysis or ML training on sensitive datasets while maintaining mathematical privacy guarantees",
+          "maximum_security": "Use Azure Confidential Computing when processing highly sensitive data (healthcare, financial) where even the cloud provider shouldn't access the data",
+          "enterprise_governance": "Use Microsoft Purview for organization-wide data governance, classification, and compliance management"
+        }
+      },
       "tools": [
         {
-          "name": "Presidio",
+          "name": "Microsoft Presidio",
           "type": "library",
           "status": "Stable",
-          "version": "2.2.0",
+          "version": "2.2+",
           "license": "MIT",
-          "description": "Context-aware PII detection and anonymization",
+          "description": "Context-aware, customizable PII detection and anonymization SDK. The go-to solution for protecting personal data in AI pipelines.",
           "installation": "pip install presidio-analyzer presidio-anonymizer",
           "repository": "https://github.com/microsoft/presidio",
+          "when_to_use": {
+            "required_for": ["AI chatbots processing user conversations", "Document analysis and summarization", "Data pipelines ingesting customer data", "Healthcare AI processing patient records", "Financial AI processing transaction data"],
+            "critical_scenarios": ["Before storing conversation logs", "Before sending data to LLMs", "When anonymizing training datasets", "Compliance with GDPR, HIPAA, CCPA"]
+          },
+          "architecture": {
+            "modules": [
+              {"name": "presidio-analyzer", "purpose": "PII detection using NLP, regex, and ML models", "install": "pip install presidio-analyzer"},
+              {"name": "presidio-anonymizer", "purpose": "Apply anonymization operators to detected PII", "install": "pip install presidio-anonymizer"},
+              {"name": "presidio-image-redactor", "purpose": "Detect and redact PII in images (OCR + detection)", "install": "pip install presidio-image-redactor"},
+              {"name": "presidio-structured", "purpose": "PII detection in structured data (DataFrames, databases)", "install": "pip install presidio-structured"}
+            ],
+            "deployment_options": ["Python library", "Docker container", "Kubernetes", "Azure Container Apps", "As preprocessing in Azure ML pipelines"]
+          },
           "capabilities": {
-            "detection": ["Named Entity Recognition", "Pattern matching", "Custom recognizers"],
-            "anonymization": ["Redaction", "Masking", "Hashing", "Encryption", "Custom operators"],
-            "supported_entities": ["PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER", "US_SSN", "CREDIT_CARD", "IP_ADDRESS", "DATE_TIME", "LOCATION"]
+            "detection_methods": {
+              "named_entity_recognition": "Uses SpaCy, Stanza, or Transformers for entity detection",
+              "pattern_matching": "Regex-based detection with contextual validation",
+              "custom_recognizers": "Build domain-specific detectors for proprietary data types",
+              "multi_language": "Supports English, Spanish, German, French, Italian, Portuguese, Dutch, and more"
+            },
+            "anonymization_operators": [
+              {"name": "replace", "description": "Replace PII with a placeholder like <PERSON>", "use_when": "General anonymization, maintaining readability"},
+              {"name": "redact", "description": "Remove PII completely", "use_when": "Maximum privacy, data minimization"},
+              {"name": "mask", "description": "Partially hide PII (e.g., ****1234)", "use_when": "Need to show partial info for verification"},
+              {"name": "hash", "description": "Replace with cryptographic hash", "use_when": "Need consistency across documents while hiding values"},
+              {"name": "encrypt", "description": "Encrypt PII with reversible encryption", "use_when": "Need to de-anonymize later with proper authorization"},
+              {"name": "custom", "description": "Apply custom transformation logic", "use_when": "Domain-specific requirements"}
+            ],
+            "supported_entities": {
+              "standard": ["PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER", "CREDIT_CARD", "CRYPTO", "DATE_TIME", "DOMAIN_NAME", "IP_ADDRESS", "LOCATION", "IBAN_CODE", "NRP", "MEDICAL_LICENSE", "URL"],
+              "us_specific": ["US_SSN", "US_PASSPORT", "US_DRIVER_LICENSE", "US_BANK_NUMBER", "US_ITIN"],
+              "uk_specific": ["UK_NHS", "UK_NINO"],
+              "other_regions": ["AU_ABN", "AU_ACN", "AU_TFN", "AU_MEDICARE", "SG_NRIC_FIN", "IN_PAN", "IN_AADHAAR"]
+            }
+          },
+          "integration_examples": {
+            "azure_openai": "Use Presidio to anonymize user prompts before sending to Azure OpenAI, then de-anonymize responses",
+            "azure_ai_search": "Anonymize documents before indexing, or detect PII in search results",
+            "azure_ml": "Add as preprocessing step in ML pipelines for training data anonymization",
+            "langchain": "Use as a tool or preprocessing step in LangChain applications"
           },
           "documentation_url": "https://microsoft.github.io/presidio/"
+        },
+        {
+          "name": "SmartNoise SDK",
+          "type": "library",
+          "status": "Stable",
+          "version": "1.0+",
+          "license": "MIT",
+          "description": "Differential privacy toolkit for statistical analysis and synthetic data generation. Enables analytics on sensitive data while providing mathematical privacy guarantees.",
+          "installation": {
+            "sql": "pip install smartnoise-sql",
+            "synth": "pip install smartnoise-synth"
+          },
+          "repository": "https://github.com/opendp/smartnoise-sdk",
+          "maintained_by": "OpenDP (collaboration between Microsoft, Harvard IQSS)",
+          "when_to_use": {
+            "ideal_for": ["Research on sensitive datasets (medical, financial)", "Publishing aggregate statistics while protecting individuals", "Training ML models with privacy guarantees", "Generating synthetic data for sharing or testing"],
+            "privacy_guarantee": "Differential privacy provides mathematical proof that query results don't reveal whether any specific individual is in the dataset"
+          },
+          "components": [
+            {
+              "name": "smartnoise-sql",
+              "description": "Run differentially private SQL queries on tabular data",
+              "features": ["Standard SQL syntax", "Automatic noise injection", "Privacy budget tracking", "Works with pandas DataFrames, SQL Server, Postgres, Spark"],
+              "example_use": "Calculate average salary by department without revealing individual salaries"
+            },
+            {
+              "name": "smartnoise-synth",
+              "description": "Generate differentially private synthetic data",
+              "algorithms": ["MWEM (Multiplicative Weights Exponential Mechanism)", "PATE-CTGAN (Private Aggregation of Teacher Ensembles + CTGAN)", "DP-CTGAN"],
+              "example_use": "Create a synthetic version of patient records for sharing with researchers"
+            }
+          ],
+          "key_concepts": {
+            "epsilon": "Privacy loss parameter - lower values = more privacy but less accuracy. Typical range: 0.1 to 10",
+            "delta": "Probability of privacy breach - typically set to 1/n where n is dataset size",
+            "privacy_budget": "Total privacy loss allowed - exhausted as more queries are made"
+          },
+          "documentation_url": "https://smartnoise.org/"
+        },
+        {
+          "name": "Azure Confidential Computing",
+          "type": "service",
+          "status": "Generally Available",
+          "description": "Hardware-based Trusted Execution Environments (TEEs) that protect data while it's being processed. Provides 'data-in-use' protection where even Microsoft cannot access your data.",
+          "when_to_use": {
+            "required_for": ["Processing highly sensitive data (healthcare PHI, financial PII)", "Multi-party computation where parties don't trust each other", "AI inference on confidential data", "Regulatory requirements for data isolation"],
+            "ideal_scenarios": ["Healthcare AI processing patient data", "Financial AI processing trading algorithms", "Government AI processing classified information", "Collaborative AI where multiple organizations contribute data"]
+          },
+          "offerings": [
+            {
+              "name": "Confidential VMs",
+              "description": "Virtual machines with hardware-based memory encryption (AMD SEV-SNP or Intel TDX)",
+              "use_when": "Lift-and-shift existing workloads with confidentiality requirements",
+              "features": ["Full VM memory encryption", "No code changes required", "Attestation support"]
+            },
+            {
+              "name": "Confidential Containers on AKS",
+              "description": "Run containerized workloads in TEEs on Azure Kubernetes Service",
+              "use_when": "Cloud-native confidential AI applications",
+              "features": ["Container-level isolation", "Kubernetes orchestration", "Works with existing container images"]
+            },
+            {
+              "name": "Intel SGX Enclaves",
+              "description": "Application-level enclaves for the highest security (application code modifications required)",
+              "use_when": "Maximum security for specific sensitive operations",
+              "features": ["Smallest trusted computing base", "Code attestation", "Requires SDK integration"]
+            },
+            {
+              "name": "Confidential Inference (ONNX Runtime)",
+              "description": "Run ML model inference in a TEE",
+              "use_when": "Protect both model IP and input data during inference",
+              "features": ["Model confidentiality", "Input data protection", "Attestation of inference environment"]
+            }
+          ],
+          "documentation_url": "https://learn.microsoft.com/azure/confidential-computing/"
+        },
+        {
+          "name": "Microsoft Purview",
+          "type": "platform",
+          "status": "Generally Available",
+          "description": "Unified data governance, data security, and risk & compliance platform for enterprises. Essential for organization-wide privacy and data protection.",
+          "when_to_use": {
+            "required_for": ["Enterprise AI governance", "Data classification at scale", "Regulatory compliance (GDPR, HIPAA, SOX)", "Insider risk management", "Data loss prevention"],
+            "ideal_scenarios": ["Understanding what sensitive data exists across your organization", "Preventing data leakage in AI applications", "Audit and compliance reporting", "Managing data lifecycle"]
+          },
+          "capabilities": {
+            "data_governance": [
+              {"name": "Data Map", "description": "Automated discovery and classification of data across Azure, AWS, GCP, and on-premises"},
+              {"name": "Unified Catalog", "description": "Business glossary, data assets catalog, and lineage tracking"},
+              {"name": "Data Estate Insights", "description": "Analytics on data distribution, sensitivity, and governance coverage"}
+            ],
+            "data_security": [
+              {"name": "Information Protection", "description": "Apply sensitivity labels to documents, emails, and data"},
+              {"name": "Data Loss Prevention (DLP)", "description": "Prevent sensitive data from leaving the organization via email, cloud apps, or endpoints"},
+              {"name": "Insider Risk Management", "description": "Detect and respond to potentially risky user activities"}
+            ],
+            "privacy_management": [
+              {"name": "Privacy Risk Management", "description": "Identify privacy risks and data overexposure"},
+              {"name": "Subject Rights Requests", "description": "Automate GDPR/CCPA subject access requests"},
+              {"name": "Data Lifecycle Management", "description": "Retention and deletion policies for compliance"}
+            ]
+          },
+          "ai_integration": {
+            "copilot_integration": "Purview integrates with Microsoft 365 Copilot to enforce DLP policies on AI-generated content",
+            "azure_ai_integration": "Use Purview sensitivity labels to classify AI training data and outputs"
+          },
+          "documentation_url": "https://learn.microsoft.com/microsoft-365/purview/"
+        },
+        {
+          "name": "Azure Key Vault",
+          "type": "service",
+          "status": "Generally Available",
+          "description": "Secure secrets, keys, and certificate management. Essential for protecting API keys, connection strings, and encryption keys used in AI applications.",
+          "when_to_use": {
+            "required_for": ["Storing Azure OpenAI API keys", "Managing encryption keys for data protection", "Certificate management for secure communications", "Secrets rotation and auditing"],
+            "never_do": ["Hard-code API keys in application code", "Store secrets in environment variables in production", "Share keys via email or chat"]
+          },
+          "tiers": {
+            "standard": "Software-protected keys (FIPS 140 Level 1)",
+            "premium": "HSM-protected keys (FIPS 140-3 Level 3) - use for highest security requirements"
+          },
+          "ai_integration_patterns": {
+            "azure_openai": "Store OpenAI API keys in Key Vault, retrieve at runtime using managed identity",
+            "training_data_encryption": "Use Key Vault keys for Azure Storage encryption of training data",
+            "model_signing": "Store code signing certificates for ML model validation"
+          },
+          "documentation_url": "https://learn.microsoft.com/azure/key-vault/"
+        },
+        {
+          "name": "Counterfit",
+          "type": "library",
+          "status": "Stable",
+          "license": "MIT",
+          "description": "Open-source tool for security testing of AI systems. Simulates adversarial attacks to identify vulnerabilities before deployment.",
+          "repository": "https://github.com/Azure/counterfit",
+          "when_to_use": {
+            "ideal_for": ["Security red teaming of ML models", "Testing model robustness against adversarial inputs", "Compliance security assessments", "Before deploying models to production"]
+          },
+          "attack_types": ["Evasion attacks", "Inference attacks", "Inversion attacks", "Data extraction"],
+          "supported_model_types": ["Image classification", "Text classification", "Tabular data models", "Cloud-hosted models"],
+          "documentation_url": "https://github.com/Azure/counterfit/wiki"
         }
       ]
     },
