@@ -167,7 +167,7 @@ jobs:
             --registry raisimpleacr \
             --image rai-frontend:${{ steps.version.outputs.tag }} \
             --file frontend/Dockerfile \
-            --build-arg NEXT_PUBLIC_API_URL=${{ needs.setup.outputs.backend_url }}/api \
+            --build-arg NEXT_PUBLIC_API_BASE_URL=${{ needs.setup.outputs.backend_url }}/api \
             frontend/
 
       - name: Deploy Backend to Container Apps
@@ -202,3 +202,4 @@ jobs:
           
           echo "Checking backend health..."
           curl -s ${{ needs.setup.outputs.backend_url }}/api/health | jq . || echo "Health check pending - container may be starting"
+
