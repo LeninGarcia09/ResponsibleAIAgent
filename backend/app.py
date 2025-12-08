@@ -780,6 +780,7 @@ def get_tools():
                     "tools": catalog.get("categories", {}),
                     "quick_reference": catalog.get("quick_reference", {}),
                     "client_framework": catalog.get("client_recommendation_framework", {}),
+                    "use_cases": catalog.get("actionable_use_cases", {}),
                     "metadata": catalog.get("catalog_metadata", {}),
                     "source": "knowledge_base"
                 })

@@ -68,11 +68,36 @@ interface CatalogMetadata {
   ignite_2025_updates?: boolean
 }
 
+interface UseCaseTool {
+  tool: string
+  purpose: string
+  configuration?: string
+}
+
+interface UseCase {
+  id: string
+  title: string
+  description: string
+  industry_relevance: string[]
+  risk_profile: string
+  required_tools: UseCaseTool[]
+  recommended_tools?: UseCaseTool[]
+  implementation_steps: string[]
+  success_metrics: string[]
+  common_pitfalls: string[]
+}
+
+interface UseCasesData {
+  description: string
+  scenarios: UseCase[]
+}
+
 interface ToolsApiResponse {
   tools: CategoriesMap
   quick_reference?: QuickReference
   client_framework?: object
   metadata?: CatalogMetadata
+  use_cases?: UseCasesData
   source: string
 }
 
@@ -116,10 +141,12 @@ export default function CatalogPage() {
   const [metadata, setMetadata] = useState<CatalogMetadata | null>(null)
   const [quickReference, setQuickReference] = useState<QuickReference | null>(null)
   const [resources, setResources] = useState<ResourcesData | null>(null)
+  const [useCases, setUseCases] = useState<UseCasesData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [expandedTools, setExpandedTools] = useState<Set<string>>(new Set())
-  const [activeTab, setActiveTab] = useState<'tools' | 'resources'>('tools')
+  const [expandedUseCases, setExpandedUseCases] = useState<Set<string>>(new Set())
+  const [activeTab, setActiveTab] = useState<'use-cases' | 'tools' | 'resources'>('use-cases')
 
   // Fetch tools and resources from API
   useEffect(() => {
@@ -142,6 +169,7 @@ export default function CatalogPage() {
         setCategories(toolsData.tools || {})
         setMetadata(toolsData.metadata || null)
         setQuickReference(toolsData.quick_reference || null)
+        setUseCases(toolsData.use_cases || null)
         
         // Set resources if available
         if (refsResponse && refsResponse.ok) {
@@ -175,6 +203,18 @@ export default function CatalogPage() {
         newSet.delete(toolKey)
       } else {
         newSet.add(toolKey)
+      }
+      return newSet
+    })
+  }, [])
+
+  const toggleUseCaseExpanded = useCallback((useCaseId: string) => {
+    setExpandedUseCases(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(useCaseId)) {
+        newSet.delete(useCaseId)
+      } else {
+        newSet.add(useCaseId)
       }
       return newSet
     })
@@ -265,6 +305,13 @@ export default function CatalogPage() {
       {/* Tab Navigation */}
       <div className={styles.tabContainer}>
         <button 
+          className={`${styles.tab} ${activeTab === 'use-cases' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('use-cases')}
+        >
+          <span className={styles.tabIcon}>🎯</span>
+          Use Cases
+        </button>
+        <button 
           className={`${styles.tab} ${activeTab === 'tools' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('tools')}
         >
@@ -325,6 +372,181 @@ export default function CatalogPage() {
             })}
           </div>
         </nav>
+      )}
+
+      {/* Main Content - Use Cases Tab */}
+      {activeTab === 'use-cases' && !loading && !error && (
+        <main className={styles.main}>
+          <section className={styles.categorySection}>
+            <div className={styles.categoryHeader}>
+              <span className={styles.categoryIcon}>🎯</span>
+              <div>
+                <h2 className={styles.categoryTitle}>Real-World Use Cases</h2>
+                <p className={styles.categoryDescription}>
+                  Step-by-step guidance for implementing Responsible AI in common scenarios. Each use case includes required tools, implementation steps, and success metrics.
+                </p>
+              </div>
+            </div>
+
+            {useCases?.scenarios && useCases.scenarios.length > 0 ? (
+              <div className={styles.toolsGrid}>
+                {useCases.scenarios.map((useCase) => {
+                  const isExpanded = expandedUseCases.has(useCase.id)
+                  
+                  return (
+                    <div
+                      key={useCase.id}
+                      className={`${styles.toolCard} ${isExpanded ? styles.expanded : ''}`}
+                      style={{ gridColumn: isExpanded ? '1 / -1' : undefined }}
+                    >
+                      <div className={styles.toolHeader} onClick={() => toggleUseCaseExpanded(useCase.id)}>
+                        <div>
+                          <h3 className={styles.toolName}>{useCase.title}</h3>
+                          <span style={{
+                            display: 'inline-block',
+                            background: useCase.risk_profile.includes('Critical') ? '#dc3545' : 
+                                        useCase.risk_profile.includes('Very High') ? '#fd7e14' :
+                                        useCase.risk_profile.includes('High') ? '#ffc107' : '#28a745',
+                            color: useCase.risk_profile.includes('High') || useCase.risk_profile.includes('Critical') ? 'white' : 'black',
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            marginTop: '4px'
+                          }}>
+                            {useCase.risk_profile.split(' - ')[0]}
+                          </span>
+                        </div>
+                        <span className={styles.expandIcon}>{isExpanded ? '−' : '+'}</span>
+                      </div>
+
+                      <p className={styles.toolDescription}>{useCase.description}</p>
+
+                      {!isExpanded && (
+                        <div style={{ marginTop: '12px' }}>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                            {useCase.industry_relevance.slice(0, 3).map((industry, i) => (
+                              <span key={i} className={styles.principleBadge} style={{ fontSize: '11px' }}>{industry}</span>
+                            ))}
+                            {useCase.industry_relevance.length > 3 && (
+                              <span className={styles.principleBadge} style={{ fontSize: '11px' }}>+{useCase.industry_relevance.length - 3} more</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {isExpanded && (
+                        <div className={styles.toolDetails}>
+                          <div className={styles.detailSection}>
+                            <h4>Industries</h4>
+                            <div className={styles.principles}>
+                              {useCase.industry_relevance.map((industry, i) => (
+                                <span key={i} className={styles.principleBadge}>{industry}</span>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className={styles.detailSection}>
+                            <h4>⚠️ Risk Profile</h4>
+                            <p>{useCase.risk_profile}</p>
+                          </div>
+
+                          <div className={styles.detailSection}>
+                            <h4>🔧 Required Tools</h4>
+                            {useCase.required_tools.map((tool, i) => (
+                              <div key={i} style={{ marginBottom: '12px', padding: '10px', background: '#f0f9ff', borderRadius: '8px', borderLeft: '3px solid #0078d4' }}>
+                                <strong style={{ color: '#0078d4' }}>{tool.tool}</strong>
+                                <p style={{ margin: '4px 0 0', fontSize: '13px' }}>{tool.purpose}</p>
+                                {tool.configuration && (
+                                  <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#666', fontStyle: 'italic' }}>
+                                    Config: {tool.configuration}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+
+                          {useCase.recommended_tools && useCase.recommended_tools.length > 0 && (
+                            <div className={styles.detailSection}>
+                              <h4>💡 Recommended Tools</h4>
+                              {useCase.recommended_tools.map((tool, i) => (
+                                <div key={i} style={{ marginBottom: '8px', padding: '8px', background: '#f5f5f5', borderRadius: '6px' }}>
+                                  <strong>{tool.tool}</strong>
+                                  <span style={{ fontSize: '13px', color: '#666' }}> — {tool.purpose}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className={styles.detailSection}>
+                            <h4>📋 Implementation Steps</h4>
+                            <ol style={{ paddingLeft: '20px', margin: 0 }}>
+                              {useCase.implementation_steps.map((step, i) => (
+                                <li key={i} style={{ marginBottom: '6px', fontSize: '14px' }}>{step.replace(/^\d+\.\s*/, '')}</li>
+                              ))}
+                            </ol>
+                          </div>
+
+                          <div className={styles.detailSection}>
+                            <h4>✅ Success Metrics</h4>
+                            <ul style={{ paddingLeft: '20px', margin: 0 }}>
+                              {useCase.success_metrics.map((metric, i) => (
+                                <li key={i} style={{ marginBottom: '4px', fontSize: '14px', color: '#28a745' }}>{metric}</li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          <div className={styles.detailSection}>
+                            <h4>⚠️ Common Pitfalls to Avoid</h4>
+                            <ul style={{ paddingLeft: '20px', margin: 0 }}>
+                              {useCase.common_pitfalls.map((pitfall, i) => (
+                                <li key={i} style={{ marginBottom: '4px', fontSize: '14px', color: '#dc3545' }}>{pitfall}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                <p>Use cases are loading from the API...</p>
+              </div>
+            )}
+          </section>
+
+          {/* Quick Start Section */}
+          <section className={styles.categorySection}>
+            <div className={styles.categoryHeader}>
+              <span className={styles.categoryIcon}>⚡</span>
+              <div>
+                <h2 className={styles.categoryTitle}>Quick Start: What&apos;s Your Top Concern?</h2>
+                <p className={styles.categoryDescription}>
+                  Jump straight to solutions based on your immediate needs
+                </p>
+              </div>
+            </div>
+
+            <div className={styles.toolsGrid}>
+              {[
+                { concern: 'My AI might generate harmful content', solution: 'Azure AI Content Safety', action: 'Enable all harm categories at severity threshold 2' },
+                { concern: 'Users might try to jailbreak my AI', solution: 'Prompt Shields + PyRIT', action: 'Enable Prompt Shields on all user inputs' },
+                { concern: 'My AI makes up information', solution: 'Groundedness Detection', action: 'Set threshold to 4+ for production' },
+                { concern: 'My AI might be biased', solution: 'Fairlearn', action: 'Run MetricFrame analysis across protected groups' },
+                { concern: 'I can\'t explain my AI\'s decisions', solution: 'InterpretML EBM', action: 'Train with Explainable Boosting Machine' },
+                { concern: 'Data privacy and PII exposure', solution: 'Presidio', action: 'Implement PII detection in all data pipelines' },
+              ].map((item, i) => (
+                <div key={i} className={styles.toolCard}>
+                  <h3 className={styles.toolName} style={{ fontSize: '14px', color: '#333' }}>&ldquo;{item.concern}&rdquo;</h3>
+                  <p style={{ margin: '8px 0', fontWeight: 600, color: '#0078d4' }}>→ {item.solution}</p>
+                  <p className={styles.toolDescription} style={{ fontSize: '13px' }}>{item.action}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </main>
       )}
 
       {/* Main Content - Tools Tab */}

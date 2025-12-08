@@ -1,10 +1,337 @@
 {
   "catalog_metadata": {
-    "version": "2.0.0",
-    "last_updated": "2025-12-06",
+    "version": "2.1.0",
+    "last_updated": "2025-12-07",
     "description": "Comprehensive catalog of Microsoft Responsible AI tools and services for providing tailored recommendations and guidance to clients building AI solutions responsibly",
     "ignite_2025_updates": true,
     "purpose": "Enable AI practitioners to select appropriate RAI tools based on their use case, risk profile, and industry requirements"
+  },
+  "actionable_use_cases": {
+    "description": "Real-world scenarios with step-by-step tool recommendations and implementation guidance",
+    "scenarios": [
+      {
+        "id": "customer-chatbot",
+        "title": "Customer Service Chatbot",
+        "description": "Building an AI-powered chatbot for customer support that handles inquiries, provides product information, and resolves common issues",
+        "industry_relevance": ["Retail", "Financial Services", "Healthcare", "Technology"],
+        "risk_profile": "High - Direct customer interaction, potential for harmful outputs, PII handling",
+        "required_tools": [
+          {
+            "tool": "Azure AI Content Safety",
+            "purpose": "Filter harmful content in both user inputs and AI responses",
+            "configuration": "Enable all harm categories (Hate, Violence, Sexual, Self-Harm) with severity threshold of 2 or lower"
+          },
+          {
+            "tool": "Prompt Shields",
+            "purpose": "Protect against jailbreak and prompt injection attempts",
+            "configuration": "Enable on all user inputs before passing to LLM"
+          },
+          {
+            "tool": "Groundedness Detection",
+            "purpose": "Ensure responses are based on your knowledge base, not hallucinated",
+            "configuration": "Set groundedness threshold to 4+ for production use"
+          },
+          {
+            "tool": "Presidio",
+            "purpose": "Detect and anonymize PII in conversation logs before storage",
+            "configuration": "Enable detection for PERSON, EMAIL, PHONE, CREDIT_CARD at minimum"
+          }
+        ],
+        "recommended_tools": [
+          {"tool": "Azure AI Evaluation SDK", "purpose": "Continuous quality monitoring with GroundednessEvaluator and CoherenceEvaluator"},
+          {"tool": "HAX Toolkit", "purpose": "Design appropriate failure modes and human escalation paths"}
+        ],
+        "implementation_steps": [
+          "1. Set up Azure AI Content Safety resource and configure harm category thresholds",
+          "2. Integrate Prompt Shields as input filter in your chatbot pipeline",
+          "3. Implement Groundedness Detection for RAG-based responses",
+          "4. Add Presidio preprocessing for logging and analytics",
+          "5. Set up evaluation pipeline for continuous quality monitoring",
+          "6. Configure alerts for safety threshold violations"
+        ],
+        "success_metrics": ["<0.1% harmful content in responses", ">95% groundedness score", "Zero PII in stored logs"],
+        "common_pitfalls": ["Skipping input sanitization", "Not testing for indirect prompt injection", "Storing raw conversation logs with PII"]
+      },
+      {
+        "id": "ai-agent-automation",
+        "title": "AI Agent for Business Process Automation",
+        "description": "Deploying an AI agent that can take actions on behalf of users, such as booking meetings, processing expenses, or managing workflows",
+        "industry_relevance": ["Enterprise", "Financial Services", "Healthcare", "Government"],
+        "risk_profile": "Very High - Agent can take real-world actions, requires strict governance and identity management",
+        "required_tools": [
+          {
+            "tool": "Microsoft Foundry Control Plane",
+            "purpose": "Unified governance, guardrails, and observability for agent operations",
+            "configuration": "Define action boundaries, rate limits, and approval workflows for sensitive operations"
+          },
+          {
+            "tool": "Entra Agent ID",
+            "purpose": "Managed identity for agent with proper access controls and audit trail",
+            "configuration": "Use least-privilege permissions, enable comprehensive audit logging"
+          },
+          {
+            "tool": "PyRIT",
+            "purpose": "Red team the agent for prompt injection and action manipulation attacks",
+            "configuration": "Run automated attack scenarios before deployment, schedule monthly red teaming"
+          }
+        ],
+        "recommended_tools": [
+          {"tool": "Azure AI Evaluation SDK", "purpose": "Use TaskAdherenceEvaluator and ToolCallAccuracyEvaluator for quality assurance"},
+          {"tool": "Microsoft Defender for AI", "purpose": "Runtime threat detection and response"},
+          {"tool": "Microsoft Purview", "purpose": "Data governance and audit compliance"}
+        ],
+        "implementation_steps": [
+          "1. Define agent scope and action boundaries in Foundry Control Plane",
+          "2. Configure Entra Agent ID with appropriate permissions per action type",
+          "3. Implement human-in-the-loop approval for high-risk actions",
+          "4. Run comprehensive red teaming with PyRIT before deployment",
+          "5. Set up monitoring dashboards for agent behavior anomalies",
+          "6. Establish incident response procedures for agent misbehavior"
+        ],
+        "success_metrics": ["100% audit trail coverage", "Zero unauthorized actions", "<1% task failure rate"],
+        "common_pitfalls": ["Overly broad agent permissions", "No human approval for sensitive actions", "Insufficient logging"]
+      },
+      {
+        "id": "loan-approval-model",
+        "title": "AI-Assisted Loan Approval System",
+        "description": "Using machine learning to assist with loan approval decisions, credit scoring, or risk assessment",
+        "industry_relevance": ["Financial Services", "Banking", "Fintech"],
+        "risk_profile": "Critical - Regulatory compliance required, fairness is legally mandated, decisions affect people's lives",
+        "required_tools": [
+          {
+            "tool": "Fairlearn",
+            "purpose": "Assess and mitigate bias across protected groups (race, gender, age)",
+            "configuration": "Use demographic parity or equalized odds metrics, run assessment on validation set"
+          },
+          {
+            "tool": "InterpretML (EBM)",
+            "purpose": "Build inherently interpretable model for regulatory compliance",
+            "configuration": "Use Explainable Boosting Machine instead of black-box models where possible"
+          },
+          {
+            "tool": "Azure AI Evaluation SDK",
+            "purpose": "Document model performance and fairness metrics for auditors",
+            "configuration": "Generate comprehensive fairness reports for each model version"
+          }
+        ],
+        "recommended_tools": [
+          {"tool": "Responsible AI Dashboard", "purpose": "Unified view of model performance, fairness, and explanations"},
+          {"tool": "Microsoft Purview", "purpose": "Data lineage and governance for training data"}
+        ],
+        "implementation_steps": [
+          "1. Audit training data for historical bias and representation gaps",
+          "2. Train model using InterpretML EBM for inherent explainability",
+          "3. Run Fairlearn assessment across all protected groups",
+          "4. Apply mitigation techniques if disparities exceed thresholds",
+          "5. Generate documentation for regulatory compliance",
+          "6. Implement ongoing monitoring for model drift and fairness degradation"
+        ],
+        "success_metrics": ["Demographic parity ratio >0.8", "Model explainable to regulators", "Complete audit documentation"],
+        "common_pitfalls": ["Using proxy variables that correlate with protected attributes", "Training on historically biased data without mitigation", "Black-box models in regulated contexts"]
+      },
+      {
+        "id": "content-generation-platform",
+        "title": "AI Content Generation Platform",
+        "description": "Building a platform that generates marketing copy, articles, social media posts, or other creative content",
+        "industry_relevance": ["Marketing", "Media", "Technology", "E-commerce"],
+        "risk_profile": "High - Copyright risks, brand safety, misinformation potential",
+        "required_tools": [
+          {
+            "tool": "Azure AI Content Safety",
+            "purpose": "Ensure generated content doesn't contain harmful material",
+            "configuration": "Enable all harm categories, consider custom blocklists for brand safety"
+          },
+          {
+            "tool": "Protected Material Detection",
+            "purpose": "Detect copyrighted content, song lyrics, news articles in outputs",
+            "configuration": "Block content with protected material, log for review"
+          },
+          {
+            "tool": "Custom Categories",
+            "purpose": "Define brand-specific content policies (competitor mentions, off-brand messaging)",
+            "configuration": "Create custom classifiers for your brand guidelines"
+          }
+        ],
+        "recommended_tools": [
+          {"tool": "Groundedness Detection", "purpose": "Ensure factual claims are grounded in sources when generating informational content"},
+          {"tool": "Azure AI Evaluation SDK", "purpose": "Evaluate content quality, coherence, and brand alignment"}
+        ],
+        "implementation_steps": [
+          "1. Define content policies and brand guidelines as custom categories",
+          "2. Integrate Content Safety for all generated outputs",
+          "3. Enable Protected Material Detection before publishing",
+          "4. Set up human review workflow for flagged content",
+          "5. Implement quality evaluation pipeline",
+          "6. Monitor for emerging content issues and update policies"
+        ],
+        "success_metrics": ["Zero copyright violations", "<0.5% content requiring human intervention", "100% brand guideline compliance"],
+        "common_pitfalls": ["Skipping copyright checks", "Not customizing for brand-specific risks", "Publishing without human review for high-stakes content"]
+      },
+      {
+        "id": "healthcare-ai-assistant",
+        "title": "Healthcare AI Assistant",
+        "description": "Building an AI assistant for healthcare settings that helps with patient inquiries, symptom checking, or clinical decision support",
+        "industry_relevance": ["Healthcare", "Life Sciences", "Health Tech"],
+        "risk_profile": "Critical - Patient safety, HIPAA compliance, clinical accuracy requirements",
+        "required_tools": [
+          {
+            "tool": "Azure AI Content Safety",
+            "purpose": "Filter harmful health advice and self-harm content",
+            "configuration": "Strict self-harm detection, custom categories for dangerous medical advice"
+          },
+          {
+            "tool": "Presidio",
+            "purpose": "Protect PHI in all AI interactions and logs",
+            "configuration": "Enable all medical entity types, use encryption operator for reversible anonymization"
+          },
+          {
+            "tool": "Groundedness Detection",
+            "purpose": "Ensure medical information is grounded in approved clinical sources",
+            "configuration": "High threshold (5+), only ground on vetted medical content"
+          },
+          {
+            "tool": "Azure Confidential Computing",
+            "purpose": "Process sensitive patient data in trusted execution environment",
+            "configuration": "Use Confidential VMs or Containers for PHI processing"
+          }
+        ],
+        "recommended_tools": [
+          {"tool": "InterpretML", "purpose": "Explainable models for clinical decision support"},
+          {"tool": "Fairlearn", "purpose": "Ensure equitable outcomes across patient demographics"},
+          {"tool": "Azure Key Vault", "purpose": "Secure storage of API keys and encryption keys"}
+        ],
+        "implementation_steps": [
+          "1. Establish clinical content sources and validation process",
+          "2. Implement comprehensive PHI protection with Presidio",
+          "3. Set up Confidential Computing environment for sensitive workloads",
+          "4. Configure strict grounding to approved medical sources only",
+          "5. Add clear disclaimers and escalation to human clinicians",
+          "6. Establish clinical validation and ongoing monitoring process"
+        ],
+        "success_metrics": ["Zero PHI exposure", "100% clinical accuracy on validated queries", "Regulatory compliance maintained"],
+        "common_pitfalls": ["Processing PHI without encryption", "Grounding on unapproved sources", "Missing clinical disclaimers", "No human escalation path"]
+      },
+      {
+        "id": "rag-enterprise-search",
+        "title": "Enterprise RAG Search & Q&A",
+        "description": "Building a retrieval-augmented generation system for searching and answering questions over internal documents, knowledge bases, or data",
+        "industry_relevance": ["All Industries"],
+        "risk_profile": "Medium-High - Data leakage, hallucination, access control concerns",
+        "required_tools": [
+          {
+            "tool": "Groundedness Detection",
+            "purpose": "Ensure answers are grounded in retrieved documents, not hallucinated",
+            "configuration": "Threshold of 4+ for production, log and review scores below threshold"
+          },
+          {
+            "tool": "Azure AI Evaluation SDK",
+            "purpose": "Continuous evaluation of retrieval quality and answer relevance",
+            "configuration": "Use RetrievalEvaluator, RelevanceEvaluator, GroundednessProEvaluator"
+          },
+          {
+            "tool": "Azure AI Content Safety",
+            "purpose": "Ensure responses don't contain harmful content even when source documents might",
+            "configuration": "Filter outputs, consider input filtering for user queries"
+          }
+        ],
+        "recommended_tools": [
+          {"tool": "Microsoft Purview", "purpose": "Apply sensitivity labels to source documents, enforce access controls in retrieval"},
+          {"tool": "Presidio", "purpose": "Redact PII from retrieved content before including in prompts"},
+          {"tool": "Prompt Shields", "purpose": "Protect against indirect prompt injection in documents"}
+        ],
+        "implementation_steps": [
+          "1. Classify source documents with sensitivity labels using Purview",
+          "2. Implement access control in retrieval pipeline based on user permissions",
+          "3. Add Groundedness Detection to validate answer quality",
+          "4. Set up evaluation pipeline with retrieval and relevance metrics",
+          "5. Implement Content Safety for input/output filtering",
+          "6. Monitor for indirect prompt injection in document sources"
+        ],
+        "success_metrics": [">90% groundedness score", "<5% hallucination rate", "Zero unauthorized data access"],
+        "common_pitfalls": ["No access control in retrieval", "Trusting all document content (injection risk)", "Not validating groundedness", "Missing sensitivity classification"]
+      },
+      {
+        "id": "image-generation-app",
+        "title": "AI Image Generation Application",
+        "description": "Building an application that generates, edits, or manipulates images using AI models like DALL-E or Stable Diffusion",
+        "industry_relevance": ["Creative", "Marketing", "E-commerce", "Gaming"],
+        "risk_profile": "High - Inappropriate imagery, copyright concerns, deepfake potential",
+        "required_tools": [
+          {
+            "tool": "Azure AI Content Safety (Image)",
+            "purpose": "Detect inappropriate visual content in generated images",
+            "configuration": "Enable all categories (Adult, Violence, Hate symbols, Gore), block severity 2+"
+          },
+          {
+            "tool": "Protected Material Detection",
+            "purpose": "Detect copyrighted characters, logos, or artwork in generations",
+            "configuration": "Screen all outputs before displaying to users"
+          },
+          {
+            "tool": "Azure AI Content Safety (Text)",
+            "purpose": "Filter inappropriate or harmful image generation prompts",
+            "configuration": "Block prompts requesting harmful imagery"
+          }
+        ],
+        "recommended_tools": [
+          {"tool": "Custom Categories", "purpose": "Block brand-specific inappropriate content or competitor imagery"},
+          {"tool": "HAX Toolkit", "purpose": "Design appropriate error handling and user guidance"}
+        ],
+        "implementation_steps": [
+          "1. Implement prompt filtering before image generation",
+          "2. Add image analysis on all generated outputs",
+          "3. Enable protected material detection for copyright screening",
+          "4. Set up human review queue for edge cases",
+          "5. Implement rate limiting to prevent abuse",
+          "6. Add watermarking or metadata for AI-generated content provenance"
+        ],
+        "success_metrics": ["Zero inappropriate images served", "Zero copyright violations", "<1% generation rejections due to false positives"],
+        "common_pitfalls": ["Only filtering prompts, not outputs", "Skipping copyright detection", "No provenance tracking for generated content"]
+      },
+      {
+        "id": "multi-agent-system",
+        "title": "Multi-Agent Orchestration System",
+        "description": "Building a system where multiple AI agents collaborate, with different agents handling different tasks or domains",
+        "industry_relevance": ["Enterprise", "Technology", "Financial Services"],
+        "risk_profile": "Very High - Complex interactions, emergent behaviors, amplified risks",
+        "required_tools": [
+          {
+            "tool": "Microsoft Foundry Control Plane",
+            "purpose": "Unified governance across all agents in the fleet",
+            "configuration": "Central policy management, per-agent monitoring, cross-agent audit trails"
+          },
+          {
+            "tool": "Agent 365",
+            "purpose": "Enterprise-wide agent registry and discovery",
+            "configuration": "Register all agents, track interactions, prevent shadow AI"
+          },
+          {
+            "tool": "Entra Agent ID",
+            "purpose": "Managed identity for each agent with appropriate permissions",
+            "configuration": "Least privilege per agent, audit inter-agent communications"
+          },
+          {
+            "tool": "PyRIT",
+            "purpose": "Red team the entire multi-agent system for emergent vulnerabilities",
+            "configuration": "Test cross-agent manipulation, privilege escalation between agents"
+          }
+        ],
+        "recommended_tools": [
+          {"tool": "Azure AI Evaluation SDK", "purpose": "IntentResolutionEvaluator for understanding agent handoffs"},
+          {"tool": "Microsoft Defender for AI", "purpose": "Runtime threat detection across agent fleet"}
+        ],
+        "implementation_steps": [
+          "1. Design agent boundaries and interaction protocols",
+          "2. Register all agents in Agent 365 registry",
+          "3. Configure Foundry Control Plane policies for each agent type",
+          "4. Implement Entra Agent ID with specific permissions per agent",
+          "5. Set up cross-agent monitoring and alerting",
+          "6. Conduct comprehensive multi-agent red teaming"
+        ],
+        "success_metrics": ["100% agent visibility in registry", "Zero unauthorized inter-agent actions", "Full audit trail of all interactions"],
+        "common_pitfalls": ["Inconsistent policies across agents", "No cross-agent audit trail", "Untested agent interactions", "Overly broad agent permissions"]
+      }
+    ]
   },
   "categories": {
     "governance_and_control": {
@@ -560,57 +887,375 @@
     }
   },
   "client_recommendation_framework": {
-    "description": "Framework for providing tailored RAI recommendations to clients",
+    "description": "Framework for providing tailored RAI recommendations to clients based on their specific needs",
+    "how_to_use": "Use this framework to guide client conversations and generate personalized recommendations. Start with Quick Start, then refine based on maturity, use case, and industry.",
+    "quick_start_decision_tree": {
+      "description": "Start here for rapid tool selection based on your primary AI application type",
+      "decisions": [
+        {
+          "question": "What is your primary AI application type?",
+          "options": [
+            {
+              "answer": "Chatbot or Conversational AI",
+              "immediate_actions": ["Set up Azure AI Content Safety", "Enable Prompt Shields", "Implement Groundedness Detection"],
+              "see_use_case": "customer-chatbot"
+            },
+            {
+              "answer": "AI Agent that takes actions",
+              "immediate_actions": ["Deploy Foundry Control Plane", "Configure Entra Agent ID", "Run PyRIT red teaming"],
+              "see_use_case": "ai-agent-automation"
+            },
+            {
+              "answer": "RAG / Enterprise Search",
+              "immediate_actions": ["Implement Groundedness Detection", "Set up evaluation pipeline", "Configure access controls"],
+              "see_use_case": "rag-enterprise-search"
+            },
+            {
+              "answer": "Decision Support / ML Model",
+              "immediate_actions": ["Assess with Fairlearn", "Build with InterpretML EBM", "Document for compliance"],
+              "see_use_case": "loan-approval-model"
+            },
+            {
+              "answer": "Content Generation (text/images)",
+              "immediate_actions": ["Enable Content Safety", "Add Protected Material Detection", "Set up human review"],
+              "see_use_case": "content-generation-platform"
+            },
+            {
+              "answer": "Healthcare AI",
+              "immediate_actions": ["Implement Presidio for PHI", "Use Confidential Computing", "Strict grounding requirements"],
+              "see_use_case": "healthcare-ai-assistant"
+            }
+          ]
+        },
+        {
+          "question": "What is your top concern right now?",
+          "options": [
+            {
+              "concern": "My AI might generate harmful content",
+              "solution": "Azure AI Content Safety with all harm categories enabled",
+              "priority": "Critical - implement before any user testing"
+            },
+            {
+              "concern": "Users might try to jailbreak my AI",
+              "solution": "Prompt Shields for input filtering + PyRIT for testing",
+              "priority": "Critical for any public-facing AI"
+            },
+            {
+              "concern": "My AI makes up information (hallucinations)",
+              "solution": "Groundedness Detection + curated knowledge base",
+              "priority": "High for any factual use case"
+            },
+            {
+              "concern": "My AI might be biased",
+              "solution": "Fairlearn assessment + mitigation techniques",
+              "priority": "Critical for decisions affecting people"
+            },
+            {
+              "concern": "I can't explain my AI's decisions",
+              "solution": "InterpretML EBM for inherent explainability",
+              "priority": "Critical for regulated industries"
+            },
+            {
+              "concern": "Data privacy and PII exposure",
+              "solution": "Presidio for PII detection + appropriate anonymization",
+              "priority": "Critical for any user data handling"
+            },
+            {
+              "concern": "Governance and control at scale",
+              "solution": "Foundry Control Plane + Agent 365",
+              "priority": "High for enterprise deployments"
+            }
+          ]
+        }
+      ]
+    },
     "assessment_dimensions": [
       {
         "dimension": "AI Maturity Level",
+        "how_to_assess": "Ask: How many AI applications do you have in production? Do you have established AI governance processes?",
         "levels": [
-          {"level": "Exploring", "recommended_focus": ["HAX Toolkit", "Guidelines for Human-AI Interaction"], "priority_tools": ["Azure AI Content Safety", "HAX Workbook"]},
-          {"level": "Developing", "recommended_focus": ["Basic safety and quality evaluation", "Fairness assessment"], "priority_tools": ["Azure AI Evaluation SDK", "Fairlearn", "InterpretML"]},
-          {"level": "Scaling", "recommended_focus": ["Governance and control", "Continuous evaluation"], "priority_tools": ["Foundry Control Plane", "PyRIT", "Agent 365"]},
-          {"level": "Optimizing", "recommended_focus": ["Advanced security", "Fleet management"], "priority_tools": ["All tools integrated", "Custom evaluators", "Red teaming"]}
+          {
+            "level": "Exploring",
+            "indicators": ["First AI project", "POC or pilot phase", "Small team", "No established AI governance"],
+            "recommended_focus": ["Start with safety basics", "Learn RAI principles", "Design for responsibility from day one"],
+            "priority_tools": ["Azure AI Content Safety", "HAX Workbook", "Guidelines for Human-AI Interaction"],
+            "avoid": ["Over-engineering governance for a small pilot"],
+            "time_investment": "1-2 weeks for basic RAI setup"
+          },
+          {
+            "level": "Developing",
+            "indicators": ["1-3 AI applications", "Moving to production", "Growing team", "Beginning to formalize processes"],
+            "recommended_focus": ["Establish evaluation pipelines", "Implement fairness assessment", "Begin security testing"],
+            "priority_tools": ["Azure AI Evaluation SDK", "Fairlearn", "InterpretML", "Presidio"],
+            "avoid": ["Skipping evaluation in rush to production"],
+            "time_investment": "4-6 weeks for comprehensive RAI integration"
+          },
+          {
+            "level": "Scaling",
+            "indicators": ["4-10 AI applications", "Multiple teams building AI", "Need for centralized governance", "Compliance requirements growing"],
+            "recommended_focus": ["Centralize governance", "Continuous red teaming", "Fleet-wide monitoring"],
+            "priority_tools": ["Foundry Control Plane", "PyRIT", "Agent 365", "Microsoft Purview"],
+            "avoid": ["Siloed RAI implementations per team"],
+            "time_investment": "6-8 weeks for governance infrastructure"
+          },
+          {
+            "level": "Optimizing",
+            "indicators": ["10+ AI applications", "AI Center of Excellence", "Mature governance", "Industry leader in AI"],
+            "recommended_focus": ["Custom tooling", "Advanced red teaming", "Industry benchmarking", "Thought leadership"],
+            "priority_tools": ["Full RAI stack integrated", "Custom evaluators", "Automated red teaming", "Advanced analytics"],
+            "avoid": ["Complacency - threats evolve constantly"],
+            "time_investment": "Ongoing continuous improvement"
+          }
         ]
       },
       {
         "dimension": "Use Case Type",
+        "how_to_assess": "Identify the primary interaction model and risk profile of the AI application",
         "types": [
-          {"type": "Conversational AI/Chatbots", "risks": ["Harmful content generation", "Prompt injection", "Hallucination"], "required_tools": ["Azure AI Content Safety", "Azure AI Evaluation SDK", "PyRIT"], "recommended_evaluators": ["GroundednessEvaluator", "SafetyEvaluators", "IndirectAttackEvaluator"]},
-          {"type": "AI Agents", "risks": ["Unintended actions", "Tool misuse", "Security breaches"], "required_tools": ["Foundry Control Plane", "Foundry Agent Service", "PyRIT", "Entra Agent ID"], "recommended_evaluators": ["TaskAdherenceEvaluator", "ToolCallAccuracyEvaluator", "IntentResolutionEvaluator"]},
-          {"type": "Decision Support Systems", "risks": ["Bias and fairness", "Lack of explainability", "Accountability"], "required_tools": ["Fairlearn", "InterpretML", "Azure AI Evaluation SDK"], "recommended_evaluators": ["Custom fairness metrics", "EBM models", "SHAP/LIME explanations"]},
-          {"type": "Content Generation", "risks": ["Copyright infringement", "Harmful content", "Misinformation"], "required_tools": ["Azure AI Content Safety", "Azure AI Evaluation SDK"], "recommended_evaluators": ["ProtectedMaterialEvaluator", "SafetyEvaluators", "GroundednessEvaluator"]},
-          {"type": "RAG Applications", "risks": ["Hallucination", "Data leakage", "Retrieval failures"], "required_tools": ["Azure AI Evaluation SDK", "Foundry IQ", "Microsoft Purview"], "recommended_evaluators": ["GroundednessProEvaluator", "RetrievalEvaluator", "RelevanceEvaluator"]}
+          {
+            "type": "Conversational AI/Chatbots",
+            "risk_level": "High",
+            "primary_risks": ["Harmful content generation", "Prompt injection attacks", "Hallucination", "PII exposure in logs"],
+            "required_tools": ["Azure AI Content Safety", "Prompt Shields", "Groundedness Detection"],
+            "recommended_tools": ["Azure AI Evaluation SDK", "Presidio", "PyRIT"],
+            "key_evaluators": ["GroundednessEvaluator", "SafetyEvaluators", "CoherenceEvaluator"],
+            "testing_focus": "Jailbreak resistance, edge case handling, hallucination rate"
+          },
+          {
+            "type": "AI Agents",
+            "risk_level": "Very High",
+            "primary_risks": ["Unintended actions", "Tool/API misuse", "Privilege escalation", "Security breaches"],
+            "required_tools": ["Foundry Control Plane", "Entra Agent ID", "PyRIT"],
+            "recommended_tools": ["Foundry Agent Service", "Microsoft Defender for AI", "Agent 365"],
+            "key_evaluators": ["TaskAdherenceEvaluator", "ToolCallAccuracyEvaluator", "IntentResolutionEvaluator"],
+            "testing_focus": "Action boundaries, permission enforcement, cross-agent manipulation"
+          },
+          {
+            "type": "Decision Support Systems",
+            "risk_level": "Critical",
+            "primary_risks": ["Bias and discrimination", "Lack of explainability", "Regulatory non-compliance", "Harm to individuals"],
+            "required_tools": ["Fairlearn", "InterpretML (EBM)", "Azure AI Evaluation SDK"],
+            "recommended_tools": ["Responsible AI Dashboard", "Microsoft Purview"],
+            "key_evaluators": ["Custom fairness metrics per protected group"],
+            "testing_focus": "Fairness across demographics, model explainability, audit documentation"
+          },
+          {
+            "type": "Content Generation",
+            "risk_level": "High",
+            "primary_risks": ["Copyright infringement", "Harmful content", "Brand safety violations", "Misinformation"],
+            "required_tools": ["Azure AI Content Safety", "Protected Material Detection", "Custom Categories"],
+            "recommended_tools": ["Azure AI Evaluation SDK", "Groundedness Detection"],
+            "key_evaluators": ["ProtectedMaterialEvaluator", "SafetyEvaluators"],
+            "testing_focus": "Copyright detection, brand compliance, content quality"
+          },
+          {
+            "type": "RAG Applications",
+            "risk_level": "Medium-High",
+            "primary_risks": ["Hallucination", "Data leakage", "Unauthorized access", "Indirect prompt injection"],
+            "required_tools": ["Groundedness Detection", "Azure AI Evaluation SDK", "Prompt Shields"],
+            "recommended_tools": ["Microsoft Purview", "Presidio"],
+            "key_evaluators": ["GroundednessProEvaluator", "RetrievalEvaluator", "RelevanceEvaluator"],
+            "testing_focus": "Retrieval accuracy, access control enforcement, grounding quality"
+          },
+          {
+            "type": "Image/Multimodal Generation",
+            "risk_level": "High",
+            "primary_risks": ["Inappropriate imagery", "Copyright violations", "Deepfakes", "Lack of provenance"],
+            "required_tools": ["Azure AI Content Safety (Image)", "Protected Material Detection"],
+            "recommended_tools": ["Custom Categories", "Content provenance watermarking"],
+            "key_evaluators": ["Image safety analysis"],
+            "testing_focus": "Visual content safety, copyright screening, prompt filtering"
+          }
         ]
       },
       {
         "dimension": "Industry Vertical",
+        "how_to_assess": "Identify regulatory requirements and industry-specific risks",
         "industries": [
-          {"industry": "Financial Services", "regulatory_requirements": ["Explainability mandates", "Fair lending laws", "Model risk management"], "priority_tools": ["InterpretML (EBM)", "Fairlearn", "Azure AI Evaluation SDK"], "special_considerations": ["Use glassbox models where possible", "Document all model decisions", "Regular fairness audits"]},
-          {"industry": "Healthcare", "regulatory_requirements": ["HIPAA compliance", "Clinical validation", "Patient safety"], "priority_tools": ["Azure AI Content Safety", "InterpretML", "Fairlearn", "Presidio"], "special_considerations": ["Protect PHI in AI interactions", "Validate clinical accuracy", "Ensure equitable outcomes"]},
-          {"industry": "Government/Public Sector", "regulatory_requirements": ["Transparency mandates", "Algorithmic accountability", "Accessibility"], "priority_tools": ["InterpretML", "Fairlearn", "HAX Toolkit"], "special_considerations": ["Public explainability", "Impact assessments", "Accessibility compliance"]},
-          {"industry": "Retail/E-commerce", "regulatory_requirements": ["Consumer protection", "Privacy regulations", "Fair advertising"], "priority_tools": ["Azure AI Content Safety", "Fairlearn", "Presidio"], "special_considerations": ["Personalization fairness", "Price discrimination prevention", "Content moderation"]},
-          {"industry": "Technology/SaaS", "regulatory_requirements": ["Platform liability", "Content policies", "Trust and safety"], "priority_tools": ["Full RAI stack", "Foundry Control Plane", "PyRIT"], "special_considerations": ["Scale-appropriate safety", "Continuous red teaming", "User trust"]}
+          {
+            "industry": "Financial Services",
+            "regulatory_framework": ["SR 11-7 (Model Risk Management)", "Fair lending laws (ECOA, FHA)", "GDPR/CCPA", "SEC/FINRA requirements"],
+            "priority_tools": ["InterpretML (EBM)", "Fairlearn", "Azure AI Evaluation SDK", "Microsoft Purview"],
+            "must_have": ["Explainable models for credit decisions", "Fairness assessment across protected groups", "Complete audit trail"],
+            "special_considerations": ["Use glassbox models where possible", "Document all model decisions", "Regular fairness audits", "Third-party validation"],
+            "compliance_tip": "Regulators increasingly expect explainability - build it in from the start, not as an afterthought"
+          },
+          {
+            "industry": "Healthcare",
+            "regulatory_framework": ["HIPAA", "FDA guidance on AI/ML", "21 CFR Part 11", "State privacy laws"],
+            "priority_tools": ["Presidio", "Azure Confidential Computing", "Azure AI Content Safety", "InterpretML"],
+            "must_have": ["PHI protection in all AI interactions", "Clinical validation", "Audit logging", "Human oversight for clinical decisions"],
+            "special_considerations": ["Never store unencrypted PHI", "Validate against clinical standards", "Ensure equitable outcomes across patient demographics"],
+            "compliance_tip": "PHI protection is non-negotiable - use Presidio + Confidential Computing for maximum protection"
+          },
+          {
+            "industry": "Government/Public Sector",
+            "regulatory_framework": ["OMB AI guidance", "Executive orders on AI", "State/local AI regulations", "Accessibility requirements (508)"],
+            "priority_tools": ["InterpretML", "Fairlearn", "HAX Toolkit", "Azure AI Content Safety"],
+            "must_have": ["Public explainability", "Algorithmic impact assessments", "Accessibility compliance", "Transparency documentation"],
+            "special_considerations": ["Citizens have right to understand AI decisions", "Must be accessible to all", "Higher scrutiny on bias"],
+            "compliance_tip": "Government AI faces public scrutiny - prioritize transparency and accessibility"
+          },
+          {
+            "industry": "Retail/E-commerce",
+            "regulatory_framework": ["Consumer protection laws", "GDPR/CCPA", "FTC guidelines", "Advertising standards"],
+            "priority_tools": ["Azure AI Content Safety", "Fairlearn", "Presidio", "Custom Categories"],
+            "must_have": ["Content moderation for UGC", "Fair personalization", "Privacy-compliant data handling"],
+            "special_considerations": ["Avoid discriminatory pricing", "Fair recommendation algorithms", "Protect customer PII"],
+            "compliance_tip": "Personalization must not become discrimination - test for fairness across customer segments"
+          },
+          {
+            "industry": "Technology/SaaS",
+            "regulatory_framework": ["Platform liability (Section 230 evolution)", "EU AI Act", "DSA", "Various state laws"],
+            "priority_tools": ["Full RAI stack", "Foundry Control Plane", "PyRIT", "Agent 365"],
+            "must_have": ["Scalable safety infrastructure", "Continuous red teaming", "Rapid response capability"],
+            "special_considerations": ["Scale requires automation", "Emerging regulations", "Trust is your product"],
+            "compliance_tip": "Build RAI infrastructure that scales with your platform - manual review won't work at scale"
+          },
+          {
+            "industry": "Education",
+            "regulatory_framework": ["FERPA", "COPPA", "State student privacy laws", "Accessibility requirements"],
+            "priority_tools": ["Azure AI Content Safety", "Presidio", "HAX Toolkit", "Fairlearn"],
+            "must_have": ["Student data protection", "Age-appropriate content filtering", "Equitable outcomes for all students"],
+            "special_considerations": ["Minors require extra protection", "Educational equity is critical", "Parental consent requirements"],
+            "compliance_tip": "Student data requires the highest protection - implement strict access controls and anonymization"
+          }
         ]
       }
     ],
     "implementation_phases": [
-      {"phase": 1, "name": "Foundation", "duration": "2-4 weeks", "activities": ["RAI maturity assessment", "Use case risk analysis", "Tool selection and setup", "Basic safety integration"], "deliverables": ["RAI roadmap", "Tool configuration guide", "Initial safety baselines"]},
-      {"phase": 2, "name": "Integration", "duration": "4-8 weeks", "activities": ["Evaluation pipeline setup", "Red teaming program launch", "Fairness assessment", "Explainability implementation"], "deliverables": ["Automated evaluation pipeline", "Red team findings report", "Fairness audit results"]},
-      {"phase": 3, "name": "Governance", "duration": "4-6 weeks", "activities": ["Foundry Control Plane setup", "Policy definition and enforcement", "Monitoring and alerting", "Incident response procedures"], "deliverables": ["Governance framework", "Policy documentation", "Monitoring dashboards"]},
-      {"phase": 4, "name": "Optimization", "duration": "Ongoing", "activities": ["Continuous improvement", "Advanced red teaming", "Custom evaluator development", "Stakeholder reporting"], "deliverables": ["Regular RAI reports", "Improvement recommendations", "Updated baselines"]}
+      {
+        "phase": 1,
+        "name": "Foundation",
+        "duration": "2-4 weeks",
+        "goal": "Establish basic RAI capabilities and safety baseline",
+        "activities": [
+          {"activity": "RAI maturity assessment", "how_to": "Use the maturity levels above to assess current state", "output": "Maturity assessment report"},
+          {"activity": "Use case risk analysis", "how_to": "Map application to use case types, identify primary risks", "output": "Risk profile document"},
+          {"activity": "Tool selection and setup", "how_to": "Based on risk profile, select and configure priority tools", "output": "Tool configuration guide"},
+          {"activity": "Basic safety integration", "how_to": "Integrate Content Safety for all user-facing interactions", "output": "Safety-enabled application"}
+        ],
+        "deliverables": ["RAI roadmap", "Tool configuration guide", "Initial safety baselines", "Risk profile document"],
+        "success_criteria": ["All user inputs/outputs pass through Content Safety", "Basic evaluation metrics established", "Team trained on RAI principles"]
+      },
+      {
+        "phase": 2,
+        "name": "Integration",
+        "duration": "4-8 weeks",
+        "goal": "Comprehensive RAI integration with evaluation and testing",
+        "activities": [
+          {"activity": "Evaluation pipeline setup", "how_to": "Configure Azure AI Evaluation SDK with relevant evaluators", "output": "Automated evaluation pipeline"},
+          {"activity": "Red teaming program launch", "how_to": "Deploy PyRIT for automated security testing", "output": "Red team findings and remediation"},
+          {"activity": "Fairness assessment", "how_to": "Run Fairlearn analysis across protected groups", "output": "Fairness audit report"},
+          {"activity": "Explainability implementation", "how_to": "Integrate InterpretML for model explanations", "output": "Explainable model documentation"}
+        ],
+        "deliverables": ["Automated evaluation pipeline", "Red team findings report", "Fairness audit results", "Explainability documentation"],
+        "success_criteria": ["Evaluation runs on every deployment", "Zero high-severity red team findings", "Fairness metrics within thresholds"]
+      },
+      {
+        "phase": 3,
+        "name": "Governance",
+        "duration": "4-6 weeks",
+        "goal": "Enterprise-grade governance and operational excellence",
+        "activities": [
+          {"activity": "Foundry Control Plane setup", "how_to": "Deploy centralized governance infrastructure", "output": "Governance platform"},
+          {"activity": "Policy definition and enforcement", "how_to": "Define RAI policies, configure automated enforcement", "output": "Policy documentation"},
+          {"activity": "Monitoring and alerting", "how_to": "Set up dashboards and alerts for RAI metrics", "output": "Monitoring dashboards"},
+          {"activity": "Incident response procedures", "how_to": "Define and document response playbooks", "output": "Incident response playbook"}
+        ],
+        "deliverables": ["Governance framework", "Policy documentation", "Monitoring dashboards", "Incident response playbook"],
+        "success_criteria": ["All AI applications under governance", "Policies automatically enforced", "Incidents detected within SLA"]
+      },
+      {
+        "phase": 4,
+        "name": "Optimization",
+        "duration": "Ongoing",
+        "goal": "Continuous improvement and industry leadership",
+        "activities": [
+          {"activity": "Continuous improvement", "how_to": "Regular review of metrics, identify improvement areas", "output": "Improvement recommendations"},
+          {"activity": "Advanced red teaming", "how_to": "Expand attack scenarios, test emerging threats", "output": "Advanced security posture"},
+          {"activity": "Custom evaluator development", "how_to": "Build domain-specific evaluators for your use cases", "output": "Custom evaluation suite"},
+          {"activity": "Stakeholder reporting", "how_to": "Regular RAI reports for leadership and compliance", "output": "Executive RAI dashboard"}
+        ],
+        "deliverables": ["Regular RAI reports", "Improvement recommendations", "Updated baselines", "Industry benchmarking"],
+        "success_criteria": ["Metrics improving quarter-over-quarter", "Zero high-severity incidents", "Compliance maintained"]
+      }
     ]
   },
   "quick_reference": {
+    "description": "Rapid lookup for tool recommendations based on specific risks or needs",
     "tool_by_risk": {
-      "harmful_content": ["Azure AI Content Safety", "SafetyEvaluators"],
-      "prompt_injection": ["Azure AI Content Safety (Prompt Shield)", "IndirectAttackEvaluator", "PyRIT"],
-      "hallucination": ["GroundednessEvaluator", "GroundednessProEvaluator", "Foundry IQ"],
-      "bias_and_fairness": ["Fairlearn", "HateUnfairnessEvaluator"],
-      "lack_of_explainability": ["InterpretML", "EBM"],
-      "copyright_infringement": ["ProtectedMaterialEvaluator"],
-      "security_vulnerabilities": ["PyRIT", "Counterfit", "Microsoft Defender for AI"],
-      "governance_gaps": ["Foundry Control Plane", "Agent 365", "Microsoft Purview"],
-      "privacy_violations": ["Presidio", "SmartNoise", "Azure Confidential Computing"],
-      "agent_misuse": ["Foundry Control Plane", "Entra Agent ID", "TaskAdherenceEvaluator"]
+      "harmful_content": {
+        "tools": ["Azure AI Content Safety", "SafetyEvaluators"],
+        "first_action": "Enable Azure AI Content Safety with all harm categories at severity threshold 2",
+        "documentation": "https://learn.microsoft.com/azure/ai-services/content-safety/"
+      },
+      "prompt_injection": {
+        "tools": ["Prompt Shields", "IndirectAttackEvaluator", "PyRIT"],
+        "first_action": "Enable Prompt Shields on all user inputs before LLM processing",
+        "documentation": "https://learn.microsoft.com/azure/ai-services/content-safety/concepts/jailbreak-detection"
+      },
+      "hallucination": {
+        "tools": ["GroundednessEvaluator", "GroundednessProEvaluator", "Foundry IQ"],
+        "first_action": "Implement Groundedness Detection with threshold of 4+ for production",
+        "documentation": "https://learn.microsoft.com/azure/ai-services/content-safety/concepts/groundedness"
+      },
+      "bias_and_fairness": {
+        "tools": ["Fairlearn", "HateUnfairnessEvaluator"],
+        "first_action": "Run Fairlearn MetricFrame analysis across protected groups",
+        "documentation": "https://fairlearn.org/"
+      },
+      "lack_of_explainability": {
+        "tools": ["InterpretML", "EBM", "SHAP"],
+        "first_action": "Train model using InterpretML EBM for inherent explainability",
+        "documentation": "https://interpret.ml/"
+      },
+      "copyright_infringement": {
+        "tools": ["Protected Material Detection"],
+        "first_action": "Enable Protected Material Detection for all generated content",
+        "documentation": "https://learn.microsoft.com/azure/ai-services/content-safety/"
+      },
+      "security_vulnerabilities": {
+        "tools": ["PyRIT", "Counterfit", "Microsoft Defender for AI"],
+        "first_action": "Run PyRIT automated red teaming before production deployment",
+        "documentation": "https://github.com/Azure/PyRIT"
+      },
+      "governance_gaps": {
+        "tools": ["Foundry Control Plane", "Agent 365", "Microsoft Purview"],
+        "first_action": "Deploy Foundry Control Plane for centralized governance",
+        "documentation": "https://azure.microsoft.com/en-us/blog/microsoft-foundry-scale-innovation-on-a-modular-interoperable-and-secure-agent-stack/"
+      },
+      "privacy_violations": {
+        "tools": ["Presidio", "SmartNoise", "Azure Confidential Computing", "Azure Key Vault"],
+        "first_action": "Implement Presidio for PII detection in all data pipelines",
+        "documentation": "https://microsoft.github.io/presidio/"
+      },
+      "agent_misuse": {
+        "tools": ["Foundry Control Plane", "Entra Agent ID", "TaskAdherenceEvaluator"],
+        "first_action": "Configure Entra Agent ID with least-privilege permissions",
+        "documentation": "https://learn.microsoft.com/en-us/entra/"
+      }
+    },
+    "minimum_viable_rai": {
+      "description": "The absolute minimum RAI tools every AI application should have",
+      "for_any_llm_application": [
+        {"tool": "Azure AI Content Safety", "reason": "Filter harmful content in inputs and outputs"},
+        {"tool": "Prompt Shields", "reason": "Protect against jailbreak and prompt injection"}
+      ],
+      "for_rag_applications": [
+        {"tool": "Groundedness Detection", "reason": "Prevent hallucinations by validating against sources"}
+      ],
+      "for_decision_systems": [
+        {"tool": "Fairlearn", "reason": "Assess bias across protected groups"},
+        {"tool": "InterpretML", "reason": "Provide explainable decisions"}
+      ],
+      "for_user_data_handling": [
+        {"tool": "Presidio", "reason": "Detect and protect PII"}
+      ],
+      "for_agents": [
+        {"tool": "Foundry Control Plane", "reason": "Governance and guardrails for agent actions"},
+        {"tool": "Entra Agent ID", "reason": "Identity and access management for agents"}
+      ]
     }
   }
 }
