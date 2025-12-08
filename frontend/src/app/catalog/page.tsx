@@ -236,14 +236,15 @@ export default function CatalogPage() {
   })
 
   // Render capability section (handles both array and object formats)
-  const renderCapabilities = (capabilities: ToolCapabilities | string[] | undefined) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const renderCapabilities = (capabilities: ToolCapabilities | string[] | undefined | any) => {
     if (!capabilities) return null
 
     if (Array.isArray(capabilities)) {
       return (
         <ul>
           {capabilities.map((cap, idx) => (
-            <li key={idx}>{cap}</li>
+            <li key={idx}>{typeof cap === 'string' ? cap : JSON.stringify(cap)}</li>
           ))}
         </ul>
       )
@@ -252,16 +253,44 @@ export default function CatalogPage() {
     // Object format with sub-categories
     return (
       <div>
-        {Object.entries(capabilities).map(([key, values]) => (
-          <div key={key} style={{ marginBottom: '10px' }}>
-            <strong style={{ textTransform: 'capitalize' }}>{key.replace(/_/g, ' ')}:</strong>
-            <ul style={{ marginTop: '4px' }}>
-              {values?.map((v, idx) => (
-                <li key={idx}>{v}</li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        {Object.entries(capabilities).map(([key, values]) => {
+          // Handle different value types
+          if (Array.isArray(values)) {
+            // Array of strings
+            return (
+              <div key={key} style={{ marginBottom: '10px' }}>
+                <strong style={{ textTransform: 'capitalize' }}>{key.replace(/_/g, ' ')}:</strong>
+                <ul style={{ marginTop: '4px' }}>
+                  {values.map((v, idx) => (
+                    <li key={idx}>{typeof v === 'string' ? v : JSON.stringify(v)}</li>
+                  ))}
+                </ul>
+              </div>
+            )
+          } else if (typeof values === 'object' && values !== null) {
+            // Nested object (like attack_types: {evasion: "...", inference: "..."})
+            return (
+              <div key={key} style={{ marginBottom: '10px' }}>
+                <strong style={{ textTransform: 'capitalize' }}>{key.replace(/_/g, ' ')}:</strong>
+                <ul style={{ marginTop: '4px' }}>
+                  {Object.entries(values).map(([subKey, subValue]) => (
+                    <li key={subKey}>
+                      <strong>{subKey.replace(/_/g, ' ')}:</strong> {String(subValue)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )
+          } else if (typeof values === 'string') {
+            // Simple string value
+            return (
+              <div key={key} style={{ marginBottom: '10px' }}>
+                <strong style={{ textTransform: 'capitalize' }}>{key.replace(/_/g, ' ')}:</strong> {values}
+              </div>
+            )
+          }
+          return null
+        })}
       </div>
     )
   }
@@ -433,10 +462,10 @@ export default function CatalogPage() {
                       {!isExpanded && (
                         <div style={{ marginTop: '12px' }}>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                            {useCase.industry_relevance.slice(0, 3).map((industry, i) => (
+                            {useCase.industry_relevance?.slice(0, 3).map((industry, i) => (
                               <span key={i} className={styles.principleBadge} style={{ fontSize: '11px' }}>{industry}</span>
                             ))}
-                            {useCase.industry_relevance.length > 3 && (
+                            {(useCase.industry_relevance?.length || 0) > 3 && (
                               <span className={styles.principleBadge} style={{ fontSize: '11px' }}>+{useCase.industry_relevance.length - 3} more</span>
                             )}
                           </div>
@@ -448,7 +477,7 @@ export default function CatalogPage() {
                           <div className={styles.detailSection}>
                             <h4>Industries</h4>
                             <div className={styles.principles}>
-                              {useCase.industry_relevance.map((industry, i) => (
+                              {useCase.industry_relevance?.map((industry, i) => (
                                 <span key={i} className={styles.principleBadge}>{industry}</span>
                               ))}
                             </div>
@@ -459,6 +488,7 @@ export default function CatalogPage() {
                             <p>{useCase.risk_profile}</p>
                           </div>
 
+                          {useCase.required_tools && useCase.required_tools.length > 0 && (
                           <div className={styles.detailSection}>
                             <h4>🔧 Required Tools</h4>
                             {useCase.required_tools.map((tool, i) => (
@@ -473,6 +503,7 @@ export default function CatalogPage() {
                               </div>
                             ))}
                           </div>
+                          )}
 
                           {useCase.recommended_tools && useCase.recommended_tools.length > 0 && (
                             <div className={styles.detailSection}>
@@ -486,15 +517,18 @@ export default function CatalogPage() {
                             </div>
                           )}
 
+                          {useCase.implementation_steps && useCase.implementation_steps.length > 0 && (
                           <div className={styles.detailSection}>
                             <h4>📋 Implementation Steps</h4>
                             <ol style={{ paddingLeft: '20px', margin: 0 }}>
                               {useCase.implementation_steps.map((step, i) => (
-                                <li key={i} style={{ marginBottom: '6px', fontSize: '14px' }}>{step.replace(/^\d+\.\s*/, '')}</li>
+                                <li key={i} style={{ marginBottom: '6px', fontSize: '14px' }}>{String(step).replace(/^\d+\.\s*/, '')}</li>
                               ))}
                             </ol>
                           </div>
+                          )}
 
+                          {useCase.success_metrics && useCase.success_metrics.length > 0 && (
                           <div className={styles.detailSection}>
                             <h4>✅ Success Metrics</h4>
                             <ul style={{ paddingLeft: '20px', margin: 0 }}>
@@ -503,7 +537,9 @@ export default function CatalogPage() {
                               ))}
                             </ul>
                           </div>
+                          )}
 
+                          {useCase.common_pitfalls && useCase.common_pitfalls.length > 0 && (
                           <div className={styles.detailSection}>
                             <h4>⚠️ Common Pitfalls to Avoid</h4>
                             <ul style={{ paddingLeft: '20px', margin: 0 }}>
@@ -512,6 +548,7 @@ export default function CatalogPage() {
                               ))}
                             </ul>
                           </div>
+                          )}
                         </div>
                       )}
                     </div>
