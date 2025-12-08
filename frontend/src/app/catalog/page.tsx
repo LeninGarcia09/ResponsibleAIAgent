@@ -34,8 +34,16 @@ interface CategoriesMap {
   [key: string]: CategoryData
 }
 
+interface QuickReferenceItem {
+  tools: string[]
+  first_action: string
+  documentation: string
+}
+
 interface QuickReference {
-  tool_by_risk?: { [key: string]: string }
+  description?: string
+  tool_by_risk?: { [key: string]: QuickReferenceItem | string[] }
+  minimum_viable_rai?: object
 }
 
 interface ResourceLink {
@@ -690,16 +698,28 @@ export default function CatalogPage() {
             </div>
 
             <div className={styles.toolsGrid}>
-              {Object.entries(quickReference.tool_by_risk).map(([risk, tools]) => (
-                <div key={risk} className={styles.toolCard}>
-                  <h3 className={styles.toolName} style={{ textTransform: 'capitalize' }}>
-                    {risk.replace(/_/g, ' ')}
-                  </h3>
-                  <p className={styles.toolDescription}>
-                    Recommended tools: <strong>{tools}</strong>
-                  </p>
-                </div>
-              ))}
+              {Object.entries(quickReference.tool_by_risk).map(([risk, data]) => {
+                // Handle both old format (string[]) and new format (object with tools, first_action, documentation)
+                const isNewFormat = data && typeof data === 'object' && !Array.isArray(data) && 'tools' in data
+                const tools = isNewFormat ? (data as QuickReferenceItem).tools : (Array.isArray(data) ? data : [])
+                const firstAction = isNewFormat ? (data as QuickReferenceItem).first_action : null
+                
+                return (
+                  <div key={risk} className={styles.toolCard}>
+                    <h3 className={styles.toolName} style={{ textTransform: 'capitalize' }}>
+                      {risk.replace(/_/g, ' ')}
+                    </h3>
+                    <p className={styles.toolDescription}>
+                      <strong>Tools:</strong> {tools.join(', ')}
+                    </p>
+                    {firstAction && (
+                      <p style={{ fontSize: '13px', color: '#0078d4', marginTop: '8px' }}>
+                        <strong>First Action:</strong> {firstAction}
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </section>
         )}
@@ -733,19 +753,25 @@ export default function CatalogPage() {
                 </div>
               </div>
               <div className={styles.toolsGrid}>
-                {Object.entries(resources.core_documentation).map(([key, resource]) => (
-                  <a
-                    key={key}
-                    href={resource.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.resourceCard}
-                  >
-                    <h3 className={styles.resourceTitle}>{resource.title}</h3>
-                    <p className={styles.resourceDescription}>{resource.description}</p>
-                    <span className={styles.resourceLink}>View Documentation →</span>
-                  </a>
-                ))}
+                {Object.entries(resources.core_documentation).map(([key, resource]) => {
+                  // Skip if not a valid resource object
+                  if (!resource || typeof resource !== 'object' || !('url' in resource)) {
+                    return null
+                  }
+                  return (
+                    <a
+                      key={key}
+                      href={resource.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.resourceCard}
+                    >
+                      <h3 className={styles.resourceTitle}>{resource.title}</h3>
+                      <p className={styles.resourceDescription}>{resource.description}</p>
+                      <span className={styles.resourceLink}>View Documentation →</span>
+                    </a>
+                  )
+                })}
               </div>
             </section>
           )}
@@ -807,6 +833,10 @@ export default function CatalogPage() {
                 </div>
                 <div className={styles.toolsGrid}>
                   {Object.entries(category).map(([key, resource]) => {
+                    // Skip if not a valid resource object
+                    if (!resource || typeof resource !== 'object' || !('url' in resource)) {
+                      return null
+                    }
                     const res = resource as ResourceLink
                     return (
                       <a
@@ -819,7 +849,7 @@ export default function CatalogPage() {
                         <h3 className={styles.resourceTitle}>{res.title}</h3>
                         <p className={styles.resourceDescription}>{res.description}</p>
                         <span className={styles.resourceLink}>
-                          {res.url.includes('github.com') ? 'View on GitHub →' : 'View Documentation →'}
+                          {res.url?.includes('github.com') ? 'View on GitHub →' : 'View Documentation →'}
                         </span>
                       </a>
                     )
