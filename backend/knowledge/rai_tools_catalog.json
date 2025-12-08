@@ -1093,257 +1093,416 @@
       ]
     },
     "fairness_and_bias": {
-      "description": "Tools for assessing and mitigating algorithmic fairness issues",
+      "description": "Tools for assessing and mitigating algorithmic fairness issues in AI/ML systems.",
+      "category_guidance": {
+        "when_to_use": "Any ML model making decisions about people, especially in high-stakes domains like lending, hiring, healthcare, or criminal justice",
+        "key_considerations": ["Protected attributes to assess", "Fairness definition appropriate for context", "Regulatory requirements (ECOA, Title VII)", "Trade-offs between fairness metrics and accuracy"]
+      },
       "tools": [
         {
           "name": "Fairlearn",
           "type": "library",
           "status": "Stable",
+          "maturity_tier": "mature",
+          "adoption": "Mainstream - Industry standard for fairness assessment and mitigation",
           "version": "0.13.0",
           "license": "MIT",
           "github_stars": 2200,
-          "description": "Open-source library for assessing and improving fairness of machine learning models",
+          "description": "Open-source library for assessing and improving fairness of machine learning models. Provides both metrics and mitigation algorithms.",
+          "primary_purpose": "Measure and mitigate unfairness in ML models across demographic groups",
+          "when_to_use": [
+            "Building ML models that affect people's lives",
+            "Hiring and recruitment systems",
+            "Credit scoring and lending decisions",
+            "Healthcare risk prediction",
+            "Insurance pricing models",
+            "Criminal justice algorithms",
+            "Regulatory compliance for fairness"
+          ],
+          "when_not_to_use": [
+            "LLM/generative AI fairness (different paradigm)",
+            "Real-time content moderation (use Content Safety)",
+            "When no demographic data is available",
+            "Unsupervised learning tasks"
+          ],
+          "prerequisites": [
+            "Python environment",
+            "Trained ML model",
+            "Test dataset with demographic attributes",
+            "Understanding of fairness definitions"
+          ],
+          "capabilities": [
+            "Demographic Parity assessment",
+            "Equalized Odds assessment",
+            "True Positive Rate Parity",
+            "False Positive Rate Parity",
+            "Selection Rate comparison",
+            "CorrelationRemover (preprocessing)",
+            "ExponentiatedGradient (in-processing)",
+            "GridSearch (in-processing)",
+            "ThresholdOptimizer (post-processing)"
+          ],
+          "fairness_metrics": ["Demographic Parity", "Equalized Odds", "True Positive Rate Parity", "False Positive Rate Parity", "Selection Rate"],
+          "mitigation_algorithms": {
+            "preprocessing": ["CorrelationRemover - Remove correlation with protected attributes"],
+            "in_processing": ["ExponentiatedGradient - Train with fairness constraints", "GridSearch - Search for fair model parameters"],
+            "post_processing": ["ThresholdOptimizer - Adjust decision thresholds per group"]
+          },
+          "rai_pillars": ["Fairness", "Accountability", "Transparency"],
+          "related_tools": {
+            "integrates_with": ["Azure ML", "scikit-learn", "Responsible AI Dashboard"],
+            "complements": ["InterpretML for explainability", "Responsible AI Dashboard for visualization"],
+            "alternative_to": ["Manual fairness analysis"]
+          },
+          "implementation_effort": "Medium - Requires fairness expertise and demographic data",
+          "pricing": "Open source - Free to use",
           "installation": "pip install fairlearn",
           "repository": "https://github.com/fairlearn/fairlearn",
-          "capabilities": {
-            "fairness_metrics": ["Demographic Parity", "Equalized Odds", "True Positive Rate Parity", "False Positive Rate Parity", "Selection Rate"],
-            "mitigation_algorithms": {
-              "preprocessing": ["CorrelationRemover"],
-              "in_processing": ["ExponentiatedGradient", "GridSearch"],
-              "post_processing": ["ThresholdOptimizer"]
-            }
-          },
-          "documentation_url": "https://fairlearn.org/",
-          "use_cases": ["Hiring and recruitment systems", "Credit scoring models", "Healthcare risk prediction", "Criminal justice algorithms"]
+          "documentation_url": "https://fairlearn.org/"
         }
       ]
     },
     "explainability_and_interpretability": {
-      "description": "Tools for understanding and explaining AI model decisions",
+      "description": "Tools for understanding and explaining AI model decisions to stakeholders, regulators, and end users.",
+      "category_guidance": {
+        "when_to_use": "Regulated industries, high-stakes decisions, model debugging, or when stakeholders need to understand AI decisions",
+        "key_considerations": ["Local vs global explanations needed", "Audience (technical vs non-technical)", "Regulatory requirements", "Model type (glassbox vs blackbox)"]
+      },
       "tools": [
         {
           "name": "InterpretML",
           "type": "library",
           "status": "Stable",
+          "maturity_tier": "mature",
+          "adoption": "Mainstream - Industry standard for ML interpretability",
           "version": "0.7.3",
           "license": "MIT",
           "github_stars": 6700,
-          "description": "Open-source library for training interpretable models and explaining blackbox models",
-          "installation": "pip install interpret",
-          "repository": "https://github.com/interpretml/interpret",
-          "capabilities": {
-            "glassbox_models": ["Explainable Boosting Machine (EBM)", "Decision Tree", "Linear/Logistic Regression", "Decision Rule Lists"],
+          "description": "Open-source library for training interpretable models and explaining blackbox models. Best known for Explainable Boosting Machines (EBMs).",
+          "primary_purpose": "Make ML models interpretable and explainable",
+          "when_to_use": [
+            "Regulated industries (finance, healthcare, insurance)",
+            "High-stakes decision-making requiring explanations",
+            "Model debugging and understanding",
+            "Stakeholder communication about AI decisions",
+            "When accuracy can be traded for interpretability",
+            "Compliance documentation"
+          ],
+          "when_not_to_use": [
+            "LLM/generative AI explanations",
+            "When pure accuracy is the only goal",
+            "Real-time inference with strict latency requirements",
+            "Very high-dimensional unstructured data"
+          ],
+          "prerequisites": [
+            "Python environment",
+            "Tabular or structured dataset",
+            "Understanding of model explanation concepts"
+          ],
+          "capabilities": [
+            "Explainable Boosting Machine (EBM) - glassbox model",
+            "Decision Tree - interpretable by design",
+            "Linear/Logistic Regression - coefficient-based explanations",
+            "Decision Rule Lists - human-readable rules",
+            "SHAP - feature importance for any model",
+            "LIME - local explanations for any model",
+            "Partial Dependence Plots",
+            "Morris Sensitivity Analysis"
+          ],
+          "model_types": {
+            "glassbox": ["Explainable Boosting Machine (EBM)", "Decision Tree", "Linear/Logistic Regression", "Decision Rule Lists"],
             "blackbox_explainers": ["SHAP", "LIME", "Partial Dependence", "Morris Sensitivity"]
           },
-          "documentation_url": "https://interpret.ml/",
-          "use_cases": ["Regulated industries (finance, healthcare)", "High-stakes decision making", "Model debugging", "Stakeholder communication"]
+          "rai_pillars": ["Transparency", "Accountability", "Fairness"],
+          "related_tools": {
+            "integrates_with": ["Azure ML", "Responsible AI Dashboard", "scikit-learn"],
+            "complements": ["Fairlearn for fairness analysis", "Responsible AI Dashboard for visualization"],
+            "alternative_to": ["Custom explanation code", "Black-box only approaches"]
+          },
+          "implementation_effort": "Low - pip install and train/explain",
+          "pricing": "Open source - Free to use",
+          "installation": "pip install interpret",
+          "repository": "https://github.com/interpretml/interpret",
+          "documentation_url": "https://interpret.ml/"
         }
       ]
     },
     "privacy": {
-      "description": "Comprehensive tools for protecting privacy, sensitive data, and implementing privacy-preserving AI solutions",
-      "guidance": {
-        "overview": "Privacy protection in AI requires a multi-layered approach: (1) PII detection and anonymization for input/output data, (2) Differential privacy for model training and analytics, (3) Secure computation for data-in-use protection, (4) Data governance for enterprise compliance",
-        "when_to_use": {
-          "pii_handling": "Use Presidio when your AI processes user data, customer records, documents, or any text/images that may contain personal information",
-          "analytics_on_sensitive_data": "Use SmartNoise when you need statistical analysis or ML training on sensitive datasets while maintaining mathematical privacy guarantees",
-          "maximum_security": "Use Azure Confidential Computing when processing highly sensitive data (healthcare, financial) where even the cloud provider shouldn't access the data",
-          "enterprise_governance": "Use Microsoft Purview for organization-wide data governance, classification, and compliance management"
-        }
+      "description": "Comprehensive tools for protecting privacy, sensitive data, and implementing privacy-preserving AI solutions.",
+      "category_guidance": {
+        "when_to_use": "Any AI system processing personal data, sensitive information, or requiring regulatory compliance",
+        "key_considerations": ["Type of PII being processed", "Regulatory requirements (GDPR, HIPAA, CCPA)", "Data residency requirements", "Privacy vs utility trade-offs"],
+        "multi_layer_approach": "Privacy protection requires: (1) PII detection and anonymization, (2) Differential privacy for analytics, (3) Secure computation for data-in-use, (4) Data governance for compliance"
       },
       "tools": [
         {
           "name": "Microsoft Presidio",
           "type": "library",
           "status": "Stable",
+          "maturity_tier": "mature",
+          "adoption": "Mainstream - Standard for PII detection and anonymization in AI pipelines",
           "version": "2.2+",
           "license": "MIT",
           "description": "Context-aware, customizable PII detection and anonymization SDK. The go-to solution for protecting personal data in AI pipelines.",
+          "primary_purpose": "Detect and anonymize personally identifiable information in text and images",
+          "when_to_use": [
+            "AI chatbots processing user conversations",
+            "Document analysis and summarization",
+            "Data pipelines ingesting customer data",
+            "Healthcare AI processing patient records",
+            "Financial AI processing transaction data",
+            "Before storing conversation logs",
+            "Before sending data to LLMs",
+            "GDPR, HIPAA, CCPA compliance"
+          ],
+          "when_not_to_use": [
+            "Structured data with known PII columns (may still help)",
+            "When PII is needed for the use case",
+            "Real-time high-throughput with microsecond latency requirements"
+          ],
+          "prerequisites": [
+            "Python environment",
+            "SpaCy or other NLP model for NER",
+            "Understanding of PII types in your domain",
+            "Anonymization strategy defined"
+          ],
+          "capabilities": [
+            "Named entity recognition (SpaCy, Stanza, Transformers)",
+            "Regex pattern matching with context",
+            "Custom recognizer development",
+            "Multi-language support (EN, ES, DE, FR, IT, PT, NL)",
+            "Replace, redact, mask, hash, encrypt operators",
+            "Image PII redaction (OCR-based)",
+            "Structured data PII detection"
+          ],
+          "supported_entities": [
+            "PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER", "CREDIT_CARD",
+            "US_SSN", "US_PASSPORT", "US_DRIVER_LICENSE",
+            "UK_NHS", "UK_NINO",
+            "LOCATION", "DATE_TIME", "IP_ADDRESS", "URL"
+          ],
+          "anonymization_operators": [
+            "replace - Placeholder like <PERSON>",
+            "redact - Remove completely",
+            "mask - Partial hiding (****1234)",
+            "hash - Cryptographic hash",
+            "encrypt - Reversible encryption"
+          ],
+          "rai_pillars": ["Privacy & Security", "Accountability"],
+          "related_tools": {
+            "integrates_with": ["Azure OpenAI", "Azure AI Search", "LangChain", "Azure ML Pipelines"],
+            "complements": ["Microsoft Purview for governance", "Azure Key Vault for encryption keys"],
+            "alternative_to": ["Custom regex solutions", "Manual redaction"]
+          },
+          "implementation_effort": "Low to Medium - pip install and configure recognizers",
+          "pricing": "Open source - Free to use",
           "installation": "pip install presidio-analyzer presidio-anonymizer",
           "repository": "https://github.com/microsoft/presidio",
-          "when_to_use": {
-            "required_for": ["AI chatbots processing user conversations", "Document analysis and summarization", "Data pipelines ingesting customer data", "Healthcare AI processing patient records", "Financial AI processing transaction data"],
-            "critical_scenarios": ["Before storing conversation logs", "Before sending data to LLMs", "When anonymizing training datasets", "Compliance with GDPR, HIPAA, CCPA"]
-          },
-          "architecture": {
-            "modules": [
-              {"name": "presidio-analyzer", "purpose": "PII detection using NLP, regex, and ML models", "install": "pip install presidio-analyzer"},
-              {"name": "presidio-anonymizer", "purpose": "Apply anonymization operators to detected PII", "install": "pip install presidio-anonymizer"},
-              {"name": "presidio-image-redactor", "purpose": "Detect and redact PII in images (OCR + detection)", "install": "pip install presidio-image-redactor"},
-              {"name": "presidio-structured", "purpose": "PII detection in structured data (DataFrames, databases)", "install": "pip install presidio-structured"}
-            ],
-            "deployment_options": ["Python library", "Docker container", "Kubernetes", "Azure Container Apps", "As preprocessing in Azure ML pipelines"]
-          },
-          "capabilities": {
-            "detection_methods": {
-              "named_entity_recognition": "Uses SpaCy, Stanza, or Transformers for entity detection",
-              "pattern_matching": "Regex-based detection with contextual validation",
-              "custom_recognizers": "Build domain-specific detectors for proprietary data types",
-              "multi_language": "Supports English, Spanish, German, French, Italian, Portuguese, Dutch, and more"
-            },
-            "anonymization_operators": [
-              {"name": "replace", "description": "Replace PII with a placeholder like <PERSON>", "use_when": "General anonymization, maintaining readability"},
-              {"name": "redact", "description": "Remove PII completely", "use_when": "Maximum privacy, data minimization"},
-              {"name": "mask", "description": "Partially hide PII (e.g., ****1234)", "use_when": "Need to show partial info for verification"},
-              {"name": "hash", "description": "Replace with cryptographic hash", "use_when": "Need consistency across documents while hiding values"},
-              {"name": "encrypt", "description": "Encrypt PII with reversible encryption", "use_when": "Need to de-anonymize later with proper authorization"},
-              {"name": "custom", "description": "Apply custom transformation logic", "use_when": "Domain-specific requirements"}
-            ],
-            "supported_entities": {
-              "standard": ["PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER", "CREDIT_CARD", "CRYPTO", "DATE_TIME", "DOMAIN_NAME", "IP_ADDRESS", "LOCATION", "IBAN_CODE", "NRP", "MEDICAL_LICENSE", "URL"],
-              "us_specific": ["US_SSN", "US_PASSPORT", "US_DRIVER_LICENSE", "US_BANK_NUMBER", "US_ITIN"],
-              "uk_specific": ["UK_NHS", "UK_NINO"],
-              "other_regions": ["AU_ABN", "AU_ACN", "AU_TFN", "AU_MEDICARE", "SG_NRIC_FIN", "IN_PAN", "IN_AADHAAR"]
-            }
-          },
-          "integration_examples": {
-            "azure_openai": "Use Presidio to anonymize user prompts before sending to Azure OpenAI, then de-anonymize responses",
-            "azure_ai_search": "Anonymize documents before indexing, or detect PII in search results",
-            "azure_ml": "Add as preprocessing step in ML pipelines for training data anonymization",
-            "langchain": "Use as a tool or preprocessing step in LangChain applications"
-          },
           "documentation_url": "https://microsoft.github.io/presidio/"
         },
         {
           "name": "SmartNoise SDK",
           "type": "library",
           "status": "Stable",
+          "maturity_tier": "established",
+          "adoption": "Specialized - Research and privacy-sensitive analytics teams",
           "version": "1.0+",
           "license": "MIT",
-          "description": "Differential privacy toolkit for statistical analysis and synthetic data generation. Enables analytics on sensitive data while providing mathematical privacy guarantees.",
-          "installation": {
-            "sql": "pip install smartnoise-sql",
-            "synth": "pip install smartnoise-synth"
-          },
-          "repository": "https://github.com/opendp/smartnoise-sdk",
-          "maintained_by": "OpenDP (collaboration between Microsoft, Harvard IQSS)",
-          "when_to_use": {
-            "ideal_for": ["Research on sensitive datasets (medical, financial)", "Publishing aggregate statistics while protecting individuals", "Training ML models with privacy guarantees", "Generating synthetic data for sharing or testing"],
-            "privacy_guarantee": "Differential privacy provides mathematical proof that query results don't reveal whether any specific individual is in the dataset"
-          },
-          "components": [
-            {
-              "name": "smartnoise-sql",
-              "description": "Run differentially private SQL queries on tabular data",
-              "features": ["Standard SQL syntax", "Automatic noise injection", "Privacy budget tracking", "Works with pandas DataFrames, SQL Server, Postgres, Spark"],
-              "example_use": "Calculate average salary by department without revealing individual salaries"
-            },
-            {
-              "name": "smartnoise-synth",
-              "description": "Generate differentially private synthetic data",
-              "algorithms": ["MWEM (Multiplicative Weights Exponential Mechanism)", "PATE-CTGAN (Private Aggregation of Teacher Ensembles + CTGAN)", "DP-CTGAN"],
-              "example_use": "Create a synthetic version of patient records for sharing with researchers"
-            }
+          "description": "Differential privacy toolkit for statistical analysis and synthetic data generation. Provides mathematical privacy guarantees for analytics.",
+          "primary_purpose": "Enable analytics on sensitive data with formal privacy guarantees",
+          "when_to_use": [
+            "Research on sensitive datasets (medical, financial)",
+            "Publishing aggregate statistics while protecting individuals",
+            "Training ML models with privacy guarantees",
+            "Generating synthetic data for sharing or testing",
+            "Census-style data releases",
+            "Privacy-preserving data sharing between organizations"
+          ],
+          "when_not_to_use": [
+            "Real-time PII detection (use Presidio)",
+            "When exact query results are required",
+            "Very small datasets (noise overwhelms signal)",
+            "When privacy budget is exhausted"
+          ],
+          "prerequisites": [
+            "Python environment",
+            "Understanding of differential privacy concepts",
+            "Privacy budget planning",
+            "Tabular or SQL-compatible data"
+          ],
+          "capabilities": [
+            "Differentially private SQL queries",
+            "Automatic noise injection",
+            "Privacy budget tracking",
+            "Synthetic data generation (MWEM, DP-CTGAN)",
+            "Works with pandas, SQL Server, Postgres, Spark"
           ],
           "key_concepts": {
-            "epsilon": "Privacy loss parameter - lower values = more privacy but less accuracy. Typical range: 0.1 to 10",
-            "delta": "Probability of privacy breach - typically set to 1/n where n is dataset size",
-            "privacy_budget": "Total privacy loss allowed - exhausted as more queries are made"
+            "epsilon": "Privacy loss parameter (0.1-10 typical)",
+            "delta": "Privacy breach probability (typically 1/n)",
+            "privacy_budget": "Total allowed privacy loss"
           },
+          "rai_pillars": ["Privacy & Security", "Accountability"],
+          "related_tools": {
+            "integrates_with": ["pandas", "SQL databases", "Spark"],
+            "complements": ["Presidio for PII anonymization", "Azure Confidential Computing"],
+            "alternative_to": ["Manual data aggregation", "k-anonymity approaches"]
+          },
+          "implementation_effort": "High - Requires differential privacy expertise",
+          "pricing": "Open source - Free to use",
+          "installation": "pip install smartnoise-sql smartnoise-synth",
+          "repository": "https://github.com/opendp/smartnoise-sdk",
+          "maintained_by": "OpenDP (Microsoft + Harvard IQSS)",
           "documentation_url": "https://smartnoise.org/"
         },
         {
           "name": "Azure Confidential Computing",
           "type": "service",
           "status": "Generally Available",
-          "description": "Hardware-based Trusted Execution Environments (TEEs) that protect data while it's being processed. Provides 'data-in-use' protection where even Microsoft cannot access your data.",
-          "when_to_use": {
-            "required_for": ["Processing highly sensitive data (healthcare PHI, financial PII)", "Multi-party computation where parties don't trust each other", "AI inference on confidential data", "Regulatory requirements for data isolation"],
-            "ideal_scenarios": ["Healthcare AI processing patient data", "Financial AI processing trading algorithms", "Government AI processing classified information", "Collaborative AI where multiple organizations contribute data"]
-          },
-          "offerings": [
-            {
-              "name": "Confidential VMs",
-              "description": "Virtual machines with hardware-based memory encryption (AMD SEV-SNP or Intel TDX)",
-              "use_when": "Lift-and-shift existing workloads with confidentiality requirements",
-              "features": ["Full VM memory encryption", "No code changes required", "Attestation support"]
-            },
-            {
-              "name": "Confidential Containers on AKS",
-              "description": "Run containerized workloads in TEEs on Azure Kubernetes Service",
-              "use_when": "Cloud-native confidential AI applications",
-              "features": ["Container-level isolation", "Kubernetes orchestration", "Works with existing container images"]
-            },
-            {
-              "name": "Intel SGX Enclaves",
-              "description": "Application-level enclaves for the highest security (application code modifications required)",
-              "use_when": "Maximum security for specific sensitive operations",
-              "features": ["Smallest trusted computing base", "Code attestation", "Requires SDK integration"]
-            },
-            {
-              "name": "Confidential Inference (ONNX Runtime)",
-              "description": "Run ML model inference in a TEE",
-              "use_when": "Protect both model IP and input data during inference",
-              "features": ["Model confidentiality", "Input data protection", "Attestation of inference environment"]
-            }
+          "maturity_tier": "mature",
+          "adoption": "Growing - Healthcare, financial, and government sectors",
+          "description": "Hardware-based Trusted Execution Environments (TEEs) that protect data while being processed. Even Microsoft cannot access your data.",
+          "primary_purpose": "Protect data-in-use with hardware-level isolation",
+          "when_to_use": [
+            "Processing highly sensitive data (healthcare PHI, financial PII)",
+            "Multi-party computation where parties don't trust each other",
+            "AI inference on confidential data",
+            "Regulatory requirements for data isolation",
+            "Healthcare AI processing patient data",
+            "Financial AI processing trading algorithms",
+            "Government AI processing classified information"
           ],
+          "when_not_to_use": [
+            "Standard workloads without confidentiality requirements",
+            "Cost-sensitive projects without compliance needs",
+            "Workloads requiring maximum performance (some overhead)",
+            "Development and testing environments"
+          ],
+          "prerequisites": [
+            "Azure subscription",
+            "Understanding of TEE concepts",
+            "Application attestation planning",
+            "Security architecture review"
+          ],
+          "capabilities": [
+            "Confidential VMs (AMD SEV-SNP, Intel TDX)",
+            "Confidential Containers on AKS",
+            "Intel SGX Enclaves for maximum isolation",
+            "Confidential Inference with ONNX Runtime",
+            "Hardware attestation",
+            "Memory encryption"
+          ],
+          "offerings": {
+            "confidential_vms": "Lift-and-shift with full VM encryption",
+            "confidential_containers": "Cloud-native on Kubernetes",
+            "sgx_enclaves": "Maximum security, requires SDK",
+            "confidential_inference": "Protect models and inputs"
+          },
+          "rai_pillars": ["Privacy & Security", "Reliability"],
+          "related_tools": {
+            "integrates_with": ["Azure Kubernetes Service", "Azure ML", "ONNX Runtime"],
+            "complements": ["Presidio for PII handling", "Key Vault for key management"],
+            "alternative_to": ["On-premises processing for security"]
+          },
+          "implementation_effort": "High - Requires security architecture planning",
+          "pricing": "Premium pricing for confidential SKUs",
           "documentation_url": "https://learn.microsoft.com/azure/confidential-computing/"
         },
         {
           "name": "Microsoft Purview",
           "type": "platform",
           "status": "Generally Available",
-          "description": "Unified data governance, data security, and risk & compliance platform for enterprises. Essential for organization-wide privacy and data protection.",
-          "when_to_use": {
-            "required_for": ["Enterprise AI governance", "Data classification at scale", "Regulatory compliance (GDPR, HIPAA, SOX)", "Insider risk management", "Data loss prevention"],
-            "ideal_scenarios": ["Understanding what sensitive data exists across your organization", "Preventing data leakage in AI applications", "Audit and compliance reporting", "Managing data lifecycle"]
+          "maturity_tier": "mature",
+          "adoption": "Mainstream - Enterprise data governance standard",
+          "description": "Unified data governance, security, and compliance platform. Essential for organization-wide privacy and data protection at scale.",
+          "primary_purpose": "Enterprise-wide data governance, classification, and compliance management",
+          "when_to_use": [
+            "Enterprise AI governance requirements",
+            "Data classification at scale",
+            "GDPR, HIPAA, SOX compliance",
+            "Insider risk management",
+            "Data loss prevention for AI",
+            "Understanding sensitive data across the organization",
+            "Subject rights request automation"
+          ],
+          "when_not_to_use": [
+            "Small projects without enterprise governance needs",
+            "Single-application PII handling (use Presidio)",
+            "Non-Microsoft ecosystem (limited integration)",
+            "Real-time content filtering (use Content Safety)"
+          ],
+          "prerequisites": [
+            "Microsoft 365 or Azure subscription",
+            "Data governance strategy defined",
+            "Compliance team involvement",
+            "Integration with data sources planned"
+          ],
+          "capabilities": [
+            "Data Map - Automated discovery across clouds",
+            "Unified Catalog - Business glossary and lineage",
+            "Information Protection - Sensitivity labels",
+            "Data Loss Prevention (DLP)",
+            "Insider Risk Management",
+            "Privacy Risk Management",
+            "Subject Rights Requests automation",
+            "Data Lifecycle Management"
+          ],
+          "rai_pillars": ["Privacy & Security", "Accountability", "Transparency"],
+          "related_tools": {
+            "integrates_with": ["Microsoft 365", "Azure", "AWS", "GCP", "Microsoft Copilot"],
+            "complements": ["Presidio for real-time PII", "Azure AI Content Safety"],
+            "alternative_to": ["Manual data governance", "Point solutions for compliance"]
           },
-          "capabilities": {
-            "data_governance": [
-              {"name": "Data Map", "description": "Automated discovery and classification of data across Azure, AWS, GCP, and on-premises"},
-              {"name": "Unified Catalog", "description": "Business glossary, data assets catalog, and lineage tracking"},
-              {"name": "Data Estate Insights", "description": "Analytics on data distribution, sensitivity, and governance coverage"}
-            ],
-            "data_security": [
-              {"name": "Information Protection", "description": "Apply sensitivity labels to documents, emails, and data"},
-              {"name": "Data Loss Prevention (DLP)", "description": "Prevent sensitive data from leaving the organization via email, cloud apps, or endpoints"},
-              {"name": "Insider Risk Management", "description": "Detect and respond to potentially risky user activities"}
-            ],
-            "privacy_management": [
-              {"name": "Privacy Risk Management", "description": "Identify privacy risks and data overexposure"},
-              {"name": "Subject Rights Requests", "description": "Automate GDPR/CCPA subject access requests"},
-              {"name": "Data Lifecycle Management", "description": "Retention and deletion policies for compliance"}
-            ]
-          },
-          "ai_integration": {
-            "copilot_integration": "Purview integrates with Microsoft 365 Copilot to enforce DLP policies on AI-generated content",
-            "azure_ai_integration": "Use Purview sensitivity labels to classify AI training data and outputs"
-          },
+          "implementation_effort": "High - Enterprise deployment with stakeholder alignment",
+          "pricing": "Microsoft 365 E5 or standalone licenses",
           "documentation_url": "https://learn.microsoft.com/microsoft-365/purview/"
         },
         {
           "name": "Azure Key Vault",
           "type": "service",
           "status": "Generally Available",
-          "description": "Secure secrets, keys, and certificate management. Essential for protecting API keys, connection strings, and encryption keys used in AI applications.",
-          "when_to_use": {
-            "required_for": ["Storing Azure OpenAI API keys", "Managing encryption keys for data protection", "Certificate management for secure communications", "Secrets rotation and auditing"],
-            "never_do": ["Hard-code API keys in application code", "Store secrets in environment variables in production", "Share keys via email or chat"]
+          "maturity_tier": "mature",
+          "adoption": "Mainstream - Required for any production Azure deployment",
+          "description": "Secure secrets, keys, and certificate management. Essential for protecting API keys and encryption keys in AI applications.",
+          "primary_purpose": "Centralized and secure management of secrets, keys, and certificates",
+          "when_to_use": [
+            "Storing Azure OpenAI API keys",
+            "Managing encryption keys for data protection",
+            "Certificate management for secure communications",
+            "Secrets rotation and auditing",
+            "Any production AI deployment"
+          ],
+          "when_not_to_use": [
+            "Development environments (but still recommended)",
+            "When using managed identity exclusively",
+            "Cost-sensitive prototypes (use environment variables temporarily)"
+          ],
+          "prerequisites": [
+            "Azure subscription",
+            "Understanding of managed identity",
+            "Access policy or RBAC planning"
+          ],
+          "capabilities": [
+            "Secret storage and retrieval",
+            "Key management (software and HSM)",
+            "Certificate management",
+            "Automatic rotation support",
+            "Audit logging",
+            "Managed Identity integration"
+          ],
+          "security_tiers": {
+            "standard": "Software-protected (FIPS 140 Level 1)",
+            "premium": "HSM-protected (FIPS 140-3 Level 3)"
           },
-          "tiers": {
-            "standard": "Software-protected keys (FIPS 140 Level 1)",
-            "premium": "HSM-protected keys (FIPS 140-3 Level 3) - use for highest security requirements"
+          "rai_pillars": ["Privacy & Security"],
+          "related_tools": {
+            "integrates_with": ["All Azure services", "Azure OpenAI", "Azure ML"],
+            "complements": ["Managed Identity for keyless auth", "Azure Confidential Computing"],
+            "alternative_to": ["Environment variables", "Config files (not recommended)"]
           },
-          "ai_integration_patterns": {
-            "azure_openai": "Store OpenAI API keys in Key Vault, retrieve at runtime using managed identity",
-            "training_data_encryption": "Use Key Vault keys for Azure Storage encryption of training data",
-            "model_signing": "Store code signing certificates for ML model validation"
-          },
+          "implementation_effort": "Low - Simple setup with SDK or managed identity",
+          "pricing": "Pay per operation - Very cost effective",
           "documentation_url": "https://learn.microsoft.com/azure/key-vault/"
-        },
-        {
-          "name": "Counterfit",
-          "type": "library",
-          "status": "Stable",
-          "license": "MIT",
-          "description": "Open-source tool for security testing of AI systems. Simulates adversarial attacks to identify vulnerabilities before deployment.",
-          "repository": "https://github.com/Azure/counterfit",
-          "when_to_use": {
-            "ideal_for": ["Security red teaming of ML models", "Testing model robustness against adversarial inputs", "Compliance security assessments", "Before deploying models to production"]
-          },
-          "attack_types": ["Evasion attacks", "Inference attacks", "Inversion attacks", "Data extraction"],
-          "supported_model_types": ["Image classification", "Text classification", "Tabular data models", "Cloud-hosted models"],
-          "documentation_url": "https://github.com/Azure/counterfit/wiki"
         }
       ]
     },
