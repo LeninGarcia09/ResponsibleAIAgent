@@ -9,8 +9,18 @@ from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 app = Flask(__name__)
 CORS(app)
 
-# Import system prompt
+# Import system prompt (legacy - kept for fallback)
 from rai_system_prompt import SYSTEM_PROMPT, build_full_prompt, RESPONSE_FORMAT_INSTRUCTIONS, OPENAI_CONFIG
+
+# Import adaptive prompt system (NEW - primary recommendation engine)
+try:
+    from adaptive_prompt_builder import get_adaptive_prompts
+    from response_adapter import assess_and_configure, Priority, PriorityMapper
+    ADAPTIVE_SYSTEM_AVAILABLE = True
+    print("✓ Adaptive prompt system initialized")
+except ImportError as e:
+    ADAPTIVE_SYSTEM_AVAILABLE = False
+    print(f"⚠ Adaptive prompt system not available, using legacy: {e}")
 
 # Import knowledge loader for dynamic knowledge access
 try:
@@ -354,10 +364,68 @@ MICROSOFT_RAI_PRINCIPLES = {
     }
 }
 
-def generate_recommendations_with_ai(project_data, is_advanced=False):
-    """Generate recommendations using Azure OpenAI with Managed Identity."""
+def generate_recommendations_adaptive(project_data):
+    """
+    Generate recommendations using the adaptive prompt system.
+    
+    This function:
+    1. Assesses input completeness
+    2. Builds adapted system and user prompts
+    3. Calls Azure OpenAI with the appropriate context
+    4. Returns structured recommendations with priority levels
+    """
     if not client:
-        # Fallback to static recommendations if no Azure OpenAI configured
+        return generate_recommendations_static(project_data)
+    
+    if not ADAPTIVE_SYSTEM_AVAILABLE:
+        # Fall back to legacy system
+        return generate_recommendations_with_ai_legacy(project_data)
+    
+    try:
+        # Get adaptive prompts based on input assessment
+        adaptive_result = get_adaptive_prompts(project_data)
+        
+        system_prompt = adaptive_result["system_prompt"]
+        user_prompt = adaptive_result["user_prompt"]
+        response_config = adaptive_result["response_config"]
+        input_assessment = adaptive_result["input_assessment"]
+        
+        # Call Azure OpenAI with adapted prompts
+        response = client.chat.completions.create(
+            model=AZURE_OPENAI_DEPLOYMENT,
+            temperature=OPENAI_CONFIG["temperature"],
+            max_tokens=OPENAI_CONFIG["max_tokens"],
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            response_format={"type": "json_object"}
+        )
+        
+        # Parse the response
+        ai_response = json.loads(response.choices[0].message.content)
+        
+        # Enrich response with adaptive metadata
+        ai_response["_adaptive_metadata"] = {
+            "response_depth": response_config["response_depth"],
+            "review_mode": response_config["review_mode"],
+            "completeness_score": input_assessment["completeness_score"],
+            "detected_project_type": response_config["project_type"],
+            "suggestions_for_better_review": input_assessment.get("suggestions", []),
+            "enablement_message": response_config.get("enablement_message", "")
+        }
+        
+        return ai_response
+        
+    except Exception as e:
+        print(f"Adaptive recommendation error: {e}")
+        # Fall back to legacy system
+        return generate_recommendations_with_ai_legacy(project_data)
+
+
+def generate_recommendations_with_ai_legacy(project_data, is_advanced=False):
+    """Legacy recommendation generation using Azure OpenAI (fallback)."""
+    if not client:
         return generate_recommendations_static(project_data)
     
     try:
@@ -665,13 +733,126 @@ def health():
     return jsonify({
         "status": "healthy", 
         "message": "Responsible AI Agent API", 
-        "version": "3.0",
+        "version": "4.0",  # Updated for adaptive system
+        "features": {
+            "adaptive_recommendations": ADAPTIVE_SYSTEM_AVAILABLE,
+            "knowledge_base": KNOWLEDGE_AVAILABLE,
+            "azure_openai": azure_openai_configured
+        },
         "azure_openai": {
             "enabled": azure_openai_configured,
             "auth_method": auth_method if azure_openai_configured else None,
             "endpoint": AZURE_OPENAI_ENDPOINT if azure_openai_configured else None,
             "deployment": AZURE_OPENAI_DEPLOYMENT if azure_openai_configured else None
         }
+    })
+
+
+@app.route("/api/assess-input", methods=["POST", "OPTIONS"])
+def assess_input():
+    """
+    NEW: Assess input completeness and return expected response depth.
+    
+    This helps the frontend show users what level of analysis they'll receive
+    and what additional fields would improve their review.
+    """
+    if request.method == "OPTIONS":
+        return jsonify({})
+    
+    try:
+        project_data = request.get_json() or {}
+        
+        if ADAPTIVE_SYSTEM_AVAILABLE:
+            from response_adapter import InputAssessor
+            
+            # Assess input
+            assessment = InputAssessor.assess_input(project_data)
+            project_characteristics = InputAssessor.detect_project_type(project_data)
+            
+            return jsonify({
+                "completeness_score": assessment["completeness_score"],
+                "response_depth": assessment["response_depth"].value,
+                "review_mode": {
+                    "minimal": "quick_guidance",
+                    "basic": "quick_scan", 
+                    "standard": "standard_review",
+                    "comprehensive": "deep_dive"
+                }.get(assessment["response_depth"].value, "quick_guidance"),
+                "provided_fields": assessment["provided_fields"],
+                "field_count": assessment["field_count"],
+                "total_fields": assessment["total_fields"],
+                "suggestions_for_better_review": assessment["suggestions"],
+                "detected_project_type": project_characteristics.get("primary_type", "General AI"),
+                "project_characteristics": {
+                    "is_llm_project": project_characteristics.get("is_llm_project", False),
+                    "is_agent_project": project_characteristics.get("is_agent_project", False),
+                    "is_high_risk": project_characteristics.get("is_high_risk", False),
+                    "handles_pii": project_characteristics.get("handles_pii", False),
+                    "is_customer_facing": project_characteristics.get("is_customer_facing", False)
+                },
+                "depth_descriptions": {
+                    "minimal": "Quick guidance with essential tools and getting started steps",
+                    "basic": "Quick scan with reference architectures and 30-day roadmap",
+                    "standard": "Full analysis across all RAI principles with detailed recommendations",
+                    "comprehensive": "Deep dive with custom implementation roadmap and exhaustive analysis"
+                }
+            })
+        else:
+            # Fallback - basic assessment without adaptive system
+            provided = [k for k, v in project_data.items() if v and str(v).strip()]
+            return jsonify({
+                "completeness_score": min(100, len(provided) * 10),
+                "response_depth": "standard",
+                "review_mode": "standard_review",
+                "field_count": len(provided),
+                "suggestions_for_better_review": [],
+                "adaptive_system_available": False
+            })
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/priority-levels", methods=["GET"])
+def get_priority_levels():
+    """
+    NEW: Return the priority level definitions for frontend display.
+    """
+    return jsonify({
+        "priority_levels": [
+            {
+                "level": "CRITICAL_BLOCKER",
+                "display_name": "Critical Blocker",
+                "icon": "🚫",
+                "color": "#dc2626",
+                "description": "Must be addressed before production deployment. Non-negotiable for responsible AI.",
+                "action_required": True
+            },
+            {
+                "level": "HIGHLY_RECOMMENDED",
+                "display_name": "Highly Recommended",
+                "icon": "⚠️",
+                "color": "#f59e0b",
+                "description": "Strongly recommended for production readiness. Significant risk if not addressed.",
+                "action_required": True
+            },
+            {
+                "level": "RECOMMENDED",
+                "display_name": "Recommended",
+                "icon": "✅",
+                "color": "#10b981",
+                "description": "Best practice that improves RAI posture. Should be part of the roadmap.",
+                "action_required": False
+            },
+            {
+                "level": "NICE_TO_HAVE",
+                "display_name": "Nice to Have",
+                "icon": "💡",
+                "color": "#6366f1",
+                "description": "Enhancement that optimizes the system. Can be prioritized based on resources.",
+                "action_required": False
+            }
+        ]
     })
 
 @app.route("/api/submit-review", methods=["POST", "OPTIONS"])
@@ -682,9 +863,9 @@ def submit_review():
     try:
         project_data = request.get_json() or {}
         
-        # Use AI-powered recommendations if available
+        # Use adaptive AI-powered recommendations if available
         if client:
-            ai_response = generate_recommendations_with_ai(project_data, is_advanced=False)
+            ai_response = generate_recommendations_adaptive(project_data)
             
             # If we got a proper AI response, use it
             if "recommendations" in ai_response and not ai_response.get("fallback"):
@@ -729,9 +910,9 @@ def submit_advanced_review():
     try:
         project_data = request.get_json() or {}
         
-        # Use AI-powered recommendations if available
+        # Use adaptive AI-powered recommendations (handles all input levels)
         if client:
-            ai_response = generate_recommendations_with_ai(project_data, is_advanced=True)
+            ai_response = generate_recommendations_adaptive(project_data)
             
             # If we got a proper AI response, use it
             if "recommendations" in ai_response and not ai_response.get("fallback"):
