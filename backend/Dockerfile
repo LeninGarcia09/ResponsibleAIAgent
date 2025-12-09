@@ -10,6 +10,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app.py .
 COPY rai_system_prompt.py .
 COPY knowledge_loader.py .
+COPY response_adapter.py .
+COPY adaptive_prompt_builder.py .
+COPY catalog_integration.py .
 
 # Copy knowledge base files
 COPY knowledge/ ./knowledge/
