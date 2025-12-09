@@ -1432,11 +1432,6 @@ Don't worry about technical details - we'll help you figure those out!"
                       Complexity: {result.reference_architecture.deployment_complexity}
                     </span>
                   )}
-                  {result.reference_architecture.estimated_monthly_cost && (
-                    <span className={styles.archCost}>
-                      Est. Cost: {result.reference_architecture.estimated_monthly_cost}
-                    </span>
-                  )}
                 </div>
                 {result.reference_architecture.architecture_diagram && (
                   <div className={styles.archDiagram}>

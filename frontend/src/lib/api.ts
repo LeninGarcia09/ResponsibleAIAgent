@@ -93,7 +93,6 @@ export interface AIRecommendation {
   tools: Tool[]
   effort?: string
   time_estimate?: string
-  cost?: string
   skill_required?: string
   impact?: string
   confidence?: string
@@ -160,7 +159,6 @@ export interface ReferenceArchitecture {
   architecture_diagram?: string
   azure_services: AzureService[]
   github_repos: GitHubRepo[]
-  estimated_monthly_cost?: string
   deployment_complexity?: string
 }
 
@@ -177,7 +175,6 @@ export interface EssentialTool {
   url: string
   install_command?: string
   purpose: string
-  cost?: string
 }
 
 export interface WeekFocus {
@@ -264,7 +261,6 @@ export interface SubmissionResponse {
     low_priority_items?: number
     top_3_priorities?: string[]
     estimated_total_effort?: string
-    estimated_total_cost?: string
   }
   next_steps?: string[]
   reference_links?: ReferenceLinks

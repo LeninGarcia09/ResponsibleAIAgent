@@ -234,7 +234,6 @@ for category in response.categories_analysis:
 ### Implementation Estimates
 For each recommendation, provide:
 - **Effort Level**: Low (< 1 day), Medium (1-5 days), High (1-2 weeks), Very High (2+ weeks)
-- **Cost Estimate**: Free, Low ($0-100/mo), Medium ($100-500/mo), High ($500+/mo)
 - **Skill Required**: Beginner, Intermediate, Advanced
 - **Dependencies**: What must be in place first
 
@@ -712,7 +711,6 @@ Structure your response as a JSON object with the following format:
         "github_repos": [
             {"name": "Repo name", "url": "https://github.com/...", "description": "What it provides"}
         ],
-        "estimated_monthly_cost": "$X-$Y range",
         "deployment_complexity": "Low | Medium | High"
     },
     "quick_start_guide": {
@@ -725,8 +723,7 @@ Structure your response as a JSON object with the following format:
                 "name": "Tool name",
                 "url": "https://...",
                 "install_command": "pip install ... (if applicable)",
-                "purpose": "Why this tool first",
-                "cost": "Free | Low | Medium | High"
+                "purpose": "Why this tool first"
             }
         ],
         "thirty_day_roadmap": {
@@ -777,7 +774,6 @@ Structure your response as a JSON object with the following format:
             ],
             "effort": "Low | Medium | High | Very High",
             "time_estimate": "< 1 day | 1-5 days | 1-2 weeks | 2+ weeks",
-            "cost": "Free | Low ($0-100/mo) | Medium ($100-500/mo) | High ($500+/mo)",
             "skill_required": "Beginner | Intermediate | Advanced",
             "impact": "Low | Medium | High",
             "confidence": "High | Medium | Low",
@@ -791,8 +787,7 @@ Structure your response as a JSON object with the following format:
         "medium_priority_items": 0,
         "low_priority_items": 0,
         "top_3_priorities": ["First priority", "Second priority", "Third priority"],
-        "estimated_total_effort": "X weeks",
-        "estimated_total_cost": "$X-$Y/month"
+        "estimated_total_effort": "X weeks"
     },
     "next_steps": [
         "Immediate action 1",
