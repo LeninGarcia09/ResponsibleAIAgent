@@ -1,5 +1,19 @@
 // API client for communicating with the backend
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080/api'
+// Default to the deployed API if env var is missing to avoid "Failed to fetch" in hosted builds
+const DEFAULT_REMOTE_API = 'https://rai-backend.graymoss-a8a3aef8.westus3.azurecontainerapps.io/api'
+const API_BASE_URL =
+  (process.env.NEXT_PUBLIC_API_BASE_URL || '').trim() ||
+  // Use local backend for localhost, otherwise fall back to the remote API
+  (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:8080/api'
+    : DEFAULT_REMOTE_API)
+
+if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
+  // Surface a clear hint in the console when the env var is not set
+  // (helps diagnose production builds pulling the localhost default)
+  // eslint-disable-next-line no-console
+  console.warn(`NEXT_PUBLIC_API_BASE_URL not set; using ${API_BASE_URL}`)
+}
 
 export interface AIReviewSubmission {
   submitter_email?: string

@@ -538,12 +538,144 @@ def augment_with_dynamic_resources(ai_response: dict, project_data: dict) -> dic
                 "reference_architecture": f"Azure AI + Content Safety architecture for {project_type or 'AI'} applications",
                 "starter_repo": dynamic_repos[0].get("url", dynamic_repos[0].get("html_url", "")) if dynamic_repos else "https://github.com/microsoft/responsible-ai-toolbox"
             }
+
+        # Ensure risk scores are present so the frontend can render the risk widgets
+        if not ai_response.get("risk_scores"):
+            ai_response["risk_scores"] = calculate_basic_risk_scores(project_data)
         
         return ai_response
         
     except Exception as e:
         print(f"⚠ Error augmenting with dynamic resources: {e}")
         return ai_response
+
+
+def calculate_basic_risk_scores(project_data: dict) -> dict:
+    """Generate a simple risk score when the model omits it.
+
+    This keeps the UI populated with the expected structure and gives users
+    a starting point until the adaptive model returns detailed scores.
+    """
+
+    overall = 55
+    drivers_pos = []
+    drivers_neg = []
+
+    stage = (project_data.get("deployment_stage") or "").lower()
+    description = (project_data.get("project_description") or "").lower()
+    tech_type = (project_data.get("technology_type") or "").lower()
+    industry = (project_data.get("industry") or "").lower()
+    capabilities = project_data.get("ai_capabilities") or []
+
+    def bump(amount: int, reason: str, positive: bool = False):
+        nonlocal overall
+        overall += amount
+        (drivers_pos if positive else drivers_neg).append(reason)
+
+    if stage in ["production", "ga", "live"]:
+        bump(10, "Production deployment increases risk")
+    if any(word in description for word in ["health", "medical", "patient"]):
+        bump(12, "Health-related use case")
+    if any(word in description for word in ["financial", "bank", "payment", "loan"]):
+        bump(10, "Financial decisioning or data")
+    if any(word in description for word in ["children", "minor", "student"]):
+        bump(8, "Impacts children or minors")
+    if any(word in description for word in ["biometric", "facial", "face", "voiceprint"]):
+        bump(10, "Biometric data involved")
+
+    high_risk_caps = {"personal_data", "decisions", "facial_recognition", "health_data", "financial"}
+    if any(cap in high_risk_caps for cap in capabilities):
+        bump(12, "High-risk AI capability selected")
+
+    # Guardrails: keep score bounded
+    overall = max(0, min(95, overall))
+
+    if overall >= 85:
+        level = "High"
+    elif overall >= 70:
+        level = "Medium"
+    else:
+        level = "Low"
+
+    principle_base = max(50, min(90, overall))
+    principle_scores = {
+        "reliability_safety": principle_base,
+        "privacy_security": min(95, principle_base + 5 if drivers_neg else principle_base),
+        "fairness": principle_base,
+        "transparency": principle_base - 2,
+        "inclusiveness": principle_base - 3,
+        "accountability": principle_base - 1,
+    }
+
+    return {
+        "overall_score": overall,
+        "risk_level": level,
+        "risk_summary": "Preliminary risk estimate based on limited input; provide more details for a refined score.",
+        "principle_scores": principle_scores,
+        "critical_factors": {
+            "score_drivers_positive": drivers_pos,
+            "score_drivers_negative": drivers_neg,
+        },
+        "qualitative_assessment": {
+            "governance": "Add ownership, escalation, and change control to improve accountability.",
+            "safety": "Validate safety filters, abuse monitoring, and rate limits.",
+            "privacy": "Confirm data minimization, retention limits, and PII handling.",
+            "fairness": "Check for biased training data and add evaluation slices.",
+            "transparency": "Document intended use, limitations, and user messaging.",
+        },
+    }
+
+
+def build_static_pillar_recommendations(recommendations: list) -> dict:
+    """Create a minimal pillar-organized structure from static recommendations."""
+
+    icon_map = {
+        "reliability_safety": "🛡️",
+        "privacy_security": "🔒",
+        "fairness": "⚖️",
+        "transparency": "🔍",
+        "inclusiveness": "🌍",
+        "accountability": "📋",
+    }
+
+    key_map = {
+        "fairness": "fairness",
+        "reliability & safety": "reliability_safety",
+        "privacy & security": "privacy_security",
+        "transparency": "transparency",
+        "inclusiveness": "inclusiveness",
+        "accountability": "accountability",
+        "llm/generative ai specific": "reliability_safety",
+        "llm generative ai specific": "reliability_safety",
+    }
+
+    pillars = {}
+
+    for rec in recommendations:
+        principle = (rec.get("principle") or "").strip()
+        principle_key = key_map.get(principle.lower()) or "_".join(principle.lower().replace("&", "").split())
+        if not principle_key:
+            continue
+
+        if principle_key not in pillars:
+            pillars[principle_key] = {
+                "pillar_name": principle or principle_key.replace("_", " ").title(),
+                "pillar_icon": icon_map.get(principle_key, "📌"),
+                "pillar_description": rec.get("description", ""),
+                "why_it_matters": rec.get("description", ""),
+                "risk_if_ignored": "Higher risk posture if these controls are not implemented.",
+                "recommendations": [],
+            }
+
+        for item in rec.get("recommendations", []):
+            pillars[principle_key]["recommendations"].append({
+                "title": item,
+                "why_needed": rec.get("description", ""),
+                "what_happens_without": "Increased likelihood of safety, fairness, or privacy issues if left unaddressed.",
+                "priority": rec.get("priority", "High"),
+            })
+
+    return pillars
 
 
 def generate_recommendations_adaptive(project_data):
@@ -1186,7 +1318,11 @@ def submit_review():
                 "tools": "https://www.microsoft.com/ai/tools-practices"
             }
         }
-        
+
+        # Populate risk scores and pillar grouping for the static fallback path
+        response_data["risk_scores"] = calculate_basic_risk_scores(project_data)
+        response_data["recommendations_by_pillar"] = build_static_pillar_recommendations(recommendations)
+
         return jsonify(response_data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -1241,6 +1377,9 @@ def submit_advanced_review():
             }
         }
         
+        response_data["risk_scores"] = calculate_basic_risk_scores(project_data)
+        response_data["recommendations_by_pillar"] = build_static_pillar_recommendations(recommendations)
+
         return jsonify(response_data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
