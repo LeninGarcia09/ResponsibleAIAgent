@@ -9,16 +9,21 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY app.py .
 COPY rai_system_prompt.py .
+COPY tiered_recommendations.py .
 COPY knowledge_loader.py .
 COPY response_adapter.py .
 COPY adaptive_prompt_builder.py .
 COPY catalog_integration.py .
+COPY dynamic_resources.py .
 
 # Copy knowledge base files
 COPY knowledge/ ./knowledge/
 
 # Copy shared folder if exists
 COPY shared/ ./shared/
+
+# Create cache directory for dynamic resources
+RUN mkdir -p ./cache
 
 EXPOSE 8080
 

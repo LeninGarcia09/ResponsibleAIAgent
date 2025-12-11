@@ -1,0 +1,362 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-12-11",
+  "update_frequency": "Check weekly or on major Microsoft announcements",
+  "source": "Compiled from Microsoft Learn, Azure Architecture Center, and GitHub",
+  
+  "architecture_patterns": {
+    "rag_conversational": {
+      "name": "RAG Chat Application",
+      "description": "Retrieval-Augmented Generation pattern for building chatbots that can answer questions using your own data",
+      "complexity": "Medium",
+      "primary_use_cases": ["Customer support", "Knowledge base Q&A", "Document search", "Enterprise chat"],
+      "azure_services": [
+        {"service": "Azure OpenAI Service", "purpose": "LLM for generation", "tier": "Standard"},
+        {"service": "Azure AI Search", "purpose": "Vector search and retrieval", "tier": "Basic+"},
+        {"service": "Azure Blob Storage", "purpose": "Document storage", "tier": "Standard"},
+        {"service": "Azure Container Apps", "purpose": "Application hosting", "tier": "Consumption"},
+        {"service": "Azure Document Intelligence", "purpose": "Document parsing", "tier": "S0"}
+      ],
+      "github_templates": [
+        {
+          "repo": "Azure-Samples/azure-search-openai-demo",
+          "language": "Python",
+          "stars_approx": 7500,
+          "deployment_command": "azd init -t azure-search-openai-demo"
+        },
+        {
+          "repo": "Azure-Samples/azure-search-openai-demo-csharp",
+          "language": "C#",
+          "deployment_command": "azd init -t azure-search-openai-demo-csharp"
+        },
+        {
+          "repo": "Azure-Samples/azure-search-openai-demo-java",
+          "language": "Java",
+          "deployment_command": "azd init -t azure-search-openai-demo-java"
+        }
+      ],
+      "documentation_links": [
+        {
+          "title": "RAG Solution Design and Evaluation Guide",
+          "url": "https://learn.microsoft.com/azure/architecture/ai-ml/guide/rag/rag-solution-design-and-evaluation-guide"
+        },
+        {
+          "title": "Azure OpenAI on Your Data",
+          "url": "https://learn.microsoft.com/azure/ai-services/openai/concepts/use-your-data"
+        }
+      ],
+      "rai_considerations": [
+        "Content Safety filters for input/output",
+        "Groundedness detection to prevent hallucinations",
+        "Citation and source attribution",
+        "Access control for sensitive documents"
+      ]
+    },
+    
+    "multi_agent_orchestration": {
+      "name": "Multi-Agent AI System",
+      "description": "Orchestrated system of specialized AI agents working together to solve complex tasks",
+      "complexity": "High",
+      "primary_use_cases": ["Complex automation", "Multi-step workflows", "Customer service routing", "Research assistants"],
+      "orchestration_patterns": [
+        {
+          "pattern": "Sequential",
+          "description": "Agents process in pipeline order, each building on previous output",
+          "best_for": "Document processing workflows, approval chains"
+        },
+        {
+          "pattern": "Concurrent",
+          "description": "Multiple agents process same input in parallel, results aggregated",
+          "best_for": "Analysis requiring multiple perspectives, ensemble decisions"
+        },
+        {
+          "pattern": "Handoff",
+          "description": "Dynamic delegation based on task requirements",
+          "best_for": "Customer support triage, specialized routing"
+        },
+        {
+          "pattern": "Group Chat",
+          "description": "Agents collaborate through discussion to reach consensus",
+          "best_for": "Decision making, brainstorming, validation"
+        },
+        {
+          "pattern": "Magentic",
+          "description": "Manager agent dynamically builds and refines task ledger",
+          "best_for": "Open-ended problems, incident response"
+        }
+      ],
+      "azure_services": [
+        {"service": "Azure AI Foundry", "purpose": "Agent development and hosting", "tier": "Standard"},
+        {"service": "Azure OpenAI Service", "purpose": "LLM backbone", "tier": "Standard"},
+        {"service": "Azure AI Agent Service", "purpose": "Agent orchestration", "tier": "Preview"}
+      ],
+      "github_templates": [
+        {
+          "repo": "microsoft/semantic-kernel",
+          "language": "Python/C#/Java",
+          "stars_approx": 26000,
+          "description": "Enterprise agent framework with multi-agent orchestration"
+        },
+        {
+          "repo": "microsoft/autogen",
+          "language": "Python",
+          "stars_approx": 35000,
+          "description": "Framework for building multi-agent conversational systems"
+        },
+        {
+          "repo": "Azure-Samples/mcp-agent-langchainjs",
+          "language": "TypeScript",
+          "description": "MCP integration for agents"
+        }
+      ],
+      "documentation_links": [
+        {
+          "title": "AI Agent Orchestration Patterns",
+          "url": "https://learn.microsoft.com/azure/architecture/ai-ml/guide/ai-agent-design-patterns"
+        },
+        {
+          "title": "Semantic Kernel Agent Framework",
+          "url": "https://learn.microsoft.com/semantic-kernel/frameworks/agent/"
+        }
+      ],
+      "rai_considerations": [
+        "Human-in-the-loop for critical decisions",
+        "Audit trail for agent actions",
+        "Capability boundaries per agent",
+        "Failure handling and graceful degradation"
+      ]
+    },
+    
+    "enterprise_copilot": {
+      "name": "Enterprise Copilot/Assistant",
+      "description": "Custom AI assistant integrated with enterprise data and workflows",
+      "complexity": "Medium-High",
+      "primary_use_cases": ["Employee productivity", "Internal tools", "Process automation", "Knowledge management"],
+      "azure_services": [
+        {"service": "Microsoft 365 Copilot", "purpose": "Office integration", "tier": "Enterprise"},
+        {"service": "Copilot Studio", "purpose": "No-code copilot building", "tier": "Per-user"},
+        {"service": "Azure OpenAI Service", "purpose": "Custom LLM capabilities", "tier": "Standard"}
+      ],
+      "github_templates": [
+        {
+          "repo": "Azure-Samples/contoso-chat-csharp-prompty",
+          "language": "C#",
+          "description": "Retail copilot with Semantic Kernel"
+        },
+        {
+          "repo": "Azure-Samples/chat-with-your-data-solution-accelerator",
+          "language": "Python",
+          "stars_approx": 1100,
+          "deployment_command": "Deploy to Azure button available"
+        }
+      ],
+      "documentation_links": [
+        {
+          "title": "Copilot Studio Documentation",
+          "url": "https://learn.microsoft.com/microsoft-copilot-studio/"
+        },
+        {
+          "title": "Build Copilot Experiences",
+          "url": "https://learn.microsoft.com/microsoft-cloud/dev/copilot/overview"
+        }
+      ],
+      "rai_considerations": [
+        "Enterprise data governance",
+        "User identity and access control",
+        "Sensitive data handling",
+        "Audit and compliance logging"
+      ]
+    },
+    
+    "document_intelligence": {
+      "name": "Document Processing Pipeline",
+      "description": "AI-powered document extraction, classification, and processing",
+      "complexity": "Medium",
+      "primary_use_cases": ["Form processing", "Invoice automation", "Contract analysis", "Medical records"],
+      "azure_services": [
+        {"service": "Azure AI Document Intelligence", "purpose": "Document parsing and extraction", "tier": "S0"},
+        {"service": "Azure OpenAI Service", "purpose": "Summarization and analysis", "tier": "Standard"},
+        {"service": "Azure Blob Storage", "purpose": "Document storage", "tier": "Standard"},
+        {"service": "Azure Logic Apps", "purpose": "Workflow automation", "tier": "Consumption"}
+      ],
+      "github_templates": [
+        {
+          "repo": "Azure-Samples/azure-search-openai-demo",
+          "language": "Python",
+          "description": "Includes document ingestion pipeline"
+        }
+      ],
+      "documentation_links": [
+        {
+          "title": "Document Intelligence Documentation",
+          "url": "https://learn.microsoft.com/azure/ai-services/document-intelligence/"
+        },
+        {
+          "title": "Custom Document Models",
+          "url": "https://learn.microsoft.com/azure/ai-services/document-intelligence/train/custom-model"
+        }
+      ],
+      "rai_considerations": [
+        "PII detection and redaction",
+        "Accuracy validation for critical fields",
+        "Human review workflows",
+        "Data retention policies"
+      ]
+    },
+    
+    "voice_enabled_ai": {
+      "name": "Voice-Enabled AI Application",
+      "description": "AI applications with speech input/output capabilities",
+      "complexity": "Medium-High",
+      "primary_use_cases": ["Call centers", "Voice assistants", "Accessibility", "Hands-free interfaces"],
+      "azure_services": [
+        {"service": "Azure Speech Service", "purpose": "Speech-to-text and text-to-speech", "tier": "S0"},
+        {"service": "Azure OpenAI Service", "purpose": "Conversational AI", "tier": "Standard"},
+        {"service": "Azure Communication Services", "purpose": "Telephony integration", "tier": "Pay-as-you-go"}
+      ],
+      "github_templates": [
+        {
+          "repo": "Azure-Samples/cognitive-services-speech-sdk",
+          "language": "Multiple",
+          "stars_approx": 3400,
+          "description": "Comprehensive speech SDK samples"
+        },
+        {
+          "repo": "Azure-Samples/art-voice-agent-accelerator",
+          "language": "Python",
+          "description": "Voice agent with STT→LLM→TTS pipeline"
+        }
+      ],
+      "documentation_links": [
+        {
+          "title": "Azure Speech Services",
+          "url": "https://learn.microsoft.com/azure/ai-services/speech-service/"
+        },
+        {
+          "title": "Custom Neural Voice",
+          "url": "https://learn.microsoft.com/azure/ai-services/speech-service/custom-neural-voice"
+        }
+      ],
+      "rai_considerations": [
+        "Voice consent and disclosure",
+        "Accessibility compliance",
+        "Deepfake prevention",
+        "Real-time content moderation"
+      ]
+    }
+  },
+  
+  "responsible_ai_tools": {
+    "assessment_and_testing": [
+      {
+        "name": "Azure AI Evaluation SDK",
+        "version": "1.0",
+        "description": "Production evaluators for quality, safety, and agent performance",
+        "url": "https://learn.microsoft.com/azure/ai-foundry/how-to/evaluate-sdk",
+        "install": "pip install azure-ai-evaluation"
+      },
+      {
+        "name": "PyRIT",
+        "version": "0.10+",
+        "description": "AI red teaming and security testing framework",
+        "url": "https://github.com/Azure/PyRIT",
+        "install": "pip install pyrit"
+      },
+      {
+        "name": "Responsible AI Toolbox",
+        "description": "Dashboard for model assessment, fairness, interpretability",
+        "url": "https://github.com/microsoft/responsible-ai-toolbox",
+        "install": "pip install raiwidgets"
+      }
+    ],
+    "fairness_and_bias": [
+      {
+        "name": "Fairlearn",
+        "description": "Fairness assessment and mitigation",
+        "url": "https://fairlearn.org/",
+        "install": "pip install fairlearn"
+      },
+      {
+        "name": "InterpretML",
+        "description": "Model interpretability and explainability",
+        "url": "https://interpret.ml/",
+        "install": "pip install interpret"
+      }
+    ],
+    "content_safety": [
+      {
+        "name": "Azure AI Content Safety",
+        "description": "Content moderation for text and images",
+        "url": "https://learn.microsoft.com/azure/ai-services/content-safety/",
+        "integration": "Azure AI Foundry native integration"
+      },
+      {
+        "name": "Prompt Shields",
+        "description": "Protection against prompt injection and jailbreaks",
+        "url": "https://learn.microsoft.com/azure/ai-services/content-safety/concepts/jailbreak-detection",
+        "integration": "Azure AI Foundry native integration"
+      }
+    ]
+  },
+  
+  "industry_solutions": {
+    "healthcare": {
+      "considerations": ["HIPAA compliance", "Clinical validation", "Patient consent", "Explainability for clinicians"],
+      "relevant_patterns": ["document_intelligence", "rag_conversational"],
+      "azure_services": ["Azure Health Data Services", "Text Analytics for Health"]
+    },
+    "financial_services": {
+      "considerations": ["Regulatory compliance", "Audit trails", "Bias in lending/underwriting", "Explainable decisions"],
+      "relevant_patterns": ["multi_agent_orchestration", "enterprise_copilot"],
+      "azure_services": ["Azure Confidential Computing", "Azure Key Vault"]
+    },
+    "retail": {
+      "considerations": ["Customer privacy", "Recommendation fairness", "Personalization transparency"],
+      "relevant_patterns": ["rag_conversational", "enterprise_copilot"],
+      "sample_repos": ["Azure-Samples/contoso-chat-csharp-prompty"]
+    },
+    "manufacturing": {
+      "considerations": ["Safety-critical decisions", "Equipment reliability", "Worker safety"],
+      "relevant_patterns": ["document_intelligence", "multi_agent_orchestration"],
+      "azure_services": ["Azure IoT Hub", "Azure Digital Twins"]
+    },
+    "government": {
+      "considerations": ["Citizen equity", "Transparency requirements", "Data sovereignty", "Accessibility"],
+      "relevant_patterns": ["rag_conversational", "document_intelligence"],
+      "certifications": ["FedRAMP", "IL2-IL6"]
+    }
+  },
+  
+  "learning_paths": [
+    {
+      "title": "AI Learning Hub",
+      "url": "https://learn.microsoft.com/ai/",
+      "description": "Central hub for all Microsoft AI learning"
+    },
+    {
+      "title": "Develop Generative AI Apps in Microsoft Foundry",
+      "url": "https://learn.microsoft.com/training/paths/create-custom-copilots-ai-studio/",
+      "description": "Build AI apps with Foundry"
+    },
+    {
+      "title": "Responsible AI Business Principles",
+      "url": "https://learn.microsoft.com/training/paths/responsible-ai-business-principles/",
+      "description": "RAI foundations for business leaders"
+    },
+    {
+      "title": "Azure AI Engineer Career Path",
+      "url": "https://learn.microsoft.com/training/career-paths/ai-engineer",
+      "description": "Comprehensive AI engineering training"
+    }
+  ],
+  
+  "_meta": {
+    "next_review_date": "2025-12-18",
+    "maintainer": "RAI Agent System",
+    "auto_update_sources": [
+      "GitHub API for repository stats",
+      "Microsoft Learn RSS for documentation updates"
+    ],
+    "notes": "This file serves as fallback when dynamic fetching fails. Update weekly or after major Microsoft announcements (Ignite, Build, etc.)"
+  }
+}

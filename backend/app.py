@@ -1,5 +1,5 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask import Flask, request, jsonify, make_response
+from flask_cors import CORS, cross_origin
 import uuid
 import os
 import json
@@ -7,7 +7,18 @@ from openai import AzureOpenAI
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 
 app = Flask(__name__)
-CORS(app)
+# Configure CORS with full options to ensure preflight works
+CORS(app, origins="*", allow_headers=["Content-Type"], methods=["GET", "POST", "OPTIONS"])
+
+# Global handler for OPTIONS preflight requests
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = make_response()
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type")
+        response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        return response
 
 # Import system prompt (legacy - kept for fallback)
 from rai_system_prompt import SYSTEM_PROMPT, build_full_prompt, RESPONSE_FORMAT_INSTRUCTIONS, OPENAI_CONFIG
@@ -32,6 +43,19 @@ except ImportError as e:
     KNOWLEDGE_AVAILABLE = False
     knowledge_loader = None
     print(f"⚠ Knowledge loader not available: {e}")
+
+# Import dynamic resources fetcher for real-time reference architectures
+try:
+    from dynamic_resources import (
+        get_dynamic_fetcher, 
+        get_dynamic_reference_architectures,
+        get_github_repo_realtime
+    )
+    DYNAMIC_RESOURCES_AVAILABLE = True
+    print("✓ Dynamic resources fetcher initialized")
+except ImportError as e:
+    DYNAMIC_RESOURCES_AVAILABLE = False
+    print(f"⚠ Dynamic resources not available: {e}")
 
 # Azure OpenAI Configuration
 AZURE_OPENAI_ENDPOINT = os.environ.get("AZURE_OPENAI_ENDPOINT")  # e.g., https://your-resource.openai.azure.com/
@@ -748,7 +772,114 @@ def health():
     })
 
 
-@app.route("/api/assess-input", methods=["POST", "OPTIONS"])
+@app.route("/api/test-risk-assessment", methods=["POST"])
+def test_risk_assessment():
+    """
+    TEST ENDPOINT: Returns mock data with enhanced risk assessment for UI testing.
+    Remove this in production.
+    """
+    data = request.json or {}
+    project_name = data.get("project_name", "Test Project")
+    
+    mock_response = {
+        "submission_id": str(uuid.uuid4()),
+        "project_name": project_name,
+        "status": "completed",
+        "ai_powered": True,
+        "review_mode": "standard",
+        "overall_assessment": {
+            "summary": "This AI project shows moderate risk levels with key concerns around data privacy and content safety. The project benefits from being in the planning stage, allowing time for proper RAI implementation.",
+            "maturity_level": "Developing",
+            "key_strengths": ["Early-stage planning allows for proactive RAI integration", "Clear use case definition"],
+            "critical_gaps": ["No content safety implementation", "Missing PII detection", "No bias testing planned"]
+        },
+        "risk_scores": {
+            "overall_score": 58,
+            "risk_level": "Moderate",
+            "risk_summary": "This project presents moderate risk due to its customer-facing LLM chatbot handling potentially sensitive customer inquiries. The main concerns are lack of content safety controls, potential for harmful outputs, and absence of PII detection. However, being in the planning stage provides opportunity to implement proper safeguards before deployment.",
+            "critical_factors": {
+                "score_drivers_negative": [
+                    {"factor": "Customer-facing LLM without content safety", "impact": "Users could be exposed to harmful, inappropriate, or factually incorrect responses", "severity": "High"},
+                    {"factor": "Processing customer inquiries may include PII", "impact": "Personal data could be logged, stored insecurely, or exposed in responses", "severity": "High"},
+                    {"factor": "No bias testing planned", "impact": "Chatbot may provide inconsistent or discriminatory responses to different user groups", "severity": "Medium"},
+                    {"factor": "No human oversight mechanism", "impact": "Harmful patterns may go undetected until customer complaints arise", "severity": "Medium"}
+                ],
+                "score_drivers_positive": [
+                    {"factor": "Project is in planning stage", "impact": "Allows time to implement proper safeguards before any deployment risk"},
+                    {"factor": "Clear intended purpose defined", "impact": "Enables targeted risk assessment and appropriate tool selection"},
+                    {"factor": "Not processing health or financial data", "impact": "Reduces regulatory complexity and compliance burden"}
+                ]
+            },
+            "qualitative_assessment": {
+                "data_sensitivity": {"level": "Medium", "rationale": "Customer inquiries may contain names, contact info, or preferences"},
+                "user_impact": {"level": "High", "rationale": "Customer-facing system directly affects user experience and trust"},
+                "regulatory_exposure": {"level": "Medium", "rationale": "May need to comply with GDPR, EU AI Act transparency requirements"},
+                "technical_complexity": {"level": "Medium", "rationale": "LLM integration requires content safety, grounding, and monitoring"},
+                "deployment_readiness": {"level": "Low", "rationale": "Significant gaps must be addressed before production deployment"}
+            },
+            "principle_scores": {
+                "fairness": 55,
+                "reliability_safety": 45,
+                "privacy_security": 50,
+                "inclusiveness": 65,
+                "transparency": 60,
+                "accountability": 55
+            },
+            "score_explanation": "Score reflects moderate risk from customer-facing LLM without proper content safety and privacy controls."
+        },
+        "recommendations_by_pillar": {
+            "reliability_safety": {
+                "pillar_name": "Reliability & Safety",
+                "pillar_icon": "🛡️",
+                "why_it_matters": "Your customer-facing chatbot will directly interact with users. Without safety controls, it could generate harmful, offensive, or factually incorrect responses that damage your brand and erode customer trust.",
+                "risk_if_ignored": "Users could receive harmful content, leading to brand damage, customer complaints, potential legal action, and regulatory fines under EU AI Act.",
+                "recommendations": [
+                    {
+                        "title": "Implement Azure AI Content Safety",
+                        "why_needed": "Your chatbot will generate responses to customer inquiries. Content Safety is essential to prevent harmful outputs including hate speech, violence, self-harm content, and sexual content that could reach your customers.",
+                        "what_happens_without": "Customers could receive inappropriate or harmful responses, leading to complaints, social media backlash, and potential regulatory violations under EU AI Act Article 52.",
+                        "priority": "🚫 CRITICAL_BLOCKER",
+                        "tool": {
+                            "name": "Azure AI Content Safety",
+                            "url": "https://learn.microsoft.com/azure/ai-services/content-safety/",
+                            "how_it_helps": "Automatically scans inputs and outputs for harmful content across 4 categories (hate, violence, self-harm, sexual) with configurable severity thresholds."
+                        },
+                        "implementation_steps": ["Create Content Safety resource in Azure Portal", "Integrate SDK into your chatbot pipeline", "Configure severity thresholds based on your audience"]
+                    }
+                ]
+            },
+            "privacy_security": {
+                "pillar_name": "Privacy & Security",
+                "pillar_icon": "🔒",
+                "why_it_matters": "Customer inquiries often contain personal information like names, emails, or account details. Without proper handling, this PII could be exposed in logs, responses, or model training.",
+                "risk_if_ignored": "PII exposure could lead to GDPR violations (fines up to 4% of global revenue), customer data breaches, and loss of trust.",
+                "recommendations": [
+                    {
+                        "title": "Implement PII Detection with Presidio",
+                        "why_needed": "Customer messages may contain names, emails, phone numbers, or account numbers. You need to detect and handle this PII before processing or logging.",
+                        "what_happens_without": "Customer PII could be stored in logs, used in model training, or exposed in responses to other users, violating GDPR and customer trust.",
+                        "priority": "⚠️ HIGHLY_RECOMMENDED",
+                        "tool": {
+                            "name": "Microsoft Presidio",
+                            "url": "https://microsoft.github.io/presidio/",
+                            "how_it_helps": "Detects 50+ PII types across multiple languages and can anonymize or redact sensitive data before processing."
+                        },
+                        "implementation_steps": ["Install Presidio analyzer and anonymizer", "Configure entity recognizers for your use case", "Add to input preprocessing pipeline"]
+                    }
+                ]
+            }
+        },
+        "next_steps": [
+            "Set up Azure AI Content Safety resource and integrate into chatbot pipeline",
+            "Implement Presidio for PII detection before logging or processing",
+            "Design human escalation path for edge cases"
+        ]
+    }
+    
+    return jsonify(mock_response)
+
+
+@app.route("/api/assess-input", methods=["POST"])
 def assess_input():
     """
     NEW: Assess input completeness and return expected response depth.
@@ -756,9 +887,6 @@ def assess_input():
     This helps the frontend show users what level of analysis they'll receive
     and what additional fields would improve their review.
     """
-    if request.method == "OPTIONS":
-        return jsonify({})
-    
     try:
         project_data = request.get_json() or {}
         
@@ -855,11 +983,8 @@ def get_priority_levels():
         ]
     })
 
-@app.route("/api/submit-review", methods=["POST", "OPTIONS"])
+@app.route("/api/submit-review", methods=["POST"])
 def submit_review():
-    if request.method == "OPTIONS":
-        return jsonify({})
-    
     try:
         project_data = request.get_json() or {}
         
@@ -901,12 +1026,9 @@ def submit_review():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/api/submit-advanced-review", methods=["POST", "OPTIONS"])
+@app.route("/api/submit-advanced-review", methods=["POST"])
 def submit_advanced_review():
     """Handle comprehensive/advanced review submissions with detailed questionnaire data."""
-    if request.method == "OPTIONS":
-        return jsonify({})
-    
     try:
         project_data = request.get_json() or {}
         
@@ -996,6 +1118,138 @@ def get_references():
         "references": {},
         "source": "static",
         "message": "No references available"
+    })
+
+
+@app.route("/api/reference-architectures", methods=["GET"])
+def get_reference_architectures():
+    """
+    Return dynamic reference architectures and starter templates.
+    
+    Query params:
+    - project_type: chatbot, multi_agent, document_processing, etc.
+    - use_case: specific use case for filtering
+    - refresh: force refresh of cached data
+    """
+    project_type = request.args.get("project_type", "chatbot")
+    use_case = request.args.get("use_case", "")
+    force_refresh = request.args.get("refresh", "false").lower() == "true"
+    
+    # Try dynamic resources first
+    if DYNAMIC_RESOURCES_AVAILABLE:
+        try:
+            fetcher = get_dynamic_fetcher()
+            
+            # Pass OpenAI client for Bing grounding if available
+            if client:
+                fetcher.openai_client = client
+                fetcher.openai_deployment = AZURE_OPENAI_DEPLOYMENT
+            
+            if force_refresh:
+                fetcher.clear_cache("reference_architectures")
+                fetcher.clear_cache("github_repos")
+            
+            architectures = fetcher.get_reference_architectures(project_type, use_case)
+            
+            return jsonify({
+                "architectures": architectures,
+                "project_type": project_type,
+                "cache_stats": fetcher.get_cache_stats(),
+                "source": "dynamic"
+            })
+        except Exception as e:
+            print(f"Dynamic resources error: {e}")
+    
+    # Fallback to static knowledge base
+    if KNOWLEDGE_AVAILABLE and knowledge_loader:
+        try:
+            arch_file = knowledge_loader._load_json("reference_architectures.json")
+            if arch_file:
+                patterns = arch_file.get("architecture_patterns", {})
+                # Filter by project type if matching
+                relevant = {}
+                for key, pattern in patterns.items():
+                    if project_type.lower() in key.lower() or not project_type:
+                        relevant[key] = pattern
+                
+                return jsonify({
+                    "architectures": relevant if relevant else patterns,
+                    "project_type": project_type,
+                    "learning_paths": arch_file.get("learning_paths", []),
+                    "rai_tools": arch_file.get("responsible_ai_tools", {}),
+                    "source": "knowledge_base"
+                })
+        except Exception as e:
+            print(f"Knowledge base fallback error: {e}")
+    
+    # Final fallback - minimal response
+    return jsonify({
+        "architectures": {},
+        "project_type": project_type,
+        "source": "none",
+        "message": "Reference architectures not available. Please check backend configuration."
+    })
+
+
+@app.route("/api/github-repos", methods=["GET"])
+def get_github_repos():
+    """
+    Return live GitHub repository information for Azure AI samples.
+    
+    Query params:
+    - limit: number of repos to return (default 10)
+    - refresh: force refresh of cached data
+    """
+    limit = request.args.get("limit", 10, type=int)
+    force_refresh = request.args.get("refresh", "false").lower() == "true"
+    
+    if DYNAMIC_RESOURCES_AVAILABLE:
+        try:
+            fetcher = get_dynamic_fetcher()
+            
+            if force_refresh:
+                fetcher.clear_cache("github_repos")
+            
+            repos = fetcher.get_popular_azure_samples(limit)
+            
+            return jsonify({
+                "repos": repos,
+                "count": len(repos),
+                "cache_stats": fetcher.get_cache_stats(),
+                "source": "github_api"
+            })
+        except Exception as e:
+            print(f"GitHub repos error: {e}")
+    
+    # Fallback to static list from knowledge base
+    if KNOWLEDGE_AVAILABLE and knowledge_loader:
+        try:
+            arch_file = knowledge_loader._load_json("reference_architectures.json")
+            if arch_file:
+                all_repos = []
+                for pattern in arch_file.get("architecture_patterns", {}).values():
+                    for template in pattern.get("github_templates", []):
+                        all_repos.append({
+                            "repo": template.get("repo", ""),
+                            "description": template.get("description", ""),
+                            "language": template.get("language", ""),
+                            "stars": template.get("stars_approx", 0),
+                            "deployment_command": template.get("deployment_command", "")
+                        })
+                
+                return jsonify({
+                    "repos": all_repos[:limit],
+                    "count": len(all_repos[:limit]),
+                    "source": "knowledge_base_static"
+                })
+        except Exception as e:
+            print(f"Knowledge base repos fallback error: {e}")
+    
+    return jsonify({
+        "repos": [],
+        "count": 0,
+        "source": "none",
+        "message": "GitHub repository information not available"
     })
 
 

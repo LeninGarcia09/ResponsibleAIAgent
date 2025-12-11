@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Footer from '../../components/Footer'
 import FeedbackButton from '../../components/FeedbackButton'
-import { apiClient, AIReviewSubmission, AdvancedReviewSubmission, SubmissionResponse, Recommendation, isAIRecommendation } from '@/lib/api'
+import { apiClient, AIReviewSubmission, AdvancedReviewSubmission, SubmissionResponse, Recommendation, isAIRecommendation, isSimpleRecommendation, TieredRecommendationItem, TieredRecommendations, RecommendationsByPillar, PillarRecommendations } from '@/lib/api'
 import styles from './submit.module.css'
 
 type ReviewMode = 'basic' | 'advanced'
@@ -82,6 +82,48 @@ export default function SubmitPage() {
   const [result, setResult] = useState<SubmissionResponse | null>(null)
   const [reviewMode, setReviewMode] = useState<ReviewMode>('basic')
   const [currentSection, setCurrentSection] = useState(0)
+  
+  // Progressive disclosure: track expanded sections
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['executive-summary']))
+  const [expandedPillars, setExpandedPillars] = useState<Set<string>>(new Set())
+  const [showDetailedRationale, setShowDetailedRationale] = useState(false)
+  
+  // Toggle section expansion
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(sectionId)) {
+        newSet.delete(sectionId)
+      } else {
+        newSet.add(sectionId)
+      }
+      return newSet
+    })
+  }
+  
+  // Toggle pillar expansion
+  const togglePillar = (pillarKey: string) => {
+    setExpandedPillars(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(pillarKey)) {
+        newSet.delete(pillarKey)
+      } else {
+        newSet.add(pillarKey)
+      }
+      return newSet
+    })
+  }
+  
+  // Expand all pillars
+  const expandAllPillars = () => {
+    const allPillars = ['reliability_safety', 'privacy_security', 'fairness', 'transparency', 'inclusiveness', 'accountability']
+    setExpandedPillars(new Set(allPillars))
+  }
+  
+  // Collapse all pillars
+  const collapseAllPillars = () => {
+    setExpandedPillars(new Set())
+  }
   
   // Accessibility: Field-level validation errors
   const [fieldErrors, setFieldErrors] = useState<FieldError[]>([])
@@ -266,6 +308,115 @@ export default function SubmitPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Test function with hardcoded mock data (no backend needed)
+  const handleTestRiskAssessment = async () => {
+    setLoading(true)
+    setError(null)
+    setResult(null)
+    
+    // Simulate loading
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    // Hardcoded mock data for testing the enhanced risk assessment UI
+    const mockData = {
+      submission_id: "test-" + Date.now(),
+      project_name: "Customer Service Chatbot",
+      status: "completed",
+      ai_powered: true,
+      review_mode: "standard",
+      risk_scores: {
+        overall_score: 58,
+        risk_level: "Moderate",
+        risk_summary: "This project presents moderate risk due to its customer-facing LLM chatbot handling potentially sensitive customer inquiries. The main concerns are lack of content safety controls, potential for harmful outputs, and absence of PII detection. However, being in the planning stage provides opportunity to implement proper safeguards before deployment.",
+        score_explanation: "Score reflects moderate risk from customer-facing LLM without proper content safety and privacy controls.",
+        critical_factors: {
+          score_drivers_negative: [
+            { factor: "Customer-facing LLM without content safety", impact: "Users could be exposed to harmful, inappropriate, or factually incorrect responses", severity: "High" },
+            { factor: "Processing customer inquiries may include PII", impact: "Personal data could be logged, stored insecurely, or exposed in responses", severity: "High" },
+            { factor: "No bias testing planned", impact: "Chatbot may provide inconsistent or discriminatory responses to different user groups", severity: "Medium" },
+            { factor: "No human oversight mechanism", impact: "Harmful patterns may go undetected until customer complaints arise", severity: "Medium" }
+          ],
+          score_drivers_positive: [
+            { factor: "Project is in planning stage", impact: "Allows time to implement proper safeguards before any deployment risk" },
+            { factor: "Clear intended purpose defined", impact: "Enables targeted risk assessment and appropriate tool selection" },
+            { factor: "Not processing health or financial data", impact: "Reduces regulatory complexity and compliance burden" }
+          ]
+        },
+        qualitative_assessment: {
+          data_sensitivity: { level: "Medium", rationale: "Customer inquiries may contain names, contact info, or preferences" },
+          user_impact: { level: "High", rationale: "Customer-facing system directly affects user experience and trust" },
+          regulatory_exposure: { level: "Medium", rationale: "May need to comply with GDPR, EU AI Act transparency requirements" },
+          technical_complexity: { level: "Medium", rationale: "LLM integration requires content safety, grounding, and monitoring" },
+          deployment_readiness: { level: "Low", rationale: "Significant gaps must be addressed before production deployment" }
+        },
+        principle_scores: {
+          fairness: 55,
+          reliability_safety: 45,
+          privacy_security: 50,
+          inclusiveness: 65,
+          transparency: 60,
+          accountability: 55
+        }
+      },
+      overall_assessment: {
+        summary: "This AI project shows moderate risk levels with key concerns around data privacy and content safety.",
+        maturity_level: "Developing",
+        key_strengths: ["Early-stage planning allows for proactive RAI integration", "Clear use case definition"],
+        critical_gaps: ["No content safety implementation", "Missing PII detection", "No bias testing planned"]
+      },
+      recommendations_by_pillar: {
+        reliability_safety: {
+          pillar_name: "Reliability & Safety",
+          pillar_icon: "🛡️",
+          why_it_matters: "Your customer-facing chatbot will directly interact with users. Without safety controls, it could generate harmful, offensive, or factually incorrect responses.",
+          risk_if_ignored: "Users could receive harmful content, leading to brand damage, customer complaints, potential legal action.",
+          recommendations: [
+            {
+              title: "Implement Azure AI Content Safety",
+              why_needed: "Your chatbot will generate responses to customer inquiries. Content Safety is essential to prevent harmful outputs.",
+              what_happens_without: "Customers could receive inappropriate or harmful responses, leading to complaints and regulatory violations.",
+              priority: "🚫 CRITICAL_BLOCKER",
+              tool: {
+                name: "Azure AI Content Safety",
+                url: "https://learn.microsoft.com/azure/ai-services/content-safety/",
+                how_it_helps: "Automatically scans inputs and outputs for harmful content across 4 categories with configurable severity thresholds."
+              },
+              implementation_steps: ["Create Content Safety resource in Azure Portal", "Integrate SDK into your chatbot pipeline", "Configure severity thresholds based on your audience"]
+            }
+          ]
+        },
+        privacy_security: {
+          pillar_name: "Privacy & Security",
+          pillar_icon: "🔐",
+          why_it_matters: "Customer inquiries often contain personal information. Without proper handling, this PII could be exposed.",
+          risk_if_ignored: "PII exposure could lead to GDPR violations (fines up to 4% of global revenue), data breaches, and loss of trust.",
+          recommendations: [
+            {
+              title: "Implement PII Detection with Presidio",
+              why_needed: "Customer messages may contain names, emails, phone numbers. You need to detect and handle this PII.",
+              what_happens_without: "Customer PII could be stored in logs, used in model training, or exposed to other users.",
+              priority: "⚠️ HIGHLY_RECOMMENDED",
+              tool: {
+                name: "Microsoft Presidio",
+                url: "https://microsoft.github.io/presidio/",
+                how_it_helps: "Detects 50+ PII types across multiple languages and can anonymize or redact sensitive data."
+              },
+              implementation_steps: ["Install Presidio analyzer and anonymizer", "Configure entity recognizers", "Add to input preprocessing pipeline"]
+            }
+          ]
+        }
+      },
+      next_steps: [
+        "Set up Azure AI Content Safety resource and integrate into chatbot pipeline",
+        "Implement Presidio for PII detection before logging or processing",
+        "Design human escalation path for edge cases"
+      ]
+    }
+    
+    setResult(mockData as SubmissionResponse)
+    setLoading(false)
   }
 
   const getPriorityClass = (priority: string) => {
@@ -1085,6 +1236,23 @@ Don't worry about technical details - we'll help you figure those out!"
   )
 
   const renderRecommendation = (rec: Recommendation, index: number) => {
+    // Handle simple recommendation format (just priority + recommendation/description text)
+    if (isSimpleRecommendation(rec)) {
+      const text = rec.recommendation || rec.description || ''
+      return (
+        <div key={index} className={styles.recommendationCard}>
+          <div className={styles.cardHeader}>
+            <span className={`${styles.priorityBadge} ${getPriorityClass(rec.priority)}`}>
+              {rec.priority}
+            </span>
+          </div>
+          <div className={styles.cardBody}>
+            <p className={styles.description}>{text}</p>
+          </div>
+        </div>
+      )
+    }
+    
     if (isAIRecommendation(rec)) {
       return (
         <div key={rec.id || index} className={styles.recommendationCard}>
@@ -1198,6 +1366,330 @@ Don't worry about technical details - we'll help you figure those out!"
     }
   }
 
+  // Render a single tiered recommendation item
+  const renderTieredItem = (item: TieredRecommendationItem, tierClass: string) => (
+    <div key={item.id} className={`${styles.tieredCard} ${styles[tierClass]}`}>
+      <div className={styles.tieredCardHeader}>
+        <span className={styles.tierLabel}>{item.tier_label}</span>
+        {item.implementation_deadline && (
+          <span className={styles.deadline}>{item.implementation_deadline}</span>
+        )}
+      </div>
+      <h4 className={styles.tieredTitle}>{item.title}</h4>
+      <p className={styles.tieredDescription}>{item.description}</p>
+      
+      <div className={styles.tierContext}>
+        <div className={styles.tierReason}>
+          <strong>Why this tier:</strong> {item.tier_reason}
+        </div>
+        <div className={styles.skipRisk}>
+          <strong>Risk if skipped:</strong> {item.skip_risk}
+        </div>
+      </div>
+
+      {item.implementation_steps && item.implementation_steps.length > 0 && (
+        <div className={styles.tieredSteps}>
+          <strong>Implementation Steps:</strong>
+          <ol>
+            {item.implementation_steps.map((step, idx) => (
+              <li key={idx}>{step}</li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {item.tools && item.tools.length > 0 && (
+        <div className={styles.tieredTools}>
+          <strong>Tools:</strong>
+          <div className={styles.toolsGrid}>
+            {item.tools.map((tool, idx) => (
+              <a
+                key={idx}
+                href={tool.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.tieredToolLink}
+              >
+                {tool.name} ↗
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {(item.effort || item.time_estimate) && (
+        <div className={styles.tieredMeta}>
+          {item.effort && <span className={styles.badge}>Effort: {item.effort}</span>}
+          {item.time_estimate && <span className={styles.badge}>Time: {item.time_estimate}</span>}
+        </div>
+      )}
+    </div>
+  )
+
+  // Render complete tiered recommendations section
+  const renderTieredRecommendations = (tiered: TieredRecommendations) => (
+    <div className={styles.tieredRecommendations}>
+      <h3 className={styles.tieredSectionHeader}>
+        🎯 Tiered Recommendations
+        <span className={styles.tieredSubheader}>Prioritized by deployment impact</span>
+      </h3>
+
+      {/* Tier Summary */}
+      {tiered.tier_summary && (
+        <div className={`${styles.tierSummary} ${styles[`readiness${tiered.tier_summary.deployment_readiness.replace(/\s+/g, '')}`]}`}>
+          <div className={styles.summaryStats}>
+            <span className={styles.statItem}>
+              <span className={styles.statCount}>{tiered.tier_summary.non_negotiable_count}</span>
+              <span className={styles.statLabel}>🚨 Non-Negotiable</span>
+            </span>
+            <span className={styles.statItem}>
+              <span className={styles.statCount}>{tiered.tier_summary.highly_recommended_count}</span>
+              <span className={styles.statLabel}>⚠️ Highly Recommended</span>
+            </span>
+            <span className={styles.statItem}>
+              <span className={styles.statCount}>{tiered.tier_summary.recommended_count}</span>
+              <span className={styles.statLabel}>✅ Recommended</span>
+            </span>
+            <span className={styles.statItem}>
+              <span className={styles.statCount}>{tiered.tier_summary.optional_count}</span>
+              <span className={styles.statLabel}>💡 Optional</span>
+            </span>
+          </div>
+          <div className={styles.readinessStatus}>
+            <strong>Deployment Readiness:</strong> {tiered.tier_summary.deployment_readiness}
+            <p className={styles.readinessExplanation}>{tiered.tier_summary.readiness_explanation}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Non-Negotiable Tier */}
+      {tiered.non_negotiable && tiered.non_negotiable.length > 0 && (
+        <div className={styles.tierSection}>
+          <h4 className={`${styles.tierHeader} ${styles.tierNonNegotiable}`}>
+            🚨 Non-Negotiable ({tiered.non_negotiable.length})
+            <span className={styles.tierDesc}>Must complete before any deployment</span>
+          </h4>
+          <div className={styles.tierCards}>
+            {tiered.non_negotiable.map(item => renderTieredItem(item, 'tierNonNegotiable'))}
+          </div>
+        </div>
+      )}
+
+      {/* Highly Recommended Tier */}
+      {tiered.highly_recommended && tiered.highly_recommended.length > 0 && (
+        <div className={styles.tierSection}>
+          <h4 className={`${styles.tierHeader} ${styles.tierHighlyRecommended}`}>
+            ⚠️ Highly Recommended ({tiered.highly_recommended.length})
+            <span className={styles.tierDesc}>Complete within first 2 weeks</span>
+          </h4>
+          <div className={styles.tierCards}>
+            {tiered.highly_recommended.map(item => renderTieredItem(item, 'tierHighlyRecommended'))}
+          </div>
+        </div>
+      )}
+
+      {/* Recommended Tier */}
+      {tiered.recommended && tiered.recommended.length > 0 && (
+        <div className={styles.tierSection}>
+          <h4 className={`${styles.tierHeader} ${styles.tierRecommended}`}>
+            ✅ Recommended ({tiered.recommended.length})
+            <span className={styles.tierDesc}>Plan for first month</span>
+          </h4>
+          <div className={styles.tierCards}>
+            {tiered.recommended.map(item => renderTieredItem(item, 'tierRecommended'))}
+          </div>
+        </div>
+      )}
+
+      {/* Optional Tier */}
+      {tiered.optional && tiered.optional.length > 0 && (
+        <div className={styles.tierSection}>
+          <h4 className={`${styles.tierHeader} ${styles.tierOptional}`}>
+            💡 Optional ({tiered.optional.length})
+            <span className={styles.tierDesc}>Nice-to-have enhancements</span>
+          </h4>
+          <div className={styles.tierCards}>
+            {tiered.optional.map(item => renderTieredItem(item, 'tierOptional'))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+
+  // Render pillar-organized recommendations (v6.0 - Progressive Disclosure)
+  const renderPillarRecommendations = (pillars: RecommendationsByPillar) => {
+    const pillarOrder = [
+      { key: 'reliability_safety', icon: '🛡️', name: 'Reliability & Safety' },
+      { key: 'privacy_security', icon: '🔒', name: 'Privacy & Security' },
+      { key: 'fairness', icon: '⚖️', name: 'Fairness' },
+      { key: 'transparency', icon: '🔍', name: 'Transparency' },
+      { key: 'inclusiveness', icon: '🌍', name: 'Inclusiveness' },
+      { key: 'accountability', icon: '📋', name: 'Accountability' },
+    ]
+    
+    // Count total recommendations for each pillar
+    const pillarCounts = pillarOrder.map(({ key }) => {
+      const data = pillars[key as keyof RecommendationsByPillar]
+      return data?.recommendations?.length || 0
+    })
+    const totalRecs = pillarCounts.reduce((a, b) => a + b, 0)
+    const activePillars = pillarCounts.filter(c => c > 0).length
+
+    return (
+      <div className={styles.pillarRecommendations}>
+        <div className={styles.pillarSectionHeaderRow}>
+          <h3 className={styles.pillarSectionHeader}>
+            📋 Actionable Recommendations
+            <span className={styles.pillarSubheader}>
+              {totalRecs} recommendations across {activePillars} RAI pillars
+            </span>
+          </h3>
+          <div className={styles.expandCollapseControls}>
+            <button 
+              type="button"
+              onClick={expandAllPillars}
+              className={styles.expandCollapseBtn}
+              aria-label="Expand all recommendation sections"
+            >
+              Expand All
+            </button>
+            <button 
+              type="button"
+              onClick={collapseAllPillars}
+              className={styles.expandCollapseBtn}
+              aria-label="Collapse all recommendation sections"
+            >
+              Collapse All
+            </button>
+          </div>
+        </div>
+
+        {pillarOrder.map(({ key, icon, name }) => {
+          const pillarData = pillars[key as keyof RecommendationsByPillar]
+          if (!pillarData || !pillarData.recommendations || pillarData.recommendations.length === 0) {
+            return null
+          }
+          
+          const isExpanded = expandedPillars.has(key)
+          const recCount = pillarData.recommendations.length
+          // Check if any are critical
+          const hasCritical = pillarData.recommendations.some(r => 
+            r.priority?.toLowerCase().includes('critical') || r.priority?.toLowerCase().includes('blocker')
+          )
+
+          return (
+            <div key={key} className={`${styles.pillarSection} ${isExpanded ? styles.pillarExpanded : styles.pillarCollapsed}`}>
+              {/* Collapsible Pillar Header */}
+              <button
+                type="button"
+                className={styles.pillarHeaderBtn}
+                onClick={() => togglePillar(key)}
+                aria-expanded={isExpanded}
+                aria-controls={`pillar-content-${key}`}
+              >
+                <div className={styles.pillarHeaderLeft}>
+                  <span className={styles.pillarIcon}>{icon}</span>
+                  <span className={styles.pillarTitleText}>{pillarData.pillar_name || name}</span>
+                  <span className={styles.pillarBadge}>{recCount} {recCount === 1 ? 'action' : 'actions'}</span>
+                  {hasCritical && <span className={styles.criticalBadge}>⚠️ Critical</span>}
+                </div>
+                <span className={`${styles.expandIcon} ${isExpanded ? styles.expandIconOpen : ''}`}>
+                  ▼
+                </span>
+              </button>
+
+              {/* Collapsible Content */}
+              <div 
+                id={`pillar-content-${key}`}
+                className={`${styles.pillarContent} ${isExpanded ? styles.pillarContentVisible : ''}`}
+                aria-hidden={!isExpanded}
+              >
+                {/* Context - shown briefly */}
+                {pillarData.why_it_matters && (
+                  <p className={styles.pillarContextBrief}>{pillarData.why_it_matters}</p>
+                )}
+
+                <div className={styles.pillarCards}>
+                  {pillarData.recommendations.map((rec, idx) => (
+                    <div key={idx} className={styles.pillarCard}>
+                      {/* Card Header - Always visible */}
+                      <div className={styles.pillarCardHeader}>
+                        <div className={styles.pillarCardTitleRow}>
+                          {rec.priority && (
+                            <span className={`${styles.priorityBadge} ${getPriorityClass(rec.priority)}`}>
+                              {rec.priority.replace(/_/g, ' ')}
+                            </span>
+                          )}
+                          <h5 className={styles.pillarRecTitle}>{rec.title}</h5>
+                        </div>
+                        {/* Tool link - immediately actionable */}
+                        {rec.tool && (
+                          <a 
+                            href={rec.tool.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className={styles.toolQuickLink}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {rec.tool.name} →
+                          </a>
+                        )}
+                      </div>
+                      
+                      {/* Brief summary - always visible */}
+                      {rec.why_needed && (
+                        <p className={styles.pillarWhyBrief}>{rec.why_needed}</p>
+                      )}
+                      
+                      {/* Expandable details */}
+                      <details className={styles.recDetails}>
+                        <summary className={styles.recDetailsSummary}>View details & implementation steps</summary>
+                        <div className={styles.recDetailsContent}>
+                          {rec.what_happens_without && (
+                            <div className={styles.pillarConsequence}>
+                              <strong>⚠️ Risk if skipped:</strong>
+                              <p>{rec.what_happens_without}</p>
+                            </div>
+                          )}
+
+                          {rec.tool && (rec.tool.how_it_helps || rec.tool.purpose) && (
+                            <div className={styles.pillarTool}>
+                              <strong>🔧 How {rec.tool.name} helps:</strong>
+                              <p className={styles.toolHelps}>{rec.tool.how_it_helps || rec.tool.purpose}</p>
+                              <a 
+                                href={rec.tool.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className={styles.toolDocLink}
+                              >
+                                📚 View Documentation
+                              </a>
+                            </div>
+                          )}
+
+                          {rec.implementation_steps && rec.implementation_steps.length > 0 && (
+                            <div className={styles.pillarSteps}>
+                              <strong>Implementation Steps:</strong>
+                              <ol>
+                                {rec.implementation_steps.map((step, i) => (
+                                  <li key={i}>{step}</li>
+                                ))}
+                              </ol>
+                            </div>
+                          )}
+                        </div>
+                      </details>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
   return (
     <div className={styles.container}>
       {/* Screen reader live region for announcements */}
@@ -1265,6 +1757,19 @@ Don't worry about technical details - we'll help you figure those out!"
                 >
                   {loading ? 'Analyzing with AI...' : 'Get AI Recommendations'}
                 </button>
+                {/* Test button for development - remove before production */}
+                {process.env.NODE_ENV === 'development' && (
+                  <button
+                    type="button"
+                    onClick={handleTestRiskAssessment}
+                    disabled={loading}
+                    className={styles.testButton}
+                    style={{ backgroundColor: '#8b5cf6', color: 'white', marginLeft: '10px', padding: '12px 24px', borderRadius: '8px', border: 'none', cursor: 'pointer' }}
+                    aria-label="Test enhanced risk assessment with mock data"
+                  >
+                    {loading ? 'Testing...' : '🧪 Test Risk UI'}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => router.push('/')}
@@ -1285,117 +1790,214 @@ Don't worry about technical details - we'll help you figure those out!"
         </form>
       ) : (
         <div className={styles.results}>
-          <div className={styles.resultHeader}>
-            <div className={styles.titleRow}>
-              <h2>Recommendations for: {result.project_name}</h2>
+          {/* EXECUTIVE SUMMARY - Most important info at a glance */}
+          <div className={styles.executiveSummary}>
+            <div className={styles.execHeader}>
+              <h2>{result.project_name}</h2>
               {result.ai_powered && (
-                <span className={styles.aiPoweredBadge}>✨ AI-Powered</span>
+                <span className={styles.aiPoweredBadge}>✨ AI-Powered Analysis</span>
               )}
             </div>
             
-            {result.overall_assessment && (
-              <div className={styles.overallAssessment}>
-                <p className={styles.assessmentSummary}>{result.overall_assessment.summary}</p>
-                <div className={styles.maturityLevel}>
-                  <strong>Maturity Level:</strong> {result.overall_assessment.maturity_level}
-                </div>
-                {result.overall_assessment.key_strengths && result.overall_assessment.key_strengths.length > 0 && (
-                  <div className={styles.strengths}>
-                    <strong>Key Strengths:</strong>
-                    <ul>
-                      {result.overall_assessment.key_strengths.map((s, i) => (
-                        <li key={i}>{s}</li>
-                      ))}
-                    </ul>
+            {/* Key metrics row - scannable at a glance */}
+            <div className={styles.keyMetricsRow}>
+              {/* Risk Score - Large and prominent */}
+              {result.risk_scores && (
+                <div className={styles.keyMetric}>
+                  <div className={`${styles.riskScoreCircle} ${styles[`risk${result.risk_scores.risk_level?.replace(' ', '')}`]}`}>
+                    <span className={styles.riskScoreNumber}>{result.risk_scores.overall_score}</span>
                   </div>
-                )}
+                  <span className={`${styles.metricLabel} ${styles[`risk${result.risk_scores.risk_level?.replace(' ', '')}`]}`}>
+                    {result.risk_scores.risk_level} Risk
+                  </span>
+                </div>
+              )}
+              
+              {/* Quick qualitative indicators */}
+              {result.risk_scores?.qualitative_assessment && (
+                <div className={styles.quickIndicators}>
+                  {Object.entries(result.risk_scores.qualitative_assessment).slice(0, 4).map(([key, value]) => (
+                    <div key={key} className={styles.quickIndicator} title={value.rationale}>
+                      <span className={styles.indicatorLabel}>
+                        {key === 'data_sensitivity' ? '🔐' : 
+                         key === 'user_impact' ? '👥' : 
+                         key === 'regulatory_exposure' ? '📋' : 
+                         key === 'deployment_readiness' ? '🚀' : '📊'}
+                        {' '}{key.replace(/_/g, ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                      </span>
+                      <span className={`${styles.indicatorLevel} ${styles[`level${value.level}`]}`}>
+                        {value.level}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* One-line summary */}
+            {result.risk_scores?.risk_summary && (
+              <p className={styles.execSummaryText}>{result.risk_scores.risk_summary}</p>
+            )}
+            
+            {/* Critical gaps highlight - if any */}
+            {result.overall_assessment?.critical_gaps && result.overall_assessment.critical_gaps.length > 0 && (
+              <div className={styles.criticalGapsHighlight}>
+                <strong>⚠️ Critical Gaps to Address:</strong>
+                <span className={styles.gapsList}>
+                  {result.overall_assessment.critical_gaps.slice(0, 3).join(' • ')}
+                </span>
               </div>
             )}
+          </div>
 
-            {/* Risk Scores Section */}
-            {result.risk_scores && (
-              <div className={styles.riskScoresSection}>
-                <h3 className={styles.sectionHeading}>📊 Risk Assessment</h3>
-                <div className={styles.riskScoreMain}>
-                  <div className={styles.overallRiskScore}>
-                    <div className={`${styles.riskScoreCircle} ${styles[`risk${result.risk_scores.risk_level?.replace(' ', '')}`]}`}>
-                      <span className={styles.riskScoreNumber}>{result.risk_scores.overall_score}</span>
-                      <span className={styles.riskScoreLabel}>/ 100</span>
+          {/* EXPANDABLE SECTIONS - Progressive disclosure */}
+          
+          {/* Section: Detailed Risk Analysis (collapsed by default) */}
+          {result.risk_scores && (
+            <div className={styles.collapsibleSection}>
+              <button
+                type="button"
+                className={styles.sectionToggle}
+                onClick={() => toggleSection('risk-details')}
+                aria-expanded={expandedSections.has('risk-details')}
+              >
+                <span>📊 Detailed Risk Analysis</span>
+                <span className={`${styles.toggleIcon} ${expandedSections.has('risk-details') ? styles.toggleOpen : ''}`}>▼</span>
+              </button>
+              
+              {expandedSections.has('risk-details') && (
+                <div className={styles.sectionContent}>
+                  {/* Qualitative Assessment with tooltips */}
+                  {result.risk_scores.qualitative_assessment && (
+                    <div className={styles.qualitativeAssessment}>
+                      <h4>Risk Dimensions</h4>
+                      <div className={styles.qualitativeGrid}>
+                        {Object.entries(result.risk_scores.qualitative_assessment).map(([key, value]) => (
+                          <div key={key} className={styles.qualitativeItem}>
+                            <span className={styles.qualitativeLabel}>
+                              {key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                            </span>
+                            <span className={`${styles.qualitativeLevel} ${styles[`level${value.level}`]}`}>
+                              {value.level}
+                            </span>
+                            <span className={styles.qualitativeRationale}>{value.rationale}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <span className={`${styles.riskLevel} ${styles[`risk${result.risk_scores.risk_level?.replace(' ', '')}`]}`}>
-                      {result.risk_scores.risk_level} Risk
-                    </span>
-                  </div>
-                  {result.risk_scores.score_explanation && (
-                    <p className={styles.riskExplanation}>{result.risk_scores.score_explanation}</p>
+                  )}
+
+                  {/* Critical Factors */}
+                  {result.risk_scores.critical_factors && (
+                    <div className={styles.criticalFactors}>
+                      <h4>Score Drivers</h4>
+                      <div className={styles.factorsGrid}>
+                        {result.risk_scores.critical_factors.score_drivers_negative && 
+                         result.risk_scores.critical_factors.score_drivers_negative.length > 0 && (
+                          <div className={styles.factorsColumn}>
+                            <h5 className={styles.factorsNegativeHeader}>⚠️ Increasing Risk</h5>
+                            <ul className={styles.factorsList}>
+                              {result.risk_scores.critical_factors.score_drivers_negative.map((driver, idx) => (
+                                <li key={idx} className={`${styles.factorItem} ${styles.factorNegative}`}>
+                                  <div className={styles.factorHeader}>
+                                    <span className={styles.factorName}>{driver.factor}</span>
+                                    {driver.severity && (
+                                      <span className={`${styles.factorSeverity} ${styles[`severity${driver.severity}`]}`}>
+                                        {driver.severity}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className={styles.factorImpact}>{driver.impact}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        
+                        {result.risk_scores.critical_factors.score_drivers_positive && 
+                         result.risk_scores.critical_factors.score_drivers_positive.length > 0 && (
+                          <div className={styles.factorsColumn}>
+                            <h5 className={styles.factorsPositiveHeader}>✅ Reducing Risk</h5>
+                            <ul className={styles.factorsList}>
+                              {result.risk_scores.critical_factors.score_drivers_positive.map((driver, idx) => (
+                                <li key={idx} className={`${styles.factorItem} ${styles.factorPositive}`}>
+                                  <span className={styles.factorName}>{driver.factor}</span>
+                                  <span className={styles.factorImpact}>{driver.impact}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Principle Scores */}
+                  {result.risk_scores.principle_scores && (
+                    <div className={styles.principleScores}>
+                      <h4>Scores by RAI Principle</h4>
+                      <div className={styles.principleScoreGrid}>
+                        {Object.entries(result.risk_scores.principle_scores).map(([principle, score]) => (
+                          <div key={principle} className={styles.principleScoreItem}>
+                            <span className={styles.principleName}>
+                              {principle.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                            </span>
+                            <div className={styles.scoreBar}>
+                              <div 
+                                className={styles.scoreBarFill} 
+                                style={{width: `${score}%`}}
+                              ></div>
+                            </div>
+                            <span className={styles.scoreValue}>{score}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
-                {result.risk_scores.principle_scores && (
-                  <div className={styles.principleScores}>
-                    <h4>Scores by Principle</h4>
-                    <div className={styles.principleScoreGrid}>
-                      <div className={styles.principleScoreItem}>
-                        <span className={styles.principleName}>Fairness</span>
-                        <div className={styles.scoreBar}>
-                          <div className={styles.scoreBarFill} style={{width: `${result.risk_scores.principle_scores.fairness}%`}}></div>
-                        </div>
-                        <span className={styles.scoreValue}>{result.risk_scores.principle_scores.fairness}</span>
-                      </div>
-                      <div className={styles.principleScoreItem}>
-                        <span className={styles.principleName}>Reliability & Safety</span>
-                        <div className={styles.scoreBar}>
-                          <div className={styles.scoreBarFill} style={{width: `${result.risk_scores.principle_scores.reliability_safety}%`}}></div>
-                        </div>
-                        <span className={styles.scoreValue}>{result.risk_scores.principle_scores.reliability_safety}</span>
-                      </div>
-                      <div className={styles.principleScoreItem}>
-                        <span className={styles.principleName}>Privacy & Security</span>
-                        <div className={styles.scoreBar}>
-                          <div className={styles.scoreBarFill} style={{width: `${result.risk_scores.principle_scores.privacy_security}%`}}></div>
-                        </div>
-                        <span className={styles.scoreValue}>{result.risk_scores.principle_scores.privacy_security}</span>
-                      </div>
-                      <div className={styles.principleScoreItem}>
-                        <span className={styles.principleName}>Inclusiveness</span>
-                        <div className={styles.scoreBar}>
-                          <div className={styles.scoreBarFill} style={{width: `${result.risk_scores.principle_scores.inclusiveness}%`}}></div>
-                        </div>
-                        <span className={styles.scoreValue}>{result.risk_scores.principle_scores.inclusiveness}</span>
-                      </div>
-                      <div className={styles.principleScoreItem}>
-                        <span className={styles.principleName}>Transparency</span>
-                        <div className={styles.scoreBar}>
-                          <div className={styles.scoreBarFill} style={{width: `${result.risk_scores.principle_scores.transparency}%`}}></div>
-                        </div>
-                        <span className={styles.scoreValue}>{result.risk_scores.principle_scores.transparency}</span>
-                      </div>
-                      <div className={styles.principleScoreItem}>
-                        <span className={styles.principleName}>Accountability</span>
-                        <div className={styles.scoreBar}>
-                          <div className={styles.scoreBarFill} style={{width: `${result.risk_scores.principle_scores.accountability}%`}}></div>
-                        </div>
-                        <span className={styles.scoreValue}>{result.risk_scores.principle_scores.accountability}</span>
-                      </div>
-                    </div>
-                  </div>
+              )}
+            </div>
+          )}
+
+          {/* Section: Key Strengths (collapsed by default) */}
+          {result.overall_assessment?.key_strengths && result.overall_assessment.key_strengths.length > 0 && (
+            <div className={styles.collapsibleSection}>
+              <button
+                type="button"
+                className={styles.sectionToggle}
+                onClick={() => toggleSection('strengths')}
+                aria-expanded={expandedSections.has('strengths')}
+              >
+                <span>✅ Key Strengths ({result.overall_assessment.key_strengths.length})</span>
+                <span className={`${styles.toggleIcon} ${expandedSections.has('strengths') ? styles.toggleOpen : ''}`}>▼</span>
+              </button>
+              
+              {expandedSections.has('strengths') && (
+                <div className={styles.sectionContent}>
+                  <ul className={styles.strengthsList}>
+                    {result.overall_assessment.key_strengths.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* EU AI Act Classification */}
+          {result.eu_ai_act_classification && (
+            <div className={styles.euAiActSection}>
+              <h3 className={styles.sectionHeading}>🇪🇺 EU AI Act Classification</h3>
+              <div className={`${styles.euRiskCategory} ${styles[`euRisk${result.eu_ai_act_classification.risk_category?.replace(' ', '')}`]}`}>
+                <span className={styles.euRiskLabel}>{result.eu_ai_act_classification.risk_category} Risk</span>
+                {result.eu_ai_act_classification.annex_reference && (
+                  <span className={styles.euAnnexRef}>{result.eu_ai_act_classification.annex_reference}</span>
                 )}
               </div>
-            )}
-
-            {/* EU AI Act Classification */}
-            {result.eu_ai_act_classification && (
-              <div className={styles.euAiActSection}>
-                <h3 className={styles.sectionHeading}>🇪🇺 EU AI Act Classification</h3>
-                <div className={`${styles.euRiskCategory} ${styles[`euRisk${result.eu_ai_act_classification.risk_category?.replace(' ', '')}`]}`}>
-                  <span className={styles.euRiskLabel}>{result.eu_ai_act_classification.risk_category} Risk</span>
-                  {result.eu_ai_act_classification.annex_reference && (
-                    <span className={styles.euAnnexRef}>{result.eu_ai_act_classification.annex_reference}</span>
-                  )}
-                </div>
-                <p className={styles.euRationale}>{result.eu_ai_act_classification.category_rationale}</p>
-                {result.eu_ai_act_classification.compliance_requirements && result.eu_ai_act_classification.compliance_requirements.length > 0 && (
-                  <div className={styles.euRequirements}>
-                    <h4>Compliance Requirements</h4>
+              <p className={styles.euRationale}>{result.eu_ai_act_classification.category_rationale}</p>
+              {result.eu_ai_act_classification.compliance_requirements && result.eu_ai_act_classification.compliance_requirements.length > 0 && (
+                <div className={styles.euRequirements}>
+                  <h4>Compliance Requirements</h4>
                     <ul>
                       {result.eu_ai_act_classification.compliance_requirements.map((req, i) => (
                         <li key={i}>{req}</li>
@@ -1469,19 +2071,20 @@ Don't worry about technical details - we'll help you figure those out!"
               </div>
             )}
 
-            <div className={styles.summary}>
-              <span className={styles.summaryItem}>
-                Total: <strong>{result.summary.total_recommendations}</strong>
-              </span>
-              <span className={styles.summaryItem}>
-                Critical: <strong className={styles.criticalCount}>{result.summary.critical_items}</strong>
-              </span>
-              <span className={styles.summaryItem}>
-                High: <strong className={styles.highCount}>{result.summary.high_priority_items}</strong>
-              </span>
-            </div>
+            {result.summary && (
+              <div className={styles.summary}>
+                <span className={styles.summaryItem}>
+                  Total: <strong>{result.summary.total_recommendations}</strong>
+                </span>
+                <span className={styles.summaryItem}>
+                  Critical: <strong className={styles.criticalCount}>{result.summary.critical_items}</strong>
+                </span>
+                <span className={styles.summaryItem}>
+                  High: <strong className={styles.highCount}>{result.summary.high_priority_items}</strong>
+                </span>
+              </div>
+            )}
             <p className={styles.submissionId}>Submission ID: {result.submission_id}</p>
-          </div>
 
           {result.next_steps && result.next_steps.length > 0 && (
             <div className={styles.nextSteps}>
@@ -1663,9 +2266,22 @@ Don't worry about technical details - we'll help you figure those out!"
             </div>
           )}
 
-          <div className={styles.recommendations}>
-            {result.recommendations.map((rec, index) => renderRecommendation(rec, index))}
-          </div>
+          {/* Pillar-Organized Recommendations Section (v5.0 - RAI Pillars) */}
+          {result.recommendations_by_pillar && (
+            renderPillarRecommendations(result.recommendations_by_pillar)
+          )}
+
+          {/* Tiered Recommendations Section (v4.0 World-Class Prioritization) */}
+          {result.tiered_recommendations && (
+            renderTieredRecommendations(result.tiered_recommendations)
+          )}
+
+          {/* Legacy Recommendations (fallback for older responses) */}
+          {result.recommendations && result.recommendations.length > 0 && (
+            <div className={styles.recommendations}>
+              {result.recommendations.map((rec, index) => renderRecommendation(rec, index))}
+            </div>
+          )}
 
           <div className={styles.actionButtons}>
             <button

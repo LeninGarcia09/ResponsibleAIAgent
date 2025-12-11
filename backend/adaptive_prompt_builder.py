@@ -17,10 +17,22 @@ from response_adapter import (
 
 # Try to import knowledge loader
 try:
-    from knowledge_loader import get_knowledge_loader, build_knowledge_context
+    from knowledge_loader import (
+        get_knowledge_loader, 
+        build_knowledge_context,
+        get_tools_catalog_for_prompt,
+        get_tools_by_rai_pillar
+    )
     KNOWLEDGE_AVAILABLE = True
 except ImportError:
     KNOWLEDGE_AVAILABLE = False
+
+# Try to import dynamic resources
+try:
+    from dynamic_resources import get_dynamic_reference_architectures
+    DYNAMIC_RESOURCES_AVAILABLE = True
+except ImportError:
+    DYNAMIC_RESOURCES_AVAILABLE = False
 
 
 # =============================================================================
@@ -93,6 +105,34 @@ Use these priority levels consistently in ALL recommendations:
 - Not urgent but improve long-term maintainability
 - Can be added in future iterations
 - Examples: Advanced monitoring dashboards, cost optimization
+
+## CRITICAL: Rich Context Requirements
+
+**For EVERY recommendation, you MUST include:**
+
+1. **why_needed**: A 2-3 sentence explanation of WHY this is important for THIS specific project.
+   - Reference the project's use case, data types, target users, or industry
+   - Be specific, not generic
+
+2. **what_happens_without**: Concrete consequences if not implemented.
+   - Include potential harms, regulatory risks, or business impacts
+   - Be specific to the project context
+
+3. **tool**: A tool from the Microsoft RAI catalog with:
+   - Exact name from catalog
+   - Documentation URL
+   - How the tool addresses this specific issue
+
+## GROUP BY RAI PILLAR
+
+Organize recommendations by the 6 Microsoft RAI pillars in `recommendations_by_pillar`:
+
+- ⚖️ **Fairness**: Bias testing, discrimination prevention, equitable outcomes
+- 🛡️ **Reliability & Safety**: Content safety, error handling, robustness testing
+- 🔒 **Privacy & Security**: Data protection, PII handling, prompt injection defense
+- 🌍 **Inclusiveness**: Accessibility, diverse user needs, language support
+- 🔍 **Transparency**: Explainability, documentation, user disclosure
+- 📋 **Accountability**: Governance, audit trails, human oversight
 """
 
 # Adaptive response instructions based on input depth
@@ -120,18 +160,33 @@ Your response should be:
 **ENCOURAGE MORE CONTEXT:**
 At the end, suggest 3-5 fields they could provide for a more detailed review.
 
-**JSON Structure - Keep it simple:**
+**JSON Structure - Keep it simple but include pillars:**
 {
     "review_mode": "quick_guidance",
     "completeness_note": "Limited information provided - recommendations are general",
     "detected_project_type": "...",
     "quick_start": {
-        "essential_tools": [...],  // 3 tools max
+        "essential_tools": [...],  // 3 tools max with name, url, purpose
         "first_week_actions": [...],  // 5 actions max
         "reference_architecture": "...",
         "starter_repo": "..."
     },
-    "recommendations": [...],  // 5 max, CRITICAL and HIGH only
+    "recommendations_by_pillar": {
+        "reliability_safety": {
+            "pillar_name": "Reliability & Safety",
+            "why_it_matters": "Why this pillar matters for THIS project",
+            "recommendations": [
+                {
+                    "title": "...",
+                    "why_needed": "2-3 sentences explaining WHY for THIS project",
+                    "what_happens_without": "Specific consequences",
+                    "priority": "🚫 CRITICAL_BLOCKER",
+                    "tool": {"name": "...", "url": "...", "purpose": "..."}
+                }
+            ]
+        },
+        // ... other pillars with recommendations
+    },
     "for_better_review": ["field1", "field2", ...]
 }
 """,
@@ -143,7 +198,7 @@ The user has provided basic context (name, description, deployment stage).
 Your response should be:
 
 **FOCUSED ON GETTING STARTED:**
-- Provide 5-8 prioritized recommendations
+- Provide 5-8 prioritized recommendations GROUPED BY RAI PILLAR
 - Include reference architecture with Azure services
 - Provide a 30-day implementation roadmap
 - Include 2-3 code snippets for key tools
@@ -157,14 +212,46 @@ Your response should be:
 - Starter GitHub repos
 - Essential tool recommendations with code examples
 
+**CRITICAL: RECOMMENDATIONS BY PILLAR**
+You MUST organize recommendations in `recommendations_by_pillar` with:
+- Each pillar explaining why it matters for THIS project
+- Each recommendation with `why_needed`, `what_happens_without`
+- Each tool with `name`, `url` (full documentation URL), and `how_it_helps`
+
 **JSON Structure:**
 {
     "review_mode": "quick_scan",
     "risk_scores": { "overall_score": X, "risk_level": "..." },
     "reference_architecture": {...},
     "quick_start_guide": {...},
-    "recommendations": [...],  // 8 max
-    "thirty_day_roadmap": {...},
+    "recommendations_by_pillar": {
+        "reliability_safety": {
+            "pillar_name": "Reliability & Safety",
+            "pillar_icon": "🛡️",
+            "why_it_matters": "Why this pillar matters for THIS specific project",
+            "risk_if_ignored": "What could go wrong for THIS project",
+            "recommendations": [
+                {
+                    "title": "Clear recommendation title",
+                    "why_needed": "2-3 sentences explaining WHY for THIS project",
+                    "what_happens_without": "Specific negative consequences",
+                    "priority": "🚫 CRITICAL_BLOCKER | ⚠️ HIGHLY_RECOMMENDED | ✅ RECOMMENDED",
+                    "tool": {
+                        "name": "Tool name from catalog",
+                        "url": "https://learn.microsoft.com/... or https://github.com/...",
+                        "how_it_helps": "How this tool solves the issue"
+                    },
+                    "implementation_steps": ["Step 1", "Step 2", "Step 3"]
+                }
+            ]
+        },
+        "privacy_security": { ... same structure ... },
+        "fairness": { ... same structure ... },
+        "transparency": { ... same structure ... },
+        "inclusiveness": { ... same structure ... },
+        "accountability": { ... same structure ... }
+    },
+    "tiered_recommendations": {...},  // Also include tiered view
     "next_steps": [...]
 }
 """,
@@ -189,11 +276,48 @@ Your response should be:
 - Full risk scores (overall + per-principle)
 - EU AI Act classification with compliance gaps
 - Reference architecture with cost estimates
-- Detailed recommendations organized by priority
+- Detailed recommendations organized by priority AND by pillar
 - Implementation timeline
 - Next steps
 
-**JSON Structure - Full format as specified in RESPONSE_FORMAT_INSTRUCTIONS**
+**CRITICAL: RECOMMENDATIONS BY PILLAR (MANDATORY)**
+You MUST provide `recommendations_by_pillar` object with ALL 6 RAI pillars:
+
+```json
+"recommendations_by_pillar": {
+    "reliability_safety": {
+        "pillar_name": "Reliability & Safety",
+        "pillar_icon": "🛡️",
+        "pillar_description": "AI systems should perform reliably and safely",
+        "why_it_matters": "Context-specific explanation for THIS project (2-3 sentences)",
+        "risk_if_ignored": "Specific consequences for THIS project if neglected",
+        "recommendations": [
+            {
+                "title": "Implement Content Safety for LLM outputs",
+                "why_needed": "Your chatbot will generate content for customers. Without content safety, harmful or inappropriate responses could damage brand reputation and expose the company to liability.",
+                "what_happens_without": "Users could receive harmful, offensive, or factually incorrect responses. This could lead to regulatory fines under EU AI Act, loss of customer trust, and potential legal action.",
+                "priority": "🚫 CRITICAL_BLOCKER",
+                "tool": {
+                    "name": "Azure AI Content Safety",
+                    "url": "https://learn.microsoft.com/azure/ai-services/content-safety/",
+                    "how_it_helps": "Automatically detects and filters harmful content including hate speech, violence, sexual content, and self-harm across text and images."
+                },
+                "implementation_steps": ["Create Content Safety resource", "Integrate SDK", "Configure severity thresholds"]
+            }
+        ]
+    },
+    "privacy_security": { ... },
+    "fairness": { ... },
+    "transparency": { ... },
+    "inclusiveness": { ... },
+    "accountability": { ... }
+}
+```
+
+**TOOL REQUIREMENTS:**
+- Every tool MUST have a valid Microsoft documentation URL (https://learn.microsoft.com/... or https://github.com/microsoft/...)
+- Use tools from the RAI catalog provided
+- Include how the tool specifically helps with THIS project's needs
 """,
 
     ResponseDepth.COMPREHENSIVE: """
@@ -220,6 +344,14 @@ Your response should be:
 - Phased rollout plan
 - Success metrics and KPIs
 - Follow-up review schedule
+
+**CRITICAL: RECOMMENDATIONS BY PILLAR (MANDATORY)**
+You MUST provide the `recommendations_by_pillar` object with ALL 6 RAI pillars.
+For each recommendation:
+- Include `why_needed` with 2-3 sentences explaining importance for THIS specific project
+- Include `what_happens_without` with concrete negative consequences
+- Include `tool` with `name`, `url` (full documentation link), and `how_it_helps`
+- Reference the project's specific context (industry, users, data, stage) in explanations
 
 **ACKNOWLEDGE THEIR EFFORT:**
 Note that they've provided comprehensive information and the recommendations are specifically tailored to their context.
@@ -354,6 +486,88 @@ This project operates in a HIGH-RISK domain under EU AI Act. Additional requirem
 }
 
 
+def build_reference_architecture_context(project_data: Dict[str, Any]) -> str:
+    """
+    Build reference architecture context from dynamic resources.
+    
+    Args:
+        project_data: Project data to determine relevant architectures
+        
+    Returns:
+        Formatted string with reference architecture recommendations
+    """
+    if not DYNAMIC_RESOURCES_AVAILABLE:
+        return ""
+    
+    try:
+        # Detect project type from technology_type or description
+        tech_type = project_data.get("technology_type", "").lower()
+        description = project_data.get("project_description", "").lower()
+        
+        # Map to architecture type
+        project_type = "chatbot"  # Default
+        if "agent" in tech_type or "agent" in description or "multi-agent" in description:
+            project_type = "multi_agent"
+        elif "document" in tech_type or "document" in description or "form" in description:
+            project_type = "document_processing"
+        elif "voice" in tech_type or "speech" in description or "call center" in description:
+            project_type = "voice_enabled"
+        elif "vision" in tech_type or "image" in description or "video" in description:
+            project_type = "computer_vision"
+        elif "copilot" in tech_type or "assistant" in description or "enterprise" in description:
+            project_type = "enterprise_copilot"
+        elif "chat" in tech_type or "rag" in description or "search" in description:
+            project_type = "chatbot"
+        
+        # Get dynamic reference architectures
+        architectures = get_dynamic_reference_architectures(project_type)
+        
+        if not architectures:
+            return ""
+        
+        context_parts = ["\n## Reference Architectures & Starter Templates\n"]
+        context_parts.append(f"**Detected Project Type**: {project_type.replace('_', ' ').title()}\n")
+        
+        # Add recommended repos
+        if "recommended_repos" in architectures:
+            context_parts.append("**GitHub Starter Templates (use with azd):**")
+            for repo in architectures["recommended_repos"][:5]:  # Top 5
+                repo_name = repo.get("repo", "")
+                stars = repo.get("stars", 0)
+                description = repo.get("description", "")[:100]
+                context_parts.append(f"- **{repo_name}** ({stars:,} ⭐): {description}")
+                if repo.get("azd_command"):
+                    context_parts.append(f"  Deploy: `{repo.get('azd_command')}`")
+            context_parts.append("")
+        
+        # Add Azure services
+        if "azure_services" in architectures:
+            context_parts.append("**Recommended Azure Services:**")
+            for svc in architectures["azure_services"][:6]:  # Top 6
+                context_parts.append(f"- {svc.get('service', '')}: {svc.get('purpose', '')}")
+            context_parts.append("")
+        
+        # Add quick start commands
+        if "quick_start_commands" in architectures:
+            context_parts.append("**Quick Start Commands:**")
+            for cmd in architectures["quick_start_commands"][:3]:  # Top 3
+                context_parts.append(f"- {cmd.get('description', '')}: `{cmd.get('command', '')}`")
+            context_parts.append("")
+        
+        # Add RAI considerations
+        if "rai_considerations" in architectures:
+            context_parts.append("**RAI Considerations for This Pattern:**")
+            for consideration in architectures["rai_considerations"][:5]:  # Top 5
+                context_parts.append(f"- {consideration}")
+        
+        return "\n".join(context_parts)
+        
+    except Exception as e:
+        # Don't fail the whole request if dynamic resources error
+        print(f"Error building reference architecture context: {e}")
+        return ""
+
+
 def build_adaptive_system_prompt(
     response_config: Dict[str, Any],
     project_data: Dict[str, Any]
@@ -398,6 +612,14 @@ def build_adaptive_system_prompt(
     
     # Add knowledge context if available
     if KNOWLEDGE_AVAILABLE:
+        # Always add the tools catalog organized by pillar
+        try:
+            tools_catalog = get_tools_catalog_for_prompt()
+            if tools_catalog:
+                parts.append(tools_catalog)
+        except Exception:
+            pass  # Catalog not critical, continue without it
+        
         industry = project_data.get("industry")
         tech_type = project_data.get("technology_type")
         
@@ -410,6 +632,11 @@ def build_adaptive_system_prompt(
             )
             if knowledge_context:
                 parts.append(f"\n## Tailored Knowledge Context\n{knowledge_context}")
+    
+    # Add dynamic reference architecture context
+    ref_arch_context = build_reference_architecture_context(project_data)
+    if ref_arch_context:
+        parts.append(ref_arch_context)
     
     # Add enablement message
     enablement = response_config.get("enablement_message", "")

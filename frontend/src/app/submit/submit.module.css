@@ -1034,11 +1034,213 @@
 .riskLevel.riskHigh { background: #ffebee; color: #c62828; }
 .riskLevel.riskCritical { background: #b71c1c; color: white; }
 
-.riskExplanation {
+.riskSummary {
   flex: 1;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 20px;
+  border-radius: 12px;
+  border-left: 4px solid #0078d4;
+}
+
+.riskSummary p {
+  font-size: 15px;
+  color: #333;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.riskExplanation {
   font-size: 14px;
   color: #424242;
   line-height: 1.6;
+  margin-top: 15px;
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+/* Qualitative Assessment Matrix */
+.qualitativeAssessment {
+  margin-top: 25px;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+}
+
+.qualitativeAssessment h4 {
+  font-size: 16px;
+  margin: 0 0 15px 0;
+  color: #333;
+}
+
+.qualitativeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.qualitativeItem {
+  display: grid;
+  grid-template-columns: 140px 70px 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.qualitativeLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: #424242;
+}
+
+.qualitativeLevel {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.qualitativeLevel.levelLow {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.qualitativeLevel.levelMedium {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
+.qualitativeLevel.levelHigh {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.qualitativeRationale {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* Critical Factors */
+.criticalFactors {
+  margin-top: 25px;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+}
+
+.criticalFactors h4 {
+  font-size: 16px;
+  margin: 0 0 15px 0;
+  color: #333;
+}
+
+.factorsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.factorsColumn {
+  background: #fafafa;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.factorsNegativeHeader {
+  font-size: 14px;
+  font-weight: 600;
+  color: #c62828;
+  margin: 0 0 12px 0;
+}
+
+.factorsPositiveHeader {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2e7d32;
+  margin: 0 0 12px 0;
+}
+
+.factorsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.factorItem {
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.factorItem:last-child {
+  margin-bottom: 0;
+}
+
+.factorNegative {
+  background: #ffebee;
+  border-left: 3px solid #c62828;
+}
+
+.factorPositive {
+  background: #e8f5e9;
+  border-left: 3px solid #2e7d32;
+}
+
+.factorHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.factorName {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  display: block;
+}
+
+.factorSeverity {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+}
+
+.factorSeverity.severityLow {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
+.factorSeverity.severityMedium {
+  background: #ffe0b2;
+  color: #e65100;
+}
+
+.factorSeverity.severityHigh {
+  background: #ffcdd2;
+  color: #c62828;
+}
+
+.factorSeverity.severityCritical {
+  background: #b71c1c;
+  color: white;
+}
+
+.factorImpact {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+  display: block;
+  margin-top: 4px;
 }
 
 .principleScores {
@@ -2257,5 +2459,990 @@
   
   .depthDesc {
     grid-column: 2;
+  }
+}
+
+/* ============================================
+   TIERED RECOMMENDATIONS (v4.0 World-Class)
+   ============================================ */
+
+.tieredRecommendations {
+  margin: 40px 0;
+}
+
+.tieredSectionHeader {
+  font-size: 28px;
+  color: #1a1a2e;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.tieredSubheader {
+  font-size: 14px;
+  font-weight: 400;
+  color: #666;
+}
+
+/* Tier Summary Box */
+.tierSummary {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-left: 5px solid #0078d4;
+}
+
+.summaryStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 20px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  min-width: 100px;
+}
+
+.statCount {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+}
+
+.readinessStatus {
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.readinessStatus strong {
+  color: #1a1a2e;
+}
+
+.readinessExplanation {
+  margin: 8px 0 0 0;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Readiness status colors */
+.readinessBlocked {
+  border-left-color: #d13438;
+}
+
+.readinessAtRisk {
+  border-left-color: #ff8c00;
+}
+
+.readinessMostlyReady {
+  border-left-color: #107c10;
+}
+
+.readinessReady {
+  border-left-color: #0078d4;
+}
+
+/* Tier Section */
+.tierSection {
+  margin-bottom: 30px;
+}
+
+.tierHeader {
+  font-size: 20px;
+  padding: 15px 20px;
+  border-radius: 8px 8px 0 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tierDesc {
+  font-size: 13px;
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+.tierHeader.tierNonNegotiable {
+  background: linear-gradient(135deg, #d13438 0%, #a4262c 100%);
+  color: white;
+}
+
+.tierHeader.tierHighlyRecommended {
+  background: linear-gradient(135deg, #ff8c00 0%, #d83b01 100%);
+  color: white;
+}
+
+.tierHeader.tierRecommended {
+  background: linear-gradient(135deg, #107c10 0%, #0b6a0b 100%);
+  color: white;
+}
+
+.tierHeader.tierOptional {
+  background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
+  color: white;
+}
+
+/* Tier Cards Container */
+.tierCards {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 0 0 8px 8px;
+  border: 1px solid #e0e0e0;
+  border-top: none;
+}
+
+/* Individual Tiered Card */
+.tieredCard {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid #ccc;
+}
+
+.tieredCard.tierNonNegotiable {
+  border-left-color: #d13438;
+}
+
+.tieredCard.tierHighlyRecommended {
+  border-left-color: #ff8c00;
+}
+
+.tieredCard.tierRecommended {
+  border-left-color: #107c10;
+}
+
+.tieredCard.tierOptional {
+  border-left-color: #0078d4;
+}
+
+.tieredCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.tierLabel {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #666;
+}
+
+.deadline {
+  font-size: 12px;
+  padding: 4px 10px;
+  background: #f0f0f0;
+  border-radius: 12px;
+  color: #444;
+}
+
+.tieredTitle {
+  font-size: 18px;
+  margin: 0 0 10px 0;
+  color: #1a1a2e;
+}
+
+.tieredDescription {
+  font-size: 14px;
+  color: #444;
+  margin: 0 0 15px 0;
+  line-height: 1.5;
+}
+
+/* Tier Context (Why + Risk) */
+.tierContext {
+  background: #f8f8f8;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 15px;
+}
+
+.tierReason,
+.skipRisk {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.tierReason:last-child,
+.skipRisk:last-child {
+  margin-bottom: 0;
+}
+
+.tierReason strong,
+.skipRisk strong {
+  color: #1a1a2e;
+}
+
+/* Implementation Steps */
+.tieredSteps {
+  margin-bottom: 15px;
+}
+
+.tieredSteps strong {
+  display: block;
+  font-size: 14px;
+  color: #1a1a2e;
+  margin-bottom: 8px;
+}
+
+.tieredSteps ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.tieredSteps li {
+  font-size: 13px;
+  color: #444;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+/* Tools Grid */
+.tieredTools {
+  margin-bottom: 15px;
+}
+
+.tieredTools strong {
+  display: block;
+  font-size: 14px;
+  color: #1a1a2e;
+  margin-bottom: 8px;
+}
+
+.toolsGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tieredToolLink {
+  display: inline-block;
+  padding: 6px 12px;
+  background: #e6f2ff;
+  color: #0078d4;
+  border-radius: 4px;
+  font-size: 13px;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.tieredToolLink:hover {
+  background: #cce4ff;
+  text-decoration: none;
+}
+
+/* Meta info (effort, time) */
+.tieredMeta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .summaryStats {
+    justify-content: center;
+  }
+  
+  .statItem {
+    min-width: 80px;
+    padding: 8px 12px;
+  }
+  
+  .statCount {
+    font-size: 22px;
+  }
+  
+  .tierHeader {
+    font-size: 18px;
+    padding: 12px 15px;
+  }
+  
+  .tieredCard {
+    padding: 15px;
+  }
+}
+
+/* ==========================================================================
+   PILLAR-ORGANIZED RECOMMENDATIONS (v5.0)
+   ========================================================================== */
+
+.pillarRecommendations {
+  margin: 30px 0;
+}
+
+.pillarSectionHeader {
+  font-size: 24px;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pillarSubheader {
+  font-size: 14px;
+  color: #666;
+  font-weight: normal;
+}
+
+.pillarSection {
+  margin-bottom: 30px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.pillarHeader {
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.pillarTitle {
+  font-size: 20px;
+  color: #1a1a1a;
+  margin: 0 0 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pillarIcon {
+  font-size: 24px;
+}
+
+.pillarContext {
+  color: #444;
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.pillarRisk {
+  color: #c75300;
+  background: #fff4e5;
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.pillarCards {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: #e0e0e0;
+}
+
+.pillarCard {
+  padding: 20px;
+  background: #fff;
+}
+
+.pillarCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.pillarRecTitle {
+  font-size: 16px;
+  color: #1a1a1a;
+  margin: 0;
+  flex: 1;
+}
+
+.pillarWhyNeeded {
+  background: #f0f7ff;
+  padding: 12px 15px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  border-left: 4px solid #0078d4;
+}
+
+.pillarWhyNeeded strong {
+  color: #0078d4;
+  display: block;
+  margin-bottom: 5px;
+  font-size: 13px;
+}
+
+.pillarWhyNeeded p {
+  margin: 0;
+  color: #333;
+  line-height: 1.5;
+}
+
+.pillarConsequence {
+  background: #fff4e5;
+  padding: 12px 15px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  border-left: 4px solid #c75300;
+}
+
+.pillarConsequence strong {
+  color: #c75300;
+  display: block;
+  margin-bottom: 5px;
+  font-size: 13px;
+}
+
+.pillarConsequence p {
+  margin: 0;
+  color: #333;
+  line-height: 1.5;
+}
+
+.pillarTool {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+  padding: 15px 18px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  border-left: 4px solid #0078d4;
+}
+
+.pillarTool strong {
+  color: #333;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.toolDetails {
+  padding-left: 5px;
+}
+
+.pillarToolLink {
+  color: #0078d4;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 16px;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+.pillarToolLink:hover {
+  text-decoration: underline;
+}
+
+.toolHelps {
+  color: #444;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 8px 0;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 4px;
+}
+
+.toolDocLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #0078d4;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #0078d4;
+  border-radius: 4px;
+  margin-top: 8px;
+  transition: all 0.2s;
+}
+
+.toolDocLink:hover {
+  background: #0078d4;
+  color: white;
+}
+
+.toolPurpose {
+  color: #666;
+  font-size: 14px;
+}
+
+.pillarSteps {
+  margin-top: 12px;
+}
+
+.pillarSteps strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.pillarSteps ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.pillarSteps li {
+  margin-bottom: 6px;
+  color: #444;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .pillarCardHeader {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .pillarTitle {
+    font-size: 18px;
+  }
+}
+
+/* ========================================
+   PROGRESSIVE DISCLOSURE UI (v6.0)
+   ======================================== */
+
+/* Executive Summary - Top-level scannable info */
+.executiveSummary {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+}
+
+.execHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.execHeader h2 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* Key Metrics Row - Quick glance indicators */
+.keyMetricsRow {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.keyMetric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.metricLabel {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Quick Indicators Grid */
+.quickIndicators {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  flex: 1;
+  min-width: 280px;
+}
+
+.quickIndicator {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  cursor: help;
+}
+
+.indicatorLabel {
+  font-size: 13px;
+  color: #475569;
+  font-weight: 500;
+}
+
+.indicatorLevel {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+
+.indicatorLevel.levelLow {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.indicatorLevel.levelMedium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.indicatorLevel.levelHigh {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Executive Summary Text */
+.execSummaryText {
+  margin: 0 0 16px 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #475569;
+}
+
+/* Critical Gaps Highlight */
+.criticalGapsHighlight {
+  background: linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%);
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.criticalGapsHighlight strong {
+  color: #dc2626;
+  font-size: 14px;
+}
+
+.gapsList {
+  color: #991b1b;
+  font-size: 14px;
+}
+
+/* Collapsible Sections */
+.collapsibleSection {
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.sectionToggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  background: white;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  transition: background-color 0.2s;
+}
+
+.sectionToggle:hover {
+  background: #f8fafc;
+}
+
+.toggleIcon {
+  font-size: 12px;
+  color: #64748b;
+  transition: transform 0.2s;
+}
+
+.toggleOpen {
+  transform: rotate(180deg);
+}
+
+.sectionContent {
+  padding: 20px 24px;
+  border-top: 1px solid #e2e8f0;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.strengthsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.strengthsList li {
+  padding: 10px 0;
+  padding-left: 28px;
+  position: relative;
+  color: #475569;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.strengthsList li:last-child {
+  border-bottom: none;
+}
+
+.strengthsList li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #22c55e;
+  font-weight: bold;
+}
+
+/* Pillar Recommendations v6.0 */
+.pillarSectionHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.expandCollapseControls {
+  display: flex;
+  gap: 8px;
+}
+
+.expandCollapseBtn {
+  padding: 8px 16px;
+  font-size: 13px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.expandCollapseBtn:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+/* Collapsible Pillar Sections */
+.pillarSection.pillarCollapsed {
+  border-radius: 10px;
+}
+
+.pillarSection.pillarExpanded {
+  border-radius: 10px;
+}
+
+.pillarHeaderBtn {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: white;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  transition: background-color 0.2s;
+  border-radius: 10px;
+}
+
+.pillarHeaderBtn:hover {
+  background: #f8fafc;
+}
+
+.pillarHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pillarTitleText {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.pillarBadge {
+  font-size: 12px;
+  padding: 3px 10px;
+  background: #e0f2fe;
+  color: #0369a1;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.criticalBadge {
+  font-size: 11px;
+  padding: 3px 10px;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.expandIcon {
+  font-size: 11px;
+  color: #64748b;
+  transition: transform 0.2s;
+}
+
+.expandIconOpen {
+  transform: rotate(180deg);
+}
+
+.pillarContent {
+  display: none;
+  padding: 0 20px 20px 20px;
+}
+
+.pillarContentVisible {
+  display: block;
+  animation: slideDown 0.2s ease-out;
+}
+
+.pillarContextBrief {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 0 16px 0;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* Recommendation Cards v6.0 */
+.pillarCardTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.toolQuickLink {
+  font-size: 13px;
+  color: #0078d4;
+  text-decoration: none;
+  padding: 4px 12px;
+  background: #e0f2fe;
+  border-radius: 6px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.toolQuickLink:hover {
+  background: #0078d4;
+  color: white;
+}
+
+.pillarWhyBrief {
+  margin: 12px 0;
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+/* Details/Summary for progressive disclosure */
+.recDetails {
+  margin-top: 12px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 12px;
+}
+
+.recDetailsSummary {
+  font-size: 13px;
+  color: #0078d4;
+  cursor: pointer;
+  padding: 6px 0;
+  user-select: none;
+  list-style: none;
+}
+
+.recDetailsSummary::-webkit-details-marker {
+  display: none;
+}
+
+.recDetailsSummary::before {
+  content: "▶ ";
+  font-size: 10px;
+}
+
+.recDetails[open] .recDetailsSummary::before {
+  content: "▼ ";
+}
+
+.recDetailsSummary:hover {
+  color: #005a9e;
+}
+
+.recDetailsContent {
+  padding-top: 12px;
+  animation: slideDown 0.2s ease-out;
+}
+
+@media (max-width: 768px) {
+  .executiveSummary {
+    padding: 20px;
+  }
+  
+  .execHeader h2 {
+    font-size: 22px;
+  }
+  
+  .keyMetricsRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  
+  .quickIndicators {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+  
+  .pillarSectionHeaderRow {
+    flex-direction: column;
+  }
+  
+  .expandCollapseControls {
+    width: 100%;
+  }
+  
+  .expandCollapseBtn {
+    flex: 1;
   }
 }

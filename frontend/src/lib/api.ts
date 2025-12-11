@@ -63,6 +63,13 @@ export interface Tool {
   install?: string
 }
 
+// Simple recommendation format (from quick guidance API)
+export interface SimpleRecommendation {
+  priority: string
+  recommendation?: string
+  description?: string  // API sometimes returns description instead of recommendation
+}
+
 // Static format recommendation (fallback)
 export interface StaticRecommendation {
   principle: string
@@ -99,12 +106,87 @@ export interface AIRecommendation {
   alternatives?: string[]
 }
 
-// Union type for both formats
-export type Recommendation = StaticRecommendation | AIRecommendation
+// Tiered recommendation item (v4.0 - world-class tier system)
+export interface TieredRecommendationItem {
+  id: string
+  title: string
+  description: string
+  tier_label: string  // "🚨 NON-NEGOTIABLE", "⚠️ HIGHLY RECOMMENDED", etc.
+  tier_reason: string
+  skip_risk: string
+  implementation_deadline?: string  // "Before any deployment", "Within 2 weeks", etc.
+  tools: Tool[]
+  implementation_steps?: string[]
+  time_estimate?: string
+  effort?: string
+}
 
-// Check if recommendation is AI format
+// Tier summary statistics
+export interface TierSummary {
+  non_negotiable_count: number
+  highly_recommended_count: number
+  recommended_count: number
+  optional_count: number
+  deployment_readiness: string  // "Blocked", "At Risk", "Mostly Ready", "Ready"
+  readiness_explanation: string
+}
+
+// Tiered recommendations container
+export interface TieredRecommendations {
+  non_negotiable: TieredRecommendationItem[]
+  highly_recommended: TieredRecommendationItem[]
+  recommended: TieredRecommendationItem[]
+  optional: TieredRecommendationItem[]
+  tier_summary?: TierSummary
+}
+
+// Pillar-based recommendation item
+export interface PillarRecommendationItem {
+  title: string
+  why_needed: string
+  what_happens_without: string
+  priority: string
+  tier?: string
+  tool?: {
+    name: string
+    url: string
+    purpose?: string
+    how_it_helps?: string
+  }
+  implementation_steps?: string[]
+}
+
+// Single pillar recommendations
+export interface PillarRecommendations {
+  pillar_name: string
+  pillar_icon?: string
+  pillar_description?: string
+  why_it_matters: string
+  risk_if_ignored?: string
+  recommendations: PillarRecommendationItem[]
+}
+
+// All pillars grouped
+export interface RecommendationsByPillar {
+  fairness?: PillarRecommendations
+  reliability_safety?: PillarRecommendations
+  privacy_security?: PillarRecommendations
+  inclusiveness?: PillarRecommendations
+  transparency?: PillarRecommendations
+  accountability?: PillarRecommendations
+}
+
+// Union type for all recommendation formats
+export type Recommendation = SimpleRecommendation | StaticRecommendation | AIRecommendation
+
+// Check if recommendation is AI format (detailed with steps)
 export function isAIRecommendation(rec: Recommendation): rec is AIRecommendation {
   return 'title' in rec && 'implementation_steps' in rec
+}
+
+// Check if recommendation is simple format (just priority + recommendation/description text)
+export function isSimpleRecommendation(rec: Recommendation): rec is SimpleRecommendation {
+  return ('recommendation' in rec || 'description' in rec) && !('title' in rec) && !('principle' in rec) && !('recommendations' in rec)
 }
 
 export interface OverallAssessment {
@@ -114,7 +196,7 @@ export interface OverallAssessment {
   critical_gaps: string[]
 }
 
-// Risk Scores (new in v2)
+// Risk Scores (new in v2, enhanced in v3)
 export interface PrincipleScores {
   fairness: number
   reliability_safety: number
@@ -124,9 +206,40 @@ export interface PrincipleScores {
   accountability: number
 }
 
+// Score driver for risk factors
+export interface ScoreDriver {
+  factor: string
+  impact: string
+  severity?: string  // Low | Medium | High | Critical (for negative drivers)
+}
+
+// Critical factors affecting the score
+export interface CriticalFactors {
+  score_drivers_positive: ScoreDriver[]
+  score_drivers_negative: ScoreDriver[]
+}
+
+// Qualitative assessment level
+export interface QualitativeLevel {
+  level: string  // Low | Medium | High
+  rationale: string
+}
+
+// Qualitative risk assessment
+export interface QualitativeAssessment {
+  data_sensitivity: QualitativeLevel
+  user_impact: QualitativeLevel
+  regulatory_exposure: QualitativeLevel
+  technical_complexity: QualitativeLevel
+  deployment_readiness: QualitativeLevel
+}
+
 export interface RiskScores {
   overall_score: number
   risk_level: string
+  risk_summary?: string  // High-level description of risk posture
+  critical_factors?: CriticalFactors
+  qualitative_assessment?: QualitativeAssessment
   principle_scores: PrincipleScores
   score_explanation?: string
 }
@@ -252,8 +365,10 @@ export interface SubmissionResponse {
   eu_ai_act_classification?: EUAIActClassification
   reference_architecture?: ReferenceArchitecture
   quick_start_guide?: QuickStartGuide
-  recommendations: Recommendation[]
-  summary: {
+  recommendations?: Recommendation[]  // Made optional - AI might not return this
+  tiered_recommendations?: TieredRecommendations  // v4.0 tiered system
+  recommendations_by_pillar?: RecommendationsByPillar  // v5.0 pillar-organized recommendations
+  summary?: {  // Made optional - AI might not return this
     total_recommendations: number
     critical_items: number
     high_priority_items: number
