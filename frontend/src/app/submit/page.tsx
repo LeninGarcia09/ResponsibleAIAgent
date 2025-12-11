@@ -310,115 +310,6 @@ export default function SubmitPage() {
     }
   }
 
-  // Test function with hardcoded mock data (no backend needed)
-  const handleTestRiskAssessment = async () => {
-    setLoading(true)
-    setError(null)
-    setResult(null)
-    
-    // Simulate loading
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    // Hardcoded mock data for testing the enhanced risk assessment UI
-    const mockData = {
-      submission_id: "test-" + Date.now(),
-      project_name: "Customer Service Chatbot",
-      status: "completed",
-      ai_powered: true,
-      review_mode: "standard",
-      risk_scores: {
-        overall_score: 58,
-        risk_level: "Moderate",
-        risk_summary: "This project presents moderate risk due to its customer-facing LLM chatbot handling potentially sensitive customer inquiries. The main concerns are lack of content safety controls, potential for harmful outputs, and absence of PII detection. However, being in the planning stage provides opportunity to implement proper safeguards before deployment.",
-        score_explanation: "Score reflects moderate risk from customer-facing LLM without proper content safety and privacy controls.",
-        critical_factors: {
-          score_drivers_negative: [
-            { factor: "Customer-facing LLM without content safety", impact: "Users could be exposed to harmful, inappropriate, or factually incorrect responses", severity: "High" },
-            { factor: "Processing customer inquiries may include PII", impact: "Personal data could be logged, stored insecurely, or exposed in responses", severity: "High" },
-            { factor: "No bias testing planned", impact: "Chatbot may provide inconsistent or discriminatory responses to different user groups", severity: "Medium" },
-            { factor: "No human oversight mechanism", impact: "Harmful patterns may go undetected until customer complaints arise", severity: "Medium" }
-          ],
-          score_drivers_positive: [
-            { factor: "Project is in planning stage", impact: "Allows time to implement proper safeguards before any deployment risk" },
-            { factor: "Clear intended purpose defined", impact: "Enables targeted risk assessment and appropriate tool selection" },
-            { factor: "Not processing health or financial data", impact: "Reduces regulatory complexity and compliance burden" }
-          ]
-        },
-        qualitative_assessment: {
-          data_sensitivity: { level: "Medium", rationale: "Customer inquiries may contain names, contact info, or preferences" },
-          user_impact: { level: "High", rationale: "Customer-facing system directly affects user experience and trust" },
-          regulatory_exposure: { level: "Medium", rationale: "May need to comply with GDPR, EU AI Act transparency requirements" },
-          technical_complexity: { level: "Medium", rationale: "LLM integration requires content safety, grounding, and monitoring" },
-          deployment_readiness: { level: "Low", rationale: "Significant gaps must be addressed before production deployment" }
-        },
-        principle_scores: {
-          fairness: 55,
-          reliability_safety: 45,
-          privacy_security: 50,
-          inclusiveness: 65,
-          transparency: 60,
-          accountability: 55
-        }
-      },
-      overall_assessment: {
-        summary: "This AI project shows moderate risk levels with key concerns around data privacy and content safety.",
-        maturity_level: "Developing",
-        key_strengths: ["Early-stage planning allows for proactive RAI integration", "Clear use case definition"],
-        critical_gaps: ["No content safety implementation", "Missing PII detection", "No bias testing planned"]
-      },
-      recommendations_by_pillar: {
-        reliability_safety: {
-          pillar_name: "Reliability & Safety",
-          pillar_icon: "🛡️",
-          why_it_matters: "Your customer-facing chatbot will directly interact with users. Without safety controls, it could generate harmful, offensive, or factually incorrect responses.",
-          risk_if_ignored: "Users could receive harmful content, leading to brand damage, customer complaints, potential legal action.",
-          recommendations: [
-            {
-              title: "Implement Azure AI Content Safety",
-              why_needed: "Your chatbot will generate responses to customer inquiries. Content Safety is essential to prevent harmful outputs.",
-              what_happens_without: "Customers could receive inappropriate or harmful responses, leading to complaints and regulatory violations.",
-              priority: "🚫 CRITICAL_BLOCKER",
-              tool: {
-                name: "Azure AI Content Safety",
-                url: "https://learn.microsoft.com/azure/ai-services/content-safety/",
-                how_it_helps: "Automatically scans inputs and outputs for harmful content across 4 categories with configurable severity thresholds."
-              },
-              implementation_steps: ["Create Content Safety resource in Azure Portal", "Integrate SDK into your chatbot pipeline", "Configure severity thresholds based on your audience"]
-            }
-          ]
-        },
-        privacy_security: {
-          pillar_name: "Privacy & Security",
-          pillar_icon: "🔐",
-          why_it_matters: "Customer inquiries often contain personal information. Without proper handling, this PII could be exposed.",
-          risk_if_ignored: "PII exposure could lead to GDPR violations (fines up to 4% of global revenue), data breaches, and loss of trust.",
-          recommendations: [
-            {
-              title: "Implement PII Detection with Presidio",
-              why_needed: "Customer messages may contain names, emails, phone numbers. You need to detect and handle this PII.",
-              what_happens_without: "Customer PII could be stored in logs, used in model training, or exposed to other users.",
-              priority: "⚠️ HIGHLY_RECOMMENDED",
-              tool: {
-                name: "Microsoft Presidio",
-                url: "https://microsoft.github.io/presidio/",
-                how_it_helps: "Detects 50+ PII types across multiple languages and can anonymize or redact sensitive data."
-              },
-              implementation_steps: ["Install Presidio analyzer and anonymizer", "Configure entity recognizers", "Add to input preprocessing pipeline"]
-            }
-          ]
-        }
-      },
-      next_steps: [
-        "Set up Azure AI Content Safety resource and integrate into chatbot pipeline",
-        "Implement Presidio for PII detection before logging or processing",
-        "Design human escalation path for edge cases"
-      ]
-    }
-    
-    setResult(mockData as SubmissionResponse)
-    setLoading(false)
-  }
-
   const getPriorityClass = (priority: string) => {
     switch (priority.toLowerCase()) {
       case 'critical':
@@ -1757,19 +1648,6 @@ Don't worry about technical details - we'll help you figure those out!"
                 >
                   {loading ? 'Analyzing with AI...' : 'Get AI Recommendations'}
                 </button>
-                {/* Test button for development - remove before production */}
-                {process.env.NODE_ENV === 'development' && (
-                  <button
-                    type="button"
-                    onClick={handleTestRiskAssessment}
-                    disabled={loading}
-                    className={styles.testButton}
-                    style={{ backgroundColor: '#8b5cf6', color: 'white', marginLeft: '10px', padding: '12px 24px', borderRadius: '8px', border: 'none', cursor: 'pointer' }}
-                    aria-label="Test enhanced risk assessment with mock data"
-                  >
-                    {loading ? 'Testing...' : '🧪 Test Risk UI'}
-                  </button>
-                )}
                 <button
                   type="button"
                   onClick={() => router.push('/')}
