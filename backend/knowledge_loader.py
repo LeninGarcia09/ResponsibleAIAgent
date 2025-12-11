@@ -233,6 +233,116 @@ def load_all_knowledge() -> Dict[str, Any]:
 # KNOWLEDGE INJECTION FOR SYSTEM PROMPT
 # =============================================================================
 
+def get_tools_by_rai_pillar() -> Dict[str, List[Dict[str, Any]]]:
+    """
+    Organize all tools from the catalog by RAI pillar.
+    Returns a dictionary with pillar names as keys and lists of tools as values.
+    """
+    loader = get_knowledge_loader()
+    catalog = loader.tools_catalog
+    
+    pillars = {
+        "Fairness": [],
+        "Reliability & Safety": [],
+        "Privacy & Security": [],
+        "Inclusiveness": [],
+        "Transparency": [],
+        "Accountability": []
+    }
+    
+    # Iterate through all categories and tools
+    for category_name, category_data in catalog.get("categories", {}).items():
+        for tool in category_data.get("tools", []):
+            tool_pillars = tool.get("rai_pillars", [])
+            tool_info = {
+                "name": tool.get("name", ""),
+                "description": tool.get("description", ""),
+                "primary_purpose": tool.get("primary_purpose", ""),
+                "when_to_use": tool.get("when_to_use", []),
+                "status": tool.get("status", "GA"),
+                "documentation_url": tool.get("documentation_url", ""),
+                "category": category_name
+            }
+            
+            # Add tool to each pillar it addresses
+            for pillar in tool_pillars:
+                # Normalize pillar names
+                if "Safety" in pillar and "Reliability" not in pillar:
+                    pillar = "Reliability & Safety"
+                elif "Security" in pillar and "Privacy" not in pillar:
+                    pillar = "Privacy & Security"
+                
+                if pillar in pillars:
+                    pillars[pillar].append(tool_info)
+    
+    return pillars
+
+
+def get_tools_catalog_for_prompt() -> str:
+    """
+    Build a comprehensive tools catalog summary organized by RAI pillar
+    for injection into the system prompt.
+    """
+    pillars = get_tools_by_rai_pillar()
+    loader = get_knowledge_loader()
+    
+    parts = [
+        "",
+        "# MICROSOFT RAI TOOLS CATALOG (Use ONLY these tools in recommendations)",
+        "",
+        "**CRITICAL**: When making recommendations, you MUST use tools from this catalog.",
+        "Each tool includes: purpose, when to use, and documentation URL.",
+        ""
+    ]
+    
+    for pillar_name, tools in pillars.items():
+        if not tools:
+            continue
+            
+        parts.append(f"## {pillar_name} Tools")
+        parts.append("")
+        
+        # Deduplicate tools (same tool may appear multiple times)
+        seen_tools = set()
+        for tool in tools:
+            if tool["name"] in seen_tools:
+                continue
+            seen_tools.add(tool["name"])
+            
+            parts.append(f"### {tool['name']}")
+            parts.append(f"- **Purpose**: {tool['primary_purpose'] or tool['description'][:200]}")
+            if tool['when_to_use']:
+                use_cases = tool['when_to_use'][:3] if isinstance(tool['when_to_use'], list) else [tool['when_to_use']]
+                parts.append(f"- **When to Use**: {'; '.join(use_cases)}")
+            if tool['documentation_url']:
+                parts.append(f"- **Docs**: {tool['documentation_url']}")
+            parts.append("")
+    
+    # Add use case scenarios
+    catalog = loader.tools_catalog
+    scenarios = catalog.get("actionable_use_cases", {}).get("scenarios", [])
+    
+    if scenarios:
+        parts.append("")
+        parts.append("# USE CASE TOOL MAPPINGS")
+        parts.append("")
+        parts.append("Use these as reference when recommending tools for specific project types:")
+        parts.append("")
+        
+        for scenario in scenarios[:5]:  # Top 5 scenarios
+            parts.append(f"## {scenario.get('title', '')}")
+            parts.append(f"**Risk Profile**: {scenario.get('risk_profile', '')}")
+            
+            required = scenario.get("required_tools", [])
+            if required:
+                tool_names = [t.get("tool", "") if isinstance(t, dict) else t for t in required[:4]]
+                parts.append(f"**Required Tools**: {', '.join(tool_names)}")
+            
+            parts.append("")
+    
+    return "\n".join(parts)
+
+
 def get_latest_tools_summary() -> str:
     """Get a summary of the latest tools for the system prompt."""
     loader = get_knowledge_loader()

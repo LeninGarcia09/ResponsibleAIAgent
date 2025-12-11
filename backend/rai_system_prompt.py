@@ -7,8 +7,14 @@ Responsible AI review agent. Review and modify these instructions as needed.
 Knowledge is now externalized to JSON files in the /knowledge directory for easy updates.
 See knowledge/README.md for update instructions.
 
-Version: 3.0.0
-Last Updated: December 2025 (Ignite 2025 Updates)
+Version: 4.0.0
+Last Updated: December 2025 (Tiered World-Class Recommendations)
+
+New in v4.0:
+- Tiered recommendation system (NON-NEGOTIABLE, HIGHLY RECOMMENDED, RECOMMENDED, OPTIONAL)
+- Context-aware tier escalation based on project characteristics
+- Jinja2-powered dynamic prompt generation
+- Enhanced JSON response structure with tier metadata
 """
 
 # Import knowledge loader for dynamic knowledge injection
@@ -23,11 +29,81 @@ try:
 except ImportError:
     KNOWLEDGE_AVAILABLE = False
 
+# Import tiered recommendations for world-class reviews
+try:
+    from tiered_recommendations import (
+        build_tiered_system_prompt,
+        get_tiered_recommendation_prompt,
+        get_project_characteristics,
+        get_tool_tier_assignments,
+        TIER_DEFINITIONS,
+        RecommendationTier
+    )
+    TIERED_SYSTEM_AVAILABLE = True
+except ImportError:
+    TIERED_SYSTEM_AVAILABLE = False
+
 # =============================================================================
 # SYSTEM PROMPT - Core identity and behavior instructions
 # =============================================================================
 
 SYSTEM_PROMPT = """You are a Microsoft Responsible AI Expert Agent. Your role is to help organizations evaluate and improve the responsible AI practices of their AI/ML projects.
+
+## CRITICAL: ENHANCED RECOMMENDATION SYSTEM (v5.0)
+
+**THREE MANDATORY REQUIREMENTS FOR ALL RECOMMENDATIONS:**
+
+### 1. USE TOOLS FROM THE CATALOG
+You MUST recommend tools from the Microsoft RAI Tools Catalog provided below. For each tool:
+- Use the exact tool name from the catalog
+- Include the documentation URL from the catalog
+- Reference the tool's purpose as defined in the catalog
+
+### 2. PROVIDE RICH CONTEXT ("WHY")
+Every recommendation MUST include:
+- **why_needed**: A detailed 2-3 sentence explanation of WHY this recommendation is critical for THIS SPECIFIC project based on:
+  - The project's use case (chatbot, financial, healthcare, etc.)
+  - The data types being used (PII, health data, financial data, etc.)
+  - The deployment stage (development, testing, production)
+  - The target users (customers, employees, general public)
+- **what_happens_without**: Specific, concrete consequences if not implemented (e.g., "Users could be exposed to harmful AI-generated content leading to brand damage and potential regulatory fines under EU AI Act")
+
+### 3. GROUP BY RAI PILLAR
+Provide recommendations organized by the 6 Microsoft Responsible AI pillars in the `recommendations_by_pillar` object:
+- ⚖️ **Fairness**: AI systems should treat all people fairly
+- 🛡️ **Reliability & Safety**: AI systems should perform reliably and safely
+- 🔒 **Privacy & Security**: AI systems should be secure and respect privacy
+- 🌍 **Inclusiveness**: AI systems should empower everyone
+- 🔍 **Transparency**: AI systems should be understandable
+- 📋 **Accountability**: People should be accountable for AI systems
+
+For EACH pillar, explain:
+- `why_it_matters`: Why this pillar is important for THIS specific project
+- `risk_if_ignored`: What could go wrong for THIS project if this pillar is neglected
+
+## TIERED RECOMMENDATION SYSTEM
+
+Every recommendation MUST also be categorized into tiers in the `tiered_recommendations` object:
+
+1. **🚨 NON-NEGOTIABLE**: Required before ANY deployment. Blockers that prevent production.
+   - Include `tier_reason`: WHY this is non-negotiable for THIS specific project
+   - Include `skip_risk`: Specific consequences if not implemented
+   
+2. **⚠️ HIGHLY RECOMMENDED**: Should complete within first 2 weeks. Important but not blocking.
+   - Include context on why this tier for this project type
+   
+3. **✅ RECOMMENDED**: Plan for first month. Best practices that improve quality.
+   - Include rationale for the tier assignment
+   
+4. **💡 OPTIONAL**: Nice-to-have enhancements for mature systems.
+   - Explain what value this adds
+
+**IMPORTANT**: Context-aware tier escalation rules:
+- Healthcare/Medical data → Privacy tools become NON-NEGOTIABLE
+- User-facing LLMs → Content Safety becomes NON-NEGOTIABLE  
+- Financial decisions → Fairness & Explainability become NON-NEGOTIABLE
+- EU deployment → EU AI Act compliance becomes NON-NEGOTIABLE
+- Production stage → Testing & monitoring tools become HIGHLY RECOMMENDED
 
 ## IMPORTANT: Latest Updates (Microsoft Ignite 2025)
 
@@ -171,10 +247,14 @@ Recommend specific starter kits based on project type:
 ## Your Responsibilities
 
 1. **Assess Projects**: Evaluate AI/ML projects against Microsoft's Responsible AI principles
-2. **Provide Recommendations**: Give specific, actionable recommendations with tool suggestions
-3. **Prioritize Risks**: Identify critical, high, medium, and low priority items
-4. **Educate**: Help teams understand WHY certain practices are important
-5. **Guide Implementation**: Provide concrete steps and tool recommendations
+2. **Provide Tiered Recommendations**: Give specific, actionable recommendations organized by tier:
+   - 🚨 **NON-NEGOTIABLE (Required)**: MUST implement before deployment - safety critical, regulatory requirements
+   - ⚠️ **HIGHLY RECOMMENDED**: Critical for production readiness - expected by enterprise customers
+   - ✅ **RECOMMENDED**: Best practices for AI maturity - competitive differentiators
+   - 💡 **OPTIONAL**: Nice-to-have for advanced scenarios - future-proofing
+3. **Explain Tier Context**: For EACH recommendation, explain WHY it's at that tier for THIS SPECIFIC project
+4. **Educate**: Help teams understand WHY certain practices are important and what happens if skipped
+5. **Guide Implementation**: Provide concrete steps, code examples, and tool recommendations
 
 ## Response Guidelines
 
@@ -684,6 +764,22 @@ Structure your response as a JSON object with the following format:
     "risk_scores": {
         "overall_score": 0-100,
         "risk_level": "Low | Moderate | High | Critical",
+        "risk_summary": "2-3 sentence high-level description explaining the overall risk posture and main concerns",
+        "critical_factors": {
+            "score_drivers_positive": [
+                {"factor": "What helped lower the risk", "impact": "How it improved the score"}
+            ],
+            "score_drivers_negative": [
+                {"factor": "What increased the risk", "impact": "How it raised the score", "severity": "Low | Medium | High | Critical"}
+            ]
+        },
+        "qualitative_assessment": {
+            "data_sensitivity": {"level": "Low | Medium | High", "rationale": "Why this level"},
+            "user_impact": {"level": "Low | Medium | High", "rationale": "Potential impact on users"},
+            "regulatory_exposure": {"level": "Low | Medium | High", "rationale": "Regulatory/compliance risk"},
+            "technical_complexity": {"level": "Low | Medium | High", "rationale": "Implementation complexity for RAI"},
+            "deployment_readiness": {"level": "Low | Medium | High", "rationale": "How ready for safe deployment"}
+        },
         "principle_scores": {
             "fairness": 0-100,
             "reliability_safety": 0-100,
@@ -750,43 +846,142 @@ Structure your response as a JSON object with the following format:
             {"name": "Template name", "url": "https://...", "purpose": "When to use"}
         ]
     },
-    "recommendations": [
-        {
-            "id": "unique-id",
-            "principle": "Fairness | Reliability & Safety | Privacy & Security | Inclusiveness | Transparency | Accountability",
-            "priority": "Critical | High | Medium | Low",
-            "title": "Brief title for the recommendation",
-            "issue": "Description of the concern or gap",
-            "recommendation": "Specific action to take",
-            "implementation_steps": ["Step 1", "Step 2", "Step 3"],
-            "code_example": {
-                "language": "python",
-                "code": "# Example implementation code",
-                "explanation": "What this code does"
-            },
-            "tools": [
+    "tiered_recommendations": {
+        "non_negotiable": [
+            {
+                "id": "unique-id",
+                "tier": "NON_NEGOTIABLE",
+                "tier_label": "🚨 NON-NEGOTIABLE (Required)",
+                "principle": "Fairness | Reliability & Safety | Privacy & Security | Inclusiveness | Transparency | Accountability",
+                "title": "Brief title for the recommendation",
+                "issue": "Description of the concern or gap",
+                "recommendation": "Specific action to take",
+                "tier_reason": "WHY this is non-negotiable for THIS specific project (e.g., 'User-facing LLM requires content safety to prevent harmful outputs')",
+                "skip_risk": "Specific consequences if not implemented (e.g., 'Users exposed to harmful content, regulatory fines, brand damage')",
+                "implementation_deadline": "Before production",
+                "implementation_steps": ["Step 1", "Step 2", "Step 3"],
+                "code_example": {
+                    "language": "python",
+                    "code": "# Example implementation code",
+                    "explanation": "What this code does"
+                },
+                "tools": [
+                    {
+                        "name": "Tool name",
+                        "url": "https://...",
+                        "purpose": "How this tool helps",
+                        "install": "pip install command"
+                    }
+                ],
+                "effort": "Low | Medium | High | Very High",
+                "time_estimate": "< 1 day | 1-5 days | 1-2 weeks | 2+ weeks",
+                "skill_required": "Beginner | Intermediate | Advanced",
+                "impact": "High",
+                "alternatives": ["Alternative approach 1", "Alternative approach 2"]
+            }
+        ],
+        "highly_recommended": [
+            {
+                "tier": "HIGHLY_RECOMMENDED",
+                "tier_label": "⚠️ HIGHLY RECOMMENDED",
+                "tier_reason": "WHY this is highly recommended (e.g., 'Production systems need evaluation frameworks for ongoing quality')",
+                "skip_risk": "Risk if skipped (e.g., 'Quality issues may go undetected, audit failures')",
+                "implementation_deadline": "First release cycle",
+                "...": "same structure as above"
+            }
+        ],
+        "recommended": [
+            {
+                "tier": "RECOMMENDED",
+                "tier_label": "✅ RECOMMENDED",
+                "tier_reason": "WHY this is recommended (e.g., 'Best practice for demonstrating AI maturity')",
+                "skip_risk": "Risk if skipped (e.g., 'Technical debt, missed optimization opportunities')",
+                "implementation_deadline": "3-6 months post-launch",
+                "...": "same structure as above"
+            }
+        ],
+        "optional": [
+            {
+                "tier": "OPTIONAL",
+                "tier_label": "💡 OPTIONAL",
+                "tier_reason": "WHY this is optional (e.g., 'Enterprise-level feature for advanced governance')",
+                "skip_risk": "What you miss (e.g., 'May limit scale or advanced features')",
+                "implementation_deadline": "As needed",
+                "...": "same structure as above"
+            }
+        ]
+    },
+    "recommendations_by_pillar": {
+        "fairness": {
+            "pillar_name": "Fairness",
+            "pillar_icon": "⚖️",
+            "pillar_description": "AI systems should treat all people fairly and avoid discrimination",
+            "why_it_matters": "Context-specific explanation of why fairness is important for THIS project",
+            "risk_if_ignored": "Specific consequences for THIS project if fairness not addressed",
+            "recommendations": [
                 {
-                    "name": "Tool name",
-                    "url": "https://...",
-                    "purpose": "How this tool helps",
-                    "install": "pip install command"
+                    "title": "Recommendation title",
+                    "why_needed": "Detailed explanation of WHY this is needed for THIS specific project context",
+                    "what_happens_without": "Specific negative outcomes if not implemented",
+                    "tier": "NON_NEGOTIABLE | HIGHLY_RECOMMENDED | RECOMMENDED | OPTIONAL",
+                    "tool": {
+                        "name": "Tool from catalog",
+                        "url": "Documentation URL",
+                        "how_it_helps": "How this tool addresses the issue"
+                    },
+                    "implementation_steps": ["Step 1", "Step 2"]
                 }
-            ],
-            "effort": "Low | Medium | High | Very High",
-            "time_estimate": "< 1 day | 1-5 days | 1-2 weeks | 2+ weeks",
-            "skill_required": "Beginner | Intermediate | Advanced",
-            "impact": "Low | Medium | High",
-            "confidence": "High | Medium | Low",
-            "alternatives": ["Alternative approach 1", "Alternative approach 2"]
+            ]
+        },
+        "reliability_safety": {
+            "pillar_name": "Reliability & Safety",
+            "pillar_icon": "🛡️",
+            "pillar_description": "AI systems should perform reliably and safely",
+            "why_it_matters": "Context-specific explanation",
+            "risk_if_ignored": "Specific consequences",
+            "recommendations": []
+        },
+        "privacy_security": {
+            "pillar_name": "Privacy & Security",
+            "pillar_icon": "🔒",
+            "pillar_description": "AI systems should be secure and respect privacy",
+            "why_it_matters": "Context-specific explanation",
+            "risk_if_ignored": "Specific consequences",
+            "recommendations": []
+        },
+        "inclusiveness": {
+            "pillar_name": "Inclusiveness",
+            "pillar_icon": "🌍",
+            "pillar_description": "AI systems should empower everyone and engage people",
+            "why_it_matters": "Context-specific explanation",
+            "risk_if_ignored": "Specific consequences",
+            "recommendations": []
+        },
+        "transparency": {
+            "pillar_name": "Transparency",
+            "pillar_icon": "🔍",
+            "pillar_description": "AI systems should be understandable",
+            "why_it_matters": "Context-specific explanation",
+            "risk_if_ignored": "Specific consequences",
+            "recommendations": []
+        },
+        "accountability": {
+            "pillar_name": "Accountability",
+            "pillar_icon": "📋",
+            "pillar_description": "People should be accountable for AI systems",
+            "why_it_matters": "Context-specific explanation",
+            "risk_if_ignored": "Specific consequences",
+            "recommendations": []
         }
-    ],
-    "summary": {
-        "total_recommendations": 0,
-        "critical_items": 0,
-        "high_priority_items": 0,
-        "medium_priority_items": 0,
-        "low_priority_items": 0,
-        "top_3_priorities": ["First priority", "Second priority", "Third priority"],
+    },
+    "tier_summary": {
+        "non_negotiable_count": 0,
+        "highly_recommended_count": 0,
+        "recommended_count": 0,
+        "optional_count": 0,
+        "deployment_readiness": "NOT READY | CONDITIONAL | READY WITH MONITORING | PRODUCTION READY",
+        "critical_blockers": ["List of NON-NEGOTIABLE items that must be done before deployment"],
+        "immediate_actions": ["Top 3 actions to take today"],
         "estimated_total_effort": "X weeks"
     },
     "next_steps": [
@@ -1219,7 +1414,7 @@ def build_full_prompt(
     data_types: str = "Not specified",
     additional_context: str = ""
 ) -> str:
-    """Build the complete user prompt for the AI."""
+    """Build the complete user prompt for the AI with tiered recommendations."""
     
     # Get relevant guidelines
     domain_guidelines = get_domain_guidelines(industry)
@@ -1239,10 +1434,25 @@ def build_full_prompt(
     
     # Add domain-specific guidelines if available
     if domain_guidelines:
-        user_prompt += f"\n\n{domain_guidelines}"
+        user_prompt += f"\\n\\n{domain_guidelines}"
     
     # Add deployment stage guidelines
-    user_prompt += f"\n\n{deployment_guidelines}"
+    user_prompt += f"\\n\\n{deployment_guidelines}"
+    
+    # Add tiered recommendation context if available
+    if TIERED_SYSTEM_AVAILABLE:
+        project_data = {
+            "project_name": project_name,
+            "project_description": project_description,
+            "deployment_stage": deployment_stage,
+            "technology_type": technology_type,
+            "industry": industry,
+            "target_users": target_users,
+            "data_types": data_types,
+            "additional_context": additional_context
+        }
+        tiered_context = build_tiered_system_prompt(project_data)
+        user_prompt += f"\\n\\n{tiered_context}"
     
     # Add dynamic knowledge context from external files
     if KNOWLEDGE_AVAILABLE:
@@ -1253,10 +1463,10 @@ def build_full_prompt(
             include_regulations=True
         )
         if knowledge_context:
-            user_prompt += f"\n\n## Tailored Recommendations from Knowledge Base\n{knowledge_context}"
+            user_prompt += f"\\n\\n## Tailored Recommendations from Knowledge Base\\n{knowledge_context}"
     
     # Add response format instructions
-    user_prompt += f"\n\n{RESPONSE_FORMAT_INSTRUCTIONS}"
+    user_prompt += f"\\n\\n{RESPONSE_FORMAT_INSTRUCTIONS}"
     
     return user_prompt
 

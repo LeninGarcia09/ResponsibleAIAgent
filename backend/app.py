@@ -388,6 +388,164 @@ MICROSOFT_RAI_PRINCIPLES = {
     }
 }
 
+
+def augment_with_dynamic_resources(ai_response: dict, project_data: dict) -> dict:
+    """
+    Augment AI response with dynamic reference architectures and quick start guides.
+    
+    This ensures the response always includes up-to-date reference architectures,
+    GitHub repos, and quick start guidance, even if the AI doesn't provide them.
+    """
+    if not DYNAMIC_RESOURCES_AVAILABLE:
+        return ai_response
+    
+    try:
+        # Detect project type from AI response or project data
+        project_type = (
+            ai_response.get("detected_project_type") or 
+            ai_response.get("_adaptive_metadata", {}).get("detected_project_type") or
+            project_data.get("technology_type", "")
+        ).lower()
+        
+        use_case = project_data.get("project_description", "")[:200]
+        
+        # Get dynamic reference architectures
+        dynamic_archs = get_dynamic_reference_architectures(project_type, use_case)
+        
+        # Get repos from the correct key (github_repos or repos)
+        dynamic_repos = dynamic_archs.get("github_repos", []) or dynamic_archs.get("repos", [])
+        
+        # Augment reference_architecture if missing or incomplete
+        if not ai_response.get("reference_architecture") or not ai_response["reference_architecture"].get("repos"):
+            ai_response["reference_architecture"] = {
+                "description": dynamic_archs.get("description", f"Reference architecture for {project_type or 'AI'} projects"),
+                "azure_services": dynamic_archs.get("azure_services", [
+                    "Azure OpenAI Service",
+                    "Azure AI Studio", 
+                    "Azure Machine Learning",
+                    "Azure Content Safety"
+                ]),
+                "repos": [
+                    {
+                        "name": repo.get("name", ""),
+                        "url": repo.get("url", repo.get("html_url", "")),
+                        "description": repo.get("description", ""),
+                        "stars": repo.get("stars", repo.get("stargazers_count", 0)),
+                        "language": repo.get("language", "Python"),
+                        "last_updated": repo.get("last_updated", repo.get("updated_at", ""))
+                    }
+                    for repo in dynamic_repos[:5]  # Top 5 repos
+                ],
+                "patterns": dynamic_archs.get("patterns", []),
+                "documentation": dynamic_archs.get("documentation", []),
+                "microsoft_docs": [
+                    {
+                        "title": "Azure AI Services Documentation",
+                        "url": "https://learn.microsoft.com/azure/ai-services/"
+                    },
+                    {
+                        "title": "Responsible AI Overview",
+                        "url": "https://learn.microsoft.com/azure/machine-learning/concept-responsible-ai"
+                    },
+                    {
+                        "title": "Azure OpenAI Service",
+                        "url": "https://learn.microsoft.com/azure/ai-services/openai/"
+                    }
+                ]
+            }
+        
+        # Augment quick_start_guide if missing
+        if not ai_response.get("quick_start_guide"):
+            quick_start_commands = dynamic_archs.get("quick_start_commands", [])
+            ai_response["quick_start_guide"] = {
+                "title": f"Getting Started with {project_type.upper() if project_type else 'AI'} Development",
+                "description": "Essential steps to set up your responsible AI project",
+                "steps": [
+                    {
+                        "step": 1,
+                        "title": "Set Up Azure AI Environment",
+                        "description": "Create an Azure AI resource group and configure services",
+                        "commands": [
+                            "az login",
+                            "az group create --name myai-rg --location westus",
+                            "az cognitiveservices account create --name myai-openai --resource-group myai-rg --kind OpenAI --sku S0 --location westus"
+                        ]
+                    },
+                    {
+                        "step": 2,
+                        "title": "Install Required Libraries",
+                        "description": "Set up Python environment with Azure AI SDKs",
+                        "commands": quick_start_commands[:3] if quick_start_commands else [
+                            "pip install azure-ai-contentsafety",
+                            "pip install azure-ai-ml",
+                            "pip install promptflow"
+                        ]
+                    },
+                    {
+                        "step": 3,
+                        "title": "Configure Content Safety",
+                        "description": "Enable content moderation for your AI application",
+                        "commands": [
+                            "pip install azure-ai-contentsafety",
+                            "# Configure safety settings in Azure Portal"
+                        ]
+                    },
+                    {
+                        "step": 4,
+                        "title": "Implement Responsible AI Practices",
+                        "description": "Add fairness, explainability, and monitoring",
+                        "commands": [
+                            "pip install fairlearn raiwidgets interpret",
+                            "# Use ResponsibleAIDashboard for model analysis"
+                        ]
+                    }
+                ],
+                "resources": dynamic_archs.get("documentation", dynamic_archs.get("microsoft_docs", [
+                    {
+                        "title": "Azure AI Quickstart",
+                        "url": "https://learn.microsoft.com/azure/ai-services/openai/quickstart"
+                    },
+                    {
+                        "title": "Responsible AI Toolbox",
+                        "url": "https://github.com/microsoft/responsible-ai-toolbox"
+                    }
+                ])),
+                "starter_repos": [
+                    {
+                        "name": repo.get("name", ""),
+                        "url": repo.get("url", repo.get("html_url", "")),
+                        "clone_command": f"git clone {repo.get('url', repo.get('html_url', ''))}.git"
+                    }
+                    for repo in dynamic_repos[:3]  # Top 3 for quick start
+                ]
+            }
+        
+        # Also augment quick_start (short form) if needed
+        if not ai_response.get("quick_start"):
+            ai_response["quick_start"] = {
+                "essential_tools": [
+                    {"name": "Azure Content Safety", "url": "https://learn.microsoft.com/azure/ai-services/content-safety/", "purpose": "Content moderation and safety filtering"},
+                    {"name": "Responsible AI Toolbox", "url": "https://github.com/microsoft/responsible-ai-toolbox", "purpose": "Fairness assessment and model debugging"},
+                    {"name": "Prompt Flow", "url": "https://github.com/microsoft/promptflow", "purpose": "LLM application development and testing"}
+                ],
+                "first_week_actions": [
+                    "Set up Azure OpenAI resource with content filtering enabled",
+                    "Configure Content Safety service for your use case",
+                    "Install fairlearn and run bias assessment on training data",
+                    "Set up basic monitoring with Azure Application Insights",
+                    "Review Microsoft's Responsible AI Standard documentation"
+                ],
+                "reference_architecture": f"Azure AI + Content Safety architecture for {project_type or 'AI'} applications",
+                "starter_repo": dynamic_repos[0].get("url", dynamic_repos[0].get("html_url", "")) if dynamic_repos else "https://github.com/microsoft/responsible-ai-toolbox"
+            }
+        
+        return ai_response
+        
+    except Exception as e:
+        print(f"⚠ Error augmenting with dynamic resources: {e}")
+        return ai_response
+
+
 def generate_recommendations_adaptive(project_data):
     """
     Generate recommendations using the adaptive prompt system.
@@ -993,7 +1151,15 @@ def submit_review():
             ai_response = generate_recommendations_adaptive(project_data)
             
             # If we got a proper AI response, use it
-            if "recommendations" in ai_response and not ai_response.get("fallback"):
+            # Check for both old format (recommendations) and new format (recommendations_by_pillar)
+            has_recommendations = (
+                "recommendations" in ai_response or 
+                "recommendations_by_pillar" in ai_response
+            )
+            if has_recommendations and not ai_response.get("fallback"):
+                # Augment response with dynamic reference architectures if missing
+                ai_response = augment_with_dynamic_resources(ai_response, project_data)
+                
                 return jsonify({
                     "submission_id": str(uuid.uuid4()),
                     "project_name": project_data.get("project_name", "Unknown"),
@@ -1037,7 +1203,15 @@ def submit_advanced_review():
             ai_response = generate_recommendations_adaptive(project_data)
             
             # If we got a proper AI response, use it
-            if "recommendations" in ai_response and not ai_response.get("fallback"):
+            # Check for both old format (recommendations) and new format (recommendations_by_pillar)
+            has_recommendations = (
+                "recommendations" in ai_response or 
+                "recommendations_by_pillar" in ai_response
+            )
+            if has_recommendations and not ai_response.get("fallback"):
+                # Augment response with dynamic reference architectures if missing
+                ai_response = augment_with_dynamic_resources(ai_response, project_data)
+                
                 return jsonify({
                     "submission_id": str(uuid.uuid4()),
                     "project_name": project_data.get("project_name", "Unknown"),
