@@ -3,12 +3,17 @@ from flask_cors import CORS, cross_origin
 import uuid
 import os
 import json
+import re
+import logging
+from datetime import datetime
 from openai import AzureOpenAI
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 
 app = Flask(__name__)
 # Configure CORS with full options to ensure preflight works
 CORS(app, origins="*", allow_headers=["Content-Type"], methods=["GET", "POST", "OPTIONS"])
+
+logger = logging.getLogger(__name__)
 
 # Global handler for OPTIONS preflight requests
 @app.before_request
@@ -56,6 +61,332 @@ try:
 except ImportError as e:
     DYNAMIC_RESOURCES_AVAILABLE = False
     print(f"⚠ Dynamic resources not available: {e}")
+
+    # Scenario matching metadata to personalize guidance
+    SCENARIO_KEYWORD_HINTS = {
+        "customer-chatbot": [
+            "chatbot", "customer", "support", "helpdesk", "contact center",
+            "call center", "service", "faq"
+        ],
+        "ai-agent-automation": [
+            "agent", "automation", "workflow", "orchestrator", "autonomous",
+            "action", "process"
+        ],
+        "loan-approval-model": [
+            "loan", "credit", "underwriting", "finance", "mortgage", "lending"
+        ],
+        "content-generation-platform": [
+            "content", "marketing", "copy", "generation", "creative", "social"
+        ],
+        "healthcare-ai-assistant": [
+            "healthcare", "medical", "patient", "clinician", "doctor", "nurse"
+        ],
+        "rag-enterprise-search": [
+            "rag", "retrieval", "search", "knowledge", "documents", "grounding"
+        ],
+        "image-generation-app": [
+            "image", "vision", "generate", "art", "graphic", "media"
+        ],
+        "multi-agent-system": [
+            "multi-agent", "swarm", "ensemble", "agents", "coordinator"
+        ]
+    }
+
+    PROJECT_TYPE_HINTS = {
+        "ai agent": ["ai-agent-automation", "multi-agent-system"],
+        "ai-agent": ["ai-agent-automation", "multi-agent-system"],
+        "ai agents": ["ai-agent-automation", "multi-agent-system"],
+        "llm/generative ai": [
+            "customer-chatbot", "content-generation-platform", "rag-enterprise-search"
+        ],
+        "generative ai": [
+            "customer-chatbot", "content-generation-platform", "rag-enterprise-search"
+        ],
+        "llm": [
+            "customer-chatbot", "content-generation-platform", "rag-enterprise-search"
+        ],
+        "traditional ml": ["loan-approval-model"],
+        "ml": ["loan-approval-model"],
+        "computer vision": ["image-generation-app"],
+        "document intelligence": ["rag-enterprise-search"],
+        "general ai": []
+    }
+
+    SCENARIO_STAKEHOLDERS = {
+        "customer-chatbot": [
+            "Customer Support Lead",
+            "Security & Privacy Officer",
+            "Responsible AI Champion"
+        ],
+        "ai-agent-automation": [
+            "Operations Owner",
+            "Identity & Access Lead",
+            "Incident Response Manager"
+        ],
+        "loan-approval-model": [
+            "Chief Risk Officer",
+            "Compliance Lead",
+            "Model Risk Management"
+        ],
+        "content-generation-platform": [
+            "Marketing Director",
+            "Brand Safety Owner",
+            "Legal Counsel"
+        ],
+        "healthcare-ai-assistant": [
+            "Clinical Safety Officer",
+            "Privacy Officer",
+            "Medical Governance Board"
+        ],
+        "rag-enterprise-search": [
+            "Knowledge Management Lead",
+            "Data Governance Officer",
+            "Security Architect"
+        ],
+        "image-generation-app": [
+            "Creative Director",
+            "Intellectual Property Counsel",
+            "Safety Reviewer"
+        ],
+        "multi-agent-system": [
+            "Program Manager",
+            "Security Operations",
+            "Responsible AI Board"
+        ]
+    }
+
+    DEFAULT_STAKEHOLDERS = [
+        "Product Owner",
+        "Responsible AI Champion",
+        "Security & Privacy Lead",
+        "Legal/Compliance Partner"
+    ]
+
+
+    def _safe_lower(value):
+        return str(value).lower() if value else ""
+
+
+    def _tokenize_for_matching(*values):
+        text = " ".join(str(v) for v in values if v)
+        tokens = set()
+        for token in re.findall(r"[a-z0-9]+", text.lower()):
+            if len(token) > 2:
+                tokens.add(token)
+        return tokens
+
+
+    def _dedupe_preserve_order(items):
+        seen = set()
+        ordered = []
+        for entry in items or []:
+            if not entry:
+                continue
+            if entry in seen:
+                continue
+            seen.add(entry)
+            ordered.append(entry)
+        return ordered
+
+
+    def _extract_latest_updates(research_result):
+        updates = []
+        if not isinstance(research_result, dict):
+            return updates
+
+        results = research_result.get("results")
+        if isinstance(results, list):
+            for item in results:
+                if not isinstance(item, dict):
+                    continue
+                title = item.get("title") or item.get("headline") or item.get("name")
+                summary = item.get("summary") or item.get("description") or item.get("excerpt")
+                url = item.get("url") or item.get("link")
+                if not url:
+                    sources = item.get("sources")
+                    if isinstance(sources, list) and sources:
+                        url = sources[0]
+                if not (title and url):
+                    continue
+                updates.append({
+                    "title": title,
+                    "summary": summary,
+                    "url": url,
+                    "last_verified": research_result.get("last_verified") or datetime.utcnow().date().isoformat()
+                })
+
+        if not updates:
+            if isinstance(research_result.get("sources"), list):
+                for source_url in research_result["sources"][:3]:
+                    updates.append({
+                        "title": "Latest resource",
+                        "summary": research_result.get("raw_response"),
+                        "url": source_url,
+                        "last_verified": research_result.get("last_verified") or datetime.utcnow().date().isoformat()
+                    })
+
+        return updates[:5]
+
+
+    def _format_tool_activity(tool_versions):
+        if not isinstance(tool_versions, dict):
+            return []
+
+        activity = []
+        for tool, details in tool_versions.items():
+            if not isinstance(details, dict):
+                continue
+            activity.append({
+                "tool": tool,
+                "last_pushed": details.get("last_pushed"),
+                "stars": details.get("stars"),
+                "url": details.get("url")
+            })
+
+        activity.sort(key=lambda item: item.get("last_pushed") or "", reverse=True)
+        return activity
+
+
+    def _select_use_case_scenario(project_data, project_type_hint, ai_response):
+        if not (KNOWLEDGE_AVAILABLE and knowledge_loader):
+            return None
+
+        catalog = knowledge_loader.tools_catalog or {}
+        scenarios = catalog.get("actionable_use_cases", {}).get("scenarios", [])
+        if not scenarios:
+            return None
+
+        combined_text = " ".join([
+            project_data.get("project_name", ""),
+            project_data.get("project_description", ""),
+            project_data.get("additional_context", ""),
+            project_data.get("business_problem", ""),
+            project_data.get("intended_purpose", "")
+        ]).lower()
+
+        project_tokens = _tokenize_for_matching(
+            project_data.get("project_name", ""),
+            project_data.get("project_description", ""),
+            project_data.get("additional_context", ""),
+            project_data.get("business_problem", ""),
+            project_data.get("intended_purpose", ""),
+            project_data.get("technology_type", ""),
+            " ".join(project_data.get("ai_capabilities", []) or [])
+        )
+
+        industry = _safe_lower(project_data.get("industry"))
+        project_type_candidates = {
+            _safe_lower(project_type_hint),
+            _safe_lower(project_data.get("technology_type")),
+            _safe_lower(ai_response.get("_adaptive_metadata", {}).get("detected_project_type"))
+        }
+
+        best_scenario = None
+        best_score = 0
+
+        for scenario in scenarios:
+            scenario_id = scenario.get("id", "")
+            scenario_tokens = _tokenize_for_matching(
+                scenario.get("title", ""),
+                scenario.get("description", ""),
+                " ".join(scenario.get("industry_relevance", [])),
+                scenario.get("risk_profile", "")
+            )
+
+            score = len(project_tokens & scenario_tokens)
+
+            for hint in SCENARIO_KEYWORD_HINTS.get(scenario_id, []):
+                if hint in combined_text:
+                    score += 12
+
+            if industry and any(industry in _safe_lower(ind) for ind in scenario.get("industry_relevance", [])):
+                score += 10
+
+            for project_type in project_type_candidates:
+                if not project_type:
+                    continue
+                if scenario_id in PROJECT_TYPE_HINTS.get(project_type, []):
+                    score += 14
+                if project_type in scenario_tokens:
+                    score += 4
+
+            if score > best_score:
+                best_score = score
+                best_scenario = scenario
+
+        if best_score < 6:
+            return None
+
+        return best_scenario
+
+
+    def _parse_step(step_text):
+        cleaned = (step_text or "").strip()
+        if not cleaned:
+            return "Implementation step", "Complete this step to advance your responsible AI readiness."
+
+        cleaned = re.sub(r"^\s*\d+[\.|\)]\s*", "", cleaned)
+        if ":" in cleaned:
+            title, desc = cleaned.split(":", 1)
+            return title.strip() or "Implementation step", desc.strip() or title.strip()
+
+        return cleaned, cleaned
+
+
+    def _build_week_one_checklist(steps):
+        checklist = []
+        for idx, raw_step in enumerate(steps[:4], start=1):
+            title, desc = _parse_step(raw_step)
+            checklist.append({
+                "task": title,
+                "priority": "High" if idx <= 2 else "Medium",
+                "time_estimate": "1-2 days" if idx <= 2 else "3-4 days"
+            })
+        return checklist
+
+
+    def _build_thirty_day_roadmap(steps):
+        if not steps:
+            return {}
+
+        buckets = {
+            "week_1": steps[:2],
+            "week_2": steps[2:4],
+            "week_3": steps[4:5],
+            "week_4": steps[5:6]
+        }
+
+        roadmap = {}
+        for week, bucket in buckets.items():
+            if not bucket:
+                continue
+            titles = []
+            descriptions = []
+            for entry in bucket:
+                title, desc = _parse_step(entry)
+                titles.append(title)
+                descriptions.append(desc)
+            roadmap[week] = {
+                "focus": titles[0],
+                "actions": descriptions,
+                "milestone": titles[-1]
+            }
+        return roadmap
+
+
+    def _build_structured_steps(steps, quick_start_commands=None):
+        structured = []
+        for idx, raw_step in enumerate(steps[:4], start=1):
+            title, desc = _parse_step(raw_step)
+            entry = {
+                "step": idx,
+                "title": title,
+                "description": desc
+            }
+            if quick_start_commands and idx == 2:
+                entry["commands"] = quick_start_commands[:3]
+            structured.append(entry)
+        return structured
 
 # Azure OpenAI Configuration
 AZURE_OPENAI_ENDPOINT = os.environ.get("AZURE_OPENAI_ENDPOINT")  # e.g., https://your-resource.openai.azure.com/
@@ -390,38 +721,108 @@ MICROSOFT_RAI_PRINCIPLES = {
 
 
 def augment_with_dynamic_resources(ai_response: dict, project_data: dict) -> dict:
-    """
-    Augment AI response with dynamic reference architectures and quick start guides.
-    
-    This ensures the response always includes up-to-date reference architectures,
-    GitHub repos, and quick start guidance, even if the AI doesn't provide them.
-    """
+    """Augment the response with dynamic resources and knowledge-backed context."""
     if not DYNAMIC_RESOURCES_AVAILABLE:
         return ai_response
-    
+
     try:
-        # Detect project type from AI response or project data
-        project_type = (
-            ai_response.get("detected_project_type") or 
-            ai_response.get("_adaptive_metadata", {}).get("detected_project_type") or
-            project_data.get("technology_type", "")
-        ).lower()
-        
+        fetcher = get_dynamic_fetcher(client) if DYNAMIC_RESOURCES_AVAILABLE else None
+        project_type_source = (
+            ai_response.get("detected_project_type")
+            or ai_response.get("_adaptive_metadata", {}).get("detected_project_type")
+            or project_data.get("technology_type", "")
+        )
+        project_type = _safe_lower(project_type_source)
         use_case = project_data.get("project_description", "")[:200]
-        
-        # Get dynamic reference architectures
+
+        scenario = _select_use_case_scenario(project_data, project_type_source, ai_response)
+
         dynamic_archs = get_dynamic_reference_architectures(project_type, use_case)
-        
-        # Get repos from the correct key (github_repos or repos)
         dynamic_repos = dynamic_archs.get("github_repos", []) or dynamic_archs.get("repos", [])
-        
-        # Augment reference_architecture if missing or incomplete
+        quick_start_commands = dynamic_archs.get("quick_start_commands", [])
+
+        latest_updates = []
+        latest_tool_activity = []
+
+        if fetcher:
+            try:
+                topic = scenario.get("title") if scenario else project_type_source or project_data.get("project_name", "Responsible AI")
+                research_query = f"{topic} Microsoft responsible AI updates {datetime.utcnow().year}"
+                research_result = fetcher.search_with_bing_grounding(
+                    query=research_query,
+                    context="Microsoft responsible AI tools, governance, and safety"
+                )
+                latest_updates = _extract_latest_updates(research_result)
+            except Exception as research_error:
+                logger.debug(f"Latest updates lookup failed: {research_error}")
+
+            try:
+                tool_versions = fetcher.get_latest_tools_versions()
+                latest_tool_activity = _format_tool_activity(tool_versions)
+            except Exception as activity_error:
+                logger.debug(f"Latest tool activity lookup failed: {activity_error}")
+
+        fallback_risks = calculate_basic_risk_scores(project_data)
+        risk_scores = ai_response.get("risk_scores")
+
+        if not risk_scores:
+            ai_response["risk_scores"] = fallback_risks
+            risk_scores = ai_response["risk_scores"]
+        else:
+            risk_scores.setdefault("overall_score", fallback_risks.get("overall_score"))
+            risk_scores.setdefault("risk_level", fallback_risks.get("risk_level"))
+
+            summary_parts = []
+            if scenario and scenario.get("risk_profile"):
+                summary_parts.append(f"Scenario assessment: {scenario['risk_profile']}")
+            if risk_scores.get("risk_summary"):
+                summary_parts.append(risk_scores["risk_summary"])
+            else:
+                summary_parts.append(fallback_risks.get("risk_summary"))
+            risk_scores["risk_summary"] = " ".join(part for part in summary_parts if part).strip()
+
+            principle_scores = risk_scores.get("principle_scores")
+            if not principle_scores:
+                risk_scores["principle_scores"] = fallback_risks.get("principle_scores", {})
+            else:
+                for principle, score in fallback_risks.get("principle_scores", {}).items():
+                    principle_scores.setdefault(principle, score)
+
+            existing_factors = risk_scores.setdefault("critical_factors", {})
+            fallback_factors = fallback_risks.get("critical_factors", {})
+            for factor_key in ["score_drivers_positive", "score_drivers_negative"]:
+                merged = _dedupe_preserve_order(
+                    (existing_factors.get(factor_key) or []) + (fallback_factors.get(factor_key) or [])
+                )
+                if merged:
+                    existing_factors[factor_key] = merged
+
+            if not risk_scores.get("qualitative_assessment"):
+                risk_scores["qualitative_assessment"] = fallback_risks.get("qualitative_assessment")
+
+            if not risk_scores.get("score_explanation"):
+                drivers = existing_factors.get("score_drivers_negative", [])
+                driver_clause = ""
+                if drivers:
+                    driver_clause = f"Key drivers: {', '.join(drivers[:2])}"
+                if scenario and scenario.get("risk_profile"):
+                    risk_scores["score_explanation"] = " ".join(
+                        part for part in [scenario["risk_profile"], driver_clause] if part
+                    ).strip()
+                elif driver_clause:
+                    risk_scores["score_explanation"] = driver_clause
+
+        reference_description = dynamic_archs.get(
+            "description",
+            f"Reference architecture for {scenario.get('title') if scenario else (project_type_source or 'AI')} projects"
+        )
+
         if not ai_response.get("reference_architecture") or not ai_response["reference_architecture"].get("repos"):
             ai_response["reference_architecture"] = {
-                "description": dynamic_archs.get("description", f"Reference architecture for {project_type or 'AI'} projects"),
+                "description": reference_description,
                 "azure_services": dynamic_archs.get("azure_services", [
                     "Azure OpenAI Service",
-                    "Azure AI Studio", 
+                    "Azure AI Studio",
                     "Azure Machine Learning",
                     "Azure Content Safety"
                 ]),
@@ -434,11 +835,11 @@ def augment_with_dynamic_resources(ai_response: dict, project_data: dict) -> dic
                         "language": repo.get("language", "Python"),
                         "last_updated": repo.get("last_updated", repo.get("updated_at", ""))
                     }
-                    for repo in dynamic_repos[:5]  # Top 5 repos
+                    for repo in dynamic_repos[:5]
                 ],
                 "patterns": dynamic_archs.get("patterns", []),
                 "documentation": dynamic_archs.get("documentation", []),
-                "microsoft_docs": [
+                "microsoft_docs": dynamic_archs.get("microsoft_docs", [
                     {
                         "title": "Azure AI Services Documentation",
                         "url": "https://learn.microsoft.com/azure/ai-services/"
@@ -451,56 +852,198 @@ def augment_with_dynamic_resources(ai_response: dict, project_data: dict) -> dic
                         "title": "Azure OpenAI Service",
                         "url": "https://learn.microsoft.com/azure/ai-services/openai/"
                     }
-                ]
+                ])
             }
-        
-        # Augment quick_start_guide if missing
-        if not ai_response.get("quick_start_guide"):
-            quick_start_commands = dynamic_archs.get("quick_start_commands", [])
-            ai_response["quick_start_guide"] = {
-                "title": f"Getting Started with {project_type.upper() if project_type else 'AI'} Development",
-                "description": "Essential steps to set up your responsible AI project",
-                "steps": [
-                    {
-                        "step": 1,
-                        "title": "Set Up Azure AI Environment",
-                        "description": "Create an Azure AI resource group and configure services",
-                        "commands": [
-                            "az login",
-                            "az group create --name myai-rg --location westus",
-                            "az cognitiveservices account create --name myai-openai --resource-group myai-rg --kind OpenAI --sku S0 --location westus"
-                        ]
-                    },
-                    {
-                        "step": 2,
-                        "title": "Install Required Libraries",
-                        "description": "Set up Python environment with Azure AI SDKs",
-                        "commands": quick_start_commands[:3] if quick_start_commands else [
-                            "pip install azure-ai-contentsafety",
-                            "pip install azure-ai-ml",
-                            "pip install promptflow"
-                        ]
-                    },
-                    {
-                        "step": 3,
-                        "title": "Configure Content Safety",
-                        "description": "Enable content moderation for your AI application",
-                        "commands": [
-                            "pip install azure-ai-contentsafety",
-                            "# Configure safety settings in Azure Portal"
-                        ]
-                    },
-                    {
-                        "step": 4,
-                        "title": "Implement Responsible AI Practices",
-                        "description": "Add fairness, explainability, and monitoring",
-                        "commands": [
-                            "pip install fairlearn raiwidgets interpret",
-                            "# Use ResponsibleAIDashboard for model analysis"
-                        ]
+
+        quick_start_guide = ai_response.get("quick_start_guide") or {}
+        ai_response["quick_start_guide"] = quick_start_guide
+
+        quick_start_summary = ai_response.get("quick_start") or {}
+        ai_response["quick_start"] = quick_start_summary
+
+        if latest_updates and not quick_start_guide.get("latest_updates"):
+            quick_start_guide["latest_updates"] = latest_updates
+        if latest_updates and not ai_response.get("latest_resources"):
+            ai_response["latest_resources"] = latest_updates
+        if latest_tool_activity and not quick_start_guide.get("latest_tool_activity"):
+            quick_start_guide["latest_tool_activity"] = latest_tool_activity
+        if latest_tool_activity and not quick_start_summary.get("latest_tool_activity"):
+            quick_start_summary["latest_tool_activity"] = latest_tool_activity[:3]
+
+        scenario_tool_lookup = {}
+        essential_tools = []
+
+        if scenario:
+            for group in ("required_tools", "recommended_tools"):
+                for entry in scenario.get(group, []):
+                    name = entry.get("tool") or entry.get("name")
+                    if not name:
+                        continue
+                    lowered = name.lower()
+                    scenario_tool_lookup.setdefault(lowered, entry)
+                    tool_details = knowledge_loader.get_tool_info(name) if KNOWLEDGE_AVAILABLE and knowledge_loader else {}
+                    doc_url = entry.get("url") or (tool_details or {}).get("documentation_url") or (tool_details or {}).get("url", "")
+                    purpose = entry.get("purpose") or (tool_details or {}).get("primary_purpose") or (tool_details or {}).get("description", "")
+                    tool_payload = {
+                        "name": name,
+                        "url": doc_url,
+                        "purpose": purpose or "Supports responsible AI controls for this scenario."
                     }
-                ],
-                "resources": dynamic_archs.get("documentation", dynamic_archs.get("microsoft_docs", [
+                    install_command = (tool_details or {}).get("install_command")
+                    if install_command:
+                        tool_payload["install_command"] = install_command
+                    essential_tools.append(tool_payload)
+
+            if essential_tools and not quick_start_guide.get("essential_tools"):
+                quick_start_guide["essential_tools"] = essential_tools[:6]
+
+            scenario_steps = scenario.get("implementation_steps", [])
+            if scenario_steps:
+                if not quick_start_guide.get("week_one_checklist"):
+                    quick_start_guide["week_one_checklist"] = _build_week_one_checklist(scenario_steps)
+                if not quick_start_guide.get("thirty_day_roadmap"):
+                    roadmap = _build_thirty_day_roadmap(scenario_steps)
+                    if roadmap:
+                        quick_start_guide["thirty_day_roadmap"] = roadmap
+                if not quick_start_guide.get("steps"):
+                    quick_start_guide["steps"] = _build_structured_steps(scenario_steps, quick_start_commands)
+
+            if scenario and not quick_start_guide.get("quick_reference"):
+                quick_reference = {
+                    "top_3_tools": _dedupe_preserve_order([
+                        entry.get("tool") or entry.get("name")
+                        for entry in scenario.get("required_tools", [])
+                    ])[:3],
+                    "key_metrics": scenario.get("success_metrics", [])[:4],
+                    "red_flags": scenario.get("common_pitfalls", [])[:4],
+                    "stakeholders_to_involve": _dedupe_preserve_order(
+                        SCENARIO_STAKEHOLDERS.get(scenario.get("id"), []) + DEFAULT_STAKEHOLDERS
+                    )[:5]
+                }
+                quick_start_guide["quick_reference"] = {
+                    key: value for key, value in quick_reference.items() if value
+                }
+
+            if not quick_start_guide.get("templates_and_checklists"):
+                quick_start_guide["templates_and_checklists"] = [
+                    {
+                        "name": "Microsoft Responsible AI Standard",
+                        "url": "https://learn.microsoft.com/ai/responsible-ai/responsible-ai-standard",
+                        "purpose": "Baseline guardrails and accountability requirements"
+                    },
+                    {
+                        "name": "Responsible AI Impact Assessment",
+                        "url": "https://aka.ms/rai-impact-assessment",
+                        "purpose": "Document risks, mitigations, and approvals for this solution"
+                    }
+                ]
+
+            quick_start_guide.setdefault(
+                "detected_project_type",
+                scenario.get("title") or project_type_source or "AI Solution"
+            )
+            if scenario.get("risk_profile"):
+                quick_start_guide["risk_profile"] = scenario["risk_profile"]
+            if scenario.get("title"):
+                quick_start_guide["scenario_title"] = scenario["title"]
+
+            if essential_tools:
+                quick_start_summary["essential_tools"] = essential_tools[:3]
+            if quick_start_guide.get("week_one_checklist"):
+                quick_start_summary["first_week_actions"] = [
+                    item["task"] for item in quick_start_guide["week_one_checklist"][:4]
+                ]
+            quick_start_summary.setdefault(
+                "reference_architecture",
+                ai_response.get("reference_architecture", {}).get("description", reference_description)
+            )
+            if dynamic_repos:
+                quick_start_summary["starter_repo"] = dynamic_repos[0].get("url", dynamic_repos[0].get("html_url", ""))
+            else:
+                quick_start_summary.setdefault("starter_repo", "https://github.com/microsoft/responsible-ai-toolbox")
+            if scenario.get("risk_profile"):
+                quick_start_summary["risk_profile"] = scenario["risk_profile"]
+            if scenario.get("title"):
+                quick_start_summary["scenario"] = scenario["title"]
+
+            pillar_recs = ai_response.get("recommendations_by_pillar")
+            if isinstance(pillar_recs, dict):
+                fallback_gap = (
+                    scenario.get("common_pitfalls", [])[:1] or [fallback_risks.get("risk_summary")]
+                )[0]
+                for pillar_key, pillar_data in pillar_recs.items():
+                    if not isinstance(pillar_data, dict):
+                        continue
+                    pillar_data.setdefault(
+                        "why_it_matters",
+                        scenario.get("risk_profile", pillar_data.get("pillar_description", ""))
+                    )
+                    pillar_data.setdefault("risk_if_ignored", fallback_gap)
+                    recommendations = pillar_data.get("recommendations", [])
+                    if not isinstance(recommendations, list):
+                        continue
+                    for rec in recommendations:
+                        if not isinstance(rec, dict):
+                            continue
+                        tool_entry = rec.get("tool")
+                        tool_name = None
+                        if isinstance(tool_entry, dict):
+                            tool_name = tool_entry.get("name")
+                        elif isinstance(tool_entry, str):
+                            tool_name = tool_entry
+                        tool_lookup = scenario_tool_lookup.get(_safe_lower(tool_name)) if tool_name else None
+                        tool_metadata = {}
+                        if tool_name and KNOWLEDGE_AVAILABLE and knowledge_loader:
+                            tool_metadata = knowledge_loader.get_tool_info(tool_name) or {}
+
+                        if not rec.get("why_needed"):
+                            if tool_lookup and tool_lookup.get("purpose"):
+                                rec["why_needed"] = tool_lookup["purpose"]
+                            elif scenario.get("risk_profile"):
+                                rec["why_needed"] = scenario["risk_profile"]
+                            else:
+                                rec["why_needed"] = fallback_risks.get("risk_summary")
+
+                        if not rec.get("what_happens_without"):
+                            rec["what_happens_without"] = fallback_gap
+
+                        if tool_name:
+                            normalized_tool = tool_entry if isinstance(tool_entry, dict) else {"name": tool_name}
+                            if tool_lookup and tool_lookup.get("purpose"):
+                                normalized_tool.setdefault("purpose", tool_lookup.get("purpose"))
+                            if tool_lookup and tool_lookup.get("configuration"):
+                                normalized_tool.setdefault("how_it_helps", tool_lookup.get("configuration"))
+                            if tool_metadata:
+                                normalized_tool.setdefault(
+                                    "purpose",
+                                    tool_metadata.get("primary_purpose") or tool_metadata.get("description", "")
+                                )
+                                normalized_tool.setdefault(
+                                    "url",
+                                    tool_metadata.get("documentation_url") or tool_metadata.get("url", "")
+                                )
+                                if tool_metadata.get("primary_purpose"):
+                                    normalized_tool.setdefault("how_it_helps", tool_metadata.get("primary_purpose"))
+                            rec["tool"] = normalized_tool
+
+                        if (
+                            not rec.get("implementation_steps")
+                            or not isinstance(rec.get("implementation_steps"), list)
+                        ) and scenario.get("implementation_steps"):
+                            rec["implementation_steps"] = scenario["implementation_steps"][:3]
+
+        if not quick_start_guide.get("steps") and not scenario:
+            quick_start_guide["title"] = f"Getting Started with {(project_type_source or 'AI').upper()} Development"
+            quick_start_guide["description"] = "Essential steps to set up your responsible AI project"
+            quick_start_guide["steps"] = _build_structured_steps([
+                "1. Set up Azure AI environment",
+                "2. Install required libraries",
+                "3. Configure content safety controls",
+                "4. Implement responsible AI practices"
+            ], quick_start_commands)
+            quick_start_guide.setdefault(
+                "resources",
+                dynamic_archs.get("documentation", dynamic_archs.get("microsoft_docs", [
                     {
                         "title": "Azure AI Quickstart",
                         "url": "https://learn.microsoft.com/azure/ai-services/openai/quickstart"
@@ -509,42 +1052,64 @@ def augment_with_dynamic_resources(ai_response: dict, project_data: dict) -> dic
                         "title": "Responsible AI Toolbox",
                         "url": "https://github.com/microsoft/responsible-ai-toolbox"
                     }
-                ])),
-                "starter_repos": [
+                ]))
+            )
+            quick_start_guide.setdefault(
+                "starter_repos",
+                [
                     {
                         "name": repo.get("name", ""),
                         "url": repo.get("url", repo.get("html_url", "")),
                         "clone_command": f"git clone {repo.get('url', repo.get('html_url', ''))}.git"
                     }
-                    for repo in dynamic_repos[:3]  # Top 3 for quick start
+                    for repo in dynamic_repos[:3]
                 ]
-            }
-        
-        # Also augment quick_start (short form) if needed
-        if not ai_response.get("quick_start"):
-            ai_response["quick_start"] = {
-                "essential_tools": [
-                    {"name": "Azure Content Safety", "url": "https://learn.microsoft.com/azure/ai-services/content-safety/", "purpose": "Content moderation and safety filtering"},
-                    {"name": "Responsible AI Toolbox", "url": "https://github.com/microsoft/responsible-ai-toolbox", "purpose": "Fairness assessment and model debugging"},
-                    {"name": "Prompt Flow", "url": "https://github.com/microsoft/promptflow", "purpose": "LLM application development and testing"}
-                ],
-                "first_week_actions": [
-                    "Set up Azure OpenAI resource with content filtering enabled",
-                    "Configure Content Safety service for your use case",
-                    "Install fairlearn and run bias assessment on training data",
-                    "Set up basic monitoring with Azure Application Insights",
-                    "Review Microsoft's Responsible AI Standard documentation"
-                ],
-                "reference_architecture": f"Azure AI + Content Safety architecture for {project_type or 'AI'} applications",
-                "starter_repo": dynamic_repos[0].get("url", dynamic_repos[0].get("html_url", "")) if dynamic_repos else "https://github.com/microsoft/responsible-ai-toolbox"
-            }
+            )
 
-        # Ensure risk scores are present so the frontend can render the risk widgets
-        if not ai_response.get("risk_scores"):
-            ai_response["risk_scores"] = calculate_basic_risk_scores(project_data)
-        
+        if not quick_start_summary.get("essential_tools"):
+            quick_start_summary["essential_tools"] = quick_start_guide.get("essential_tools", [
+                {
+                    "name": "Azure Content Safety",
+                    "url": "https://learn.microsoft.com/azure/ai-services/content-safety/",
+                    "purpose": "Content moderation and safety filtering"
+                },
+                {
+                    "name": "Responsible AI Toolbox",
+                    "url": "https://github.com/microsoft/responsible-ai-toolbox",
+                    "purpose": "Fairness assessment and model debugging"
+                },
+                {
+                    "name": "Prompt Flow",
+                    "url": "https://github.com/microsoft/promptflow",
+                    "purpose": "LLM application development and testing"
+                }
+            ])
+
+        if not quick_start_summary.get("first_week_actions"):
+            quick_start_summary["first_week_actions"] = [
+                "Set up Azure OpenAI with content filtering",
+                "Configure Azure AI Content Safety for user interactions",
+                "Install Fairlearn and run a baseline bias assessment",
+                "Enable monitoring with Azure Application Insights"
+            ]
+
+        if not quick_start_summary.get("reference_architecture"):
+            quick_start_summary["reference_architecture"] = ai_response.get("reference_architecture", {}).get(
+                "description",
+                dynamic_archs.get(
+                    "description",
+                    f"Azure AI + Content Safety architecture for {project_type_source or 'AI'} applications"
+                )
+            )
+
+        if not quick_start_summary.get("starter_repo"):
+            quick_start_summary["starter_repo"] = (
+                dynamic_repos[0].get("url", dynamic_repos[0].get("html_url", ""))
+                if dynamic_repos else "https://github.com/microsoft/responsible-ai-toolbox"
+            )
+
         return ai_response
-        
+
     except Exception as e:
         print(f"⚠ Error augmenting with dynamic resources: {e}")
         return ai_response

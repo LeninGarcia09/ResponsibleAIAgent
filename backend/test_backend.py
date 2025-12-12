@@ -1,46 +1,34 @@
-"""
-Test script to validate backend modules without Azure Functions runtime
-"""
-import sys
+"""Pytest-based smoke tests covering key backend modules."""
+
+from __future__ import annotations
+
 import os
+from pathlib import Path
 
-# Add current directory to path
-sys.path.insert(0, os.path.dirname(__file__))
+import pytest
 
-print("=" * 60)
-print("Testing Responsible AI Agent Backend Components")
-print("=" * 60)
+from shared.config import settings
+from shared.models import (
+    AIReviewSubmission,
+    ResponsibleAIPrinciple,
+    SecurityCheckType,
+    ReviewStatus,
+    Finding,
+    SeverityLevel,
+)
 
-# Test 1: Config
-print("\n[1/5] Testing Configuration...")
-try:
-    from shared.config import settings
-    print("✓ Config module loaded")
-    print(f"  - Cosmos DB Database: {settings.cosmos_db_database_name}")
-    print(f"  - Storage Container: {settings.storage_container_reports}")
-    print(f"  - Email From: {settings.email_from}")
-except Exception as e:
-    print(f"✗ Config test failed: {e}")
-    sys.exit(1)
 
-# Test 2: Models
-print("\n[2/5] Testing Data Models...")
-try:
-    from shared.models import (
-        AIReviewSubmission,
-        ReviewResult,
-        ResponsibleAIPrinciple,
-        SecurityCheckType,
-        ReviewStatus,
-        Finding,
-        SecurityCheck,
-        SeverityLevel
-    )
-    print("✓ All models imported successfully")
-    print(f"  - Responsible AI Principles: {len(list(ResponsibleAIPrinciple))}")
-    print(f"  - Security Check Types: {len(list(SecurityCheckType))}")
-    
-    # Test model creation
+def test_config_settings_loads() -> None:
+    """Ensure mandatory configuration values are available."""
+
+    assert settings.cosmos_db_database_name, "Cosmos DB database name should be configured"
+    assert settings.storage_container_reports, "Storage container should be configured"
+    assert settings.email_from, "Sender email must be configured"
+
+
+def test_model_instantiation() -> None:
+    """Validate core models can be instantiated with representative data."""
+
     submission = AIReviewSubmission(
         submitter_email="test@microsoft.com",
         submitter_name="Test User",
@@ -49,80 +37,64 @@ try:
         ai_capabilities=["NLP"],
         data_sources=["Test Data"],
         user_impact="Low",
-        deployment_stage="Development"
+        deployment_stage="Development",
     )
-    print(f"✓ Created test submission: {submission.project_name}")
-    
-except Exception as e:
-    print(f"✗ Models test failed: {e}")
-    import traceback
-    traceback.print_exc()
-    sys.exit(1)
 
-# Test 3: Azure Clients (without actual connections)
-print("\n[3/5] Testing Azure Client Modules...")
-try:
-    from shared.azure_clients import (
-        get_cosmos_client,
-        get_blob_client,
-        get_openai_client,
-        get_keyvault_client,
-        get_graph_client
-    )
-    print("✓ Azure client functions imported")
-    print("  - Note: Actual connections require Azure credentials")
-except Exception as e:
-    print(f"✗ Azure clients test failed: {e}")
-    sys.exit(1)
+    assert submission.project_name == "Test Project"
+    assert "NLP" in submission.ai_capabilities
+    assert submission.deployment_stage.lower() == "development"
+    assert len(list(ResponsibleAIPrinciple)) > 0
+    assert len(list(SecurityCheckType)) > 0
+    assert ReviewStatus.PENDING.value
 
-# Test 4: Function Modules
-print("\n[4/5] Testing Function Modules...")
-try:
-    # Test if function files exist
-    function_dirs = ['SubmitReview', 'ProcessReview', 'GenerateReport']
+
+def test_function_directories_present() -> None:
+    """Confirm Azure Function directory scaffolding remains intact."""
+
+    backend_root = Path(__file__).parent
+    function_dirs = ["SubmitReview", "ProcessReview", "GenerateReport"]
+
+    missing = []
     for func_dir in function_dirs:
-        init_file = os.path.join(func_dir, '__init__.py')
-        json_file = os.path.join(func_dir, 'function.json')
-        if os.path.exists(init_file) and os.path.exists(json_file):
-            print(f"✓ {func_dir} function files present")
-        else:
-            print(f"✗ {func_dir} function files missing")
-except Exception as e:
-    print(f"✗ Function modules test failed: {e}")
+        init_file = backend_root / func_dir / "__init__.py"
+        config_file = backend_root / func_dir / "function.json"
+        if not (init_file.exists() and config_file.exists()):
+            missing.append(func_dir)
 
-# Test 5: Review Engine Logic
-print("\n[5/5] Testing Review Engine Components...")
-try:
-    # Import the review engine (without Azure OpenAI connection)
-    from datetime import datetime
-    from shared.models import Finding, SeverityLevel, ResponsibleAIPrinciple
-    
-    # Create a sample finding
+    assert not missing, f"Missing Azure Function scaffolding for: {', '.join(missing)}"
+
+
+def test_finding_model_defaults() -> None:
+    """Ensure Finding model captures critical attributes without errors."""
+
     finding = Finding(
         principle=ResponsibleAIPrinciple.FAIRNESS,
         severity=SeverityLevel.HIGH,
         title="Test Finding",
         description="Test description",
         recommendation="Test recommendation",
-        compliant=False
+        compliant=False,
     )
-    print(f"✓ Created sample finding: {finding.title}")
-    print(f"  - Principle: {finding.principle}")
-    print(f"  - Severity: {finding.severity}")
-    print(f"  - Compliant: {finding.compliant}")
-    
-except Exception as e:
-    print(f"✗ Review engine test failed: {e}")
-    import traceback
-    traceback.print_exc()
 
-print("\n" + "=" * 60)
-print("Backend Component Tests Complete!")
-print("=" * 60)
-print("\nNext Steps:")
-print("1. Install Azure Functions Core Tools:")
-print("   npm install -g azure-functions-core-tools@4")
-print("2. Configure Azure credentials in local.settings.json")
-print("3. Run: func start (to start Azure Functions locally)")
-print("\nNote: Without Azure credentials, the functions will run but")
-print("      won't be able to connect to Azure services.")
+    assert finding.principle == ResponsibleAIPrinciple.FAIRNESS
+    assert finding.severity == SeverityLevel.HIGH
+    assert finding.compliant is False
+
+
+@pytest.mark.parametrize(
+    "factory_name",
+    [
+        "get_cosmos_client",
+        "get_blob_client",
+        "get_openai_client",
+        "get_keyvault_client",
+        "get_graph_client",
+    ],
+)
+def test_azure_client_factories_importable(factory_name: str) -> None:
+    """Verify Azure client factory functions are defined and callable."""
+
+    from shared import azure_clients
+
+    factory = getattr(azure_clients, factory_name, None)
+    assert callable(factory), f"{factory_name} should be a callable factory"
