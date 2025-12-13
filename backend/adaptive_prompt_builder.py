@@ -1,12 +1,34 @@
 """
 Adaptive System Prompt Builder
+===============================
 
-This module builds dynamic system prompts based on input assessment
-and project characteristics. It integrates with the response adapter
-to provide context-appropriate guidance.
+This module orchestrates context-aware prompt generation for the Responsible AI
+recommendation engine. It assesses input completeness, detects project scenarios,
+and builds tailored system/user prompts that guide Azure OpenAI to produce
+recommendations at the appropriate depth and specificity.
 
-Version: 1.0.0
+Key Capabilities:
+    - Input Assessment: Scores completeness (0-100) based on field richness
+    - Scenario Detection: Maps projects to 8 curated scenarios (Healthcare, Finance, etc.)
+    - Dynamic Prompt Building: Adjusts guidance depth (minimal/basic/detailed/comprehensive)
+    - Knowledge Integration: Injects RAI tools catalog and reference architectures
+    - Priority Mapping: Ensures consistent priority levels across recommendations
+
+Architecture:
+    1. assess_and_configure() → Scores input, determines ResponseDepth
+    2. build_adaptive_system_prompt() → Creates context-aware system instructions
+    3. build_adaptive_user_prompt() → Formats user input with enrichment
+    4. get_adaptive_prompts() → Orchestrates full prompt generation pipeline
+
+Response Depth Levels:
+    - MINIMAL (0-25): Quick guidance, 3-5 recommendations
+    - BASIC (25-50): Quick scan, essential actions only
+    - DETAILED (50-75): Standard review with comprehensive recommendations
+    - COMPREHENSIVE (75-100): Full assessment with detailed roadmaps
+
+Version: 2.0.0
 Created: December 2025
+License: MIT
 """
 
 from typing import Dict, Any, Optional, List

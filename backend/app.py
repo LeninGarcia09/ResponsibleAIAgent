@@ -1,3 +1,34 @@
+"""
+Responsible AI Agent - Backend API Server
+==========================================
+
+A Flask-based API server that provides AI-powered responsible AI recommendations
+using Azure OpenAI, adaptive prompt engineering, and dynamic resource augmentation.
+
+Architecture:
+    - Adaptive Prompt System: Adjusts guidance depth based on input completeness
+    - Knowledge Loader: Integrates curated RAI tools catalog (8 scenarios)
+    - Dynamic Resources: Real-time research via Bing grounding, GitHub repo discovery
+    - Risk Assessment: Context-aware scoring with fallback calculations
+    - Multi-tier Recommendations: Critical blockers, high priority, quick wins
+
+Key Features:
+    - 13 RESTful API endpoints
+    - Scenario-based personalization (Healthcare, Finance, Biometric, etc.)
+    - Progressive disclosure (quick reviews → comprehensive assessments)
+    - Azure OpenAI integration with managed identity
+    - Reference architecture population
+
+Version: 2.0.0
+Created: December 2025
+License: MIT
+
+Environment Variables Required:
+    - AZURE_OPENAI_ENDPOINT: Azure OpenAI service URL
+    - AZURE_OPENAI_DEPLOYMENT: Model deployment name (e.g., gpt-4o)
+    - AZURE_OPENAI_API_VERSION: API version (e.g., 2024-08-01-preview)
+"""
+
 from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS, cross_origin
 import uuid
@@ -9,15 +40,22 @@ from datetime import datetime
 from openai import AzureOpenAI
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 
+# =============================================================================
+# Flask Application Setup
+# =============================================================================
+
 app = Flask(__name__)
-# Configure CORS with full options to ensure preflight works
+
+# Configure CORS with full options to ensure preflight requests work
+# Allows all origins for development; restrict in production
 CORS(app, origins="*", allow_headers=["Content-Type"], methods=["GET", "POST", "OPTIONS"])
 
 logger = logging.getLogger(__name__)
 
-# Global handler for OPTIONS preflight requests
+# Global handler for OPTIONS preflight requests (required for CORS)
 @app.before_request
 def handle_preflight():
+    """Handle CORS preflight OPTIONS requests before routing."""
     if request.method == "OPTIONS":
         response = make_response()
         response.headers.add("Access-Control-Allow-Origin", "*")
@@ -25,10 +63,17 @@ def handle_preflight():
         response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         return response
 
-# Import system prompt (legacy - kept for fallback)
+# =============================================================================
+# Module Imports - Graceful Degradation Pattern
+# =============================================================================
+# The system uses a layered approach: adaptive → legacy → static fallback
+# Each module has availability flags to handle import failures gracefully
+
+# Import system prompt (legacy - kept for fallback compatibility)
 from rai_system_prompt import SYSTEM_PROMPT, build_full_prompt, RESPONSE_FORMAT_INSTRUCTIONS, OPENAI_CONFIG
 
-# Import adaptive prompt system (NEW - primary recommendation engine)
+# Import adaptive prompt system (PRIMARY recommendation engine)
+# Provides context-aware prompts based on input completeness and project type
 try:
     from adaptive_prompt_builder import get_adaptive_prompts
     from response_adapter import assess_and_configure, Priority, PriorityMapper
@@ -38,7 +83,8 @@ except ImportError as e:
     ADAPTIVE_SYSTEM_AVAILABLE = False
     print(f"⚠ Adaptive prompt system not available, using legacy: {e}")
 
-# Import knowledge loader for dynamic knowledge access
+# Import knowledge loader for dynamic RAI tools catalog (8 scenarios)
+# Provides curated tool recommendations, stakeholders, and implementation guides
 try:
     from knowledge_loader import get_knowledge_loader, get_latest_tools_summary
     knowledge_loader = get_knowledge_loader()
@@ -49,7 +95,8 @@ except ImportError as e:
     knowledge_loader = None
     print(f"⚠ Knowledge loader not available: {e}")
 
-# Import dynamic resources fetcher for real-time reference architectures
+# Import dynamic resources fetcher for real-time data augmentation
+# Features: Bing-grounded research, GitHub repo discovery, tool version updates
 try:
     from dynamic_resources import (
         get_dynamic_fetcher, 
@@ -62,8 +109,15 @@ except ImportError as e:
     DYNAMIC_RESOURCES_AVAILABLE = False
     print(f"⚠ Dynamic resources not available: {e}")
 
-    # Scenario matching metadata to personalize guidance
-    SCENARIO_KEYWORD_HINTS = {
+# =============================================================================
+# Scenario Matching Metadata
+# =============================================================================
+# These dictionaries enable intelligent scenario detection for personalized guidance
+# Scenarios map to curated tool recommendations, stakeholders, and risk profiles
+
+# SCENARIO_KEYWORD_HINTS: Maps scenario IDs to keyword triggers
+# Used for token-based scoring to detect project context from descriptions
+SCENARIO_KEYWORD_HINTS = {
         "customer-chatbot": [
             "chatbot", "customer", "support", "helpdesk", "contact center",
             "call center", "service", "faq"
@@ -92,7 +146,10 @@ except ImportError as e:
         ]
     }
 
-    PROJECT_TYPE_HINTS = {
+
+# PROJECT_TYPE_HINTS: Maps technology types to likely scenario categories
+# Helps narrow down scenario detection when explicit tech type is provided
+PROJECT_TYPE_HINTS = {
         "ai agent": ["ai-agent-automation", "multi-agent-system"],
         "ai-agent": ["ai-agent-automation", "multi-agent-system"],
         "ai agents": ["ai-agent-automation", "multi-agent-system"],
@@ -112,7 +169,10 @@ except ImportError as e:
         "general ai": []
     }
 
-    SCENARIO_STAKEHOLDERS = {
+
+# SCENARIO_STAKEHOLDERS: Maps scenarios to key stakeholder roles
+# Used to populate quick_start_guide with context-appropriate governance roles
+SCENARIO_STAKEHOLDERS = {
         "customer-chatbot": [
             "Customer Support Lead",
             "Security & Privacy Officer",
@@ -721,7 +781,36 @@ MICROSOFT_RAI_PRINCIPLES = {
 
 
 def augment_with_dynamic_resources(ai_response: dict, project_data: dict) -> dict:
-    """Augment the response with dynamic resources and knowledge-backed context."""
+    """
+    Augment AI response with dynamic resources and knowledge-backed context.
+    
+    This is a CRITICAL function that ensures all response fields are populated,
+    even when dynamic resources are unavailable. The risk_scores merging logic
+    executes BEFORE checking DYNAMIC_RESOURCES_AVAILABLE flag (bug fix #297c379).
+    
+    Augmentation Steps:
+        1. Calculate fallback risk scores (always)
+        2. Select scenario for risk profile context (always)
+        3. Merge risk_scores with AI response (always)
+        4. If DYNAMIC_RESOURCES_AVAILABLE:
+           - Fetch latest research via Bing grounding
+           - Discover GitHub repos for reference implementations
+           - Get tool version updates
+           - Populate reference_architecture
+    
+    Args:
+        ai_response: Raw AI-generated recommendations (may have missing fields)
+        project_data: User input with project context
+    
+    Returns:
+        Enhanced response with guaranteed risk_scores structure and optional
+        dynamic resources (reference_architecture, latest_updates, repos)
+    
+    Critical Fix History:
+        - Commit 297c379: Moved risk_scores merging before DYNAMIC_RESOURCES_AVAILABLE
+          check to ensure all fields (risk_summary, critical_factors, principle_scores)
+          are always populated
+    """
     
     # ALWAYS calculate and merge risk scores, regardless of dynamic resources availability
     fallback_risks = calculate_basic_risk_scores(project_data)
@@ -1153,10 +1242,51 @@ def augment_with_dynamic_resources(ai_response: dict, project_data: dict) -> dic
 
 
 def calculate_basic_risk_scores(project_data: dict) -> dict:
-    """Generate a simple risk score when the model omits it.
-
-    This keeps the UI populated with the expected structure and gives users
-    a starting point until the adaptive model returns detailed scores.
+    """
+    Generate fallback risk scores using rule-based heuristics.
+    
+    This function provides a baseline risk assessment when AI doesn't return
+    risk_scores or as a merge base to ensure all fields exist. Uses keyword
+    detection and project characteristics to calculate risk levels.
+    
+    Risk Calculation Logic:
+        - Baseline: 55/100
+        - Production deployment: +10
+        - Healthcare context: +12
+        - Financial data: +10
+        - Children/minors: +8
+        - Biometric data: +10
+        - High-risk AI capabilities: +12
+        - Bounded to 0-95 range
+    
+    Risk Level Mapping:
+        - 0-39: Low Risk
+        - 40-59: Medium Risk
+        - 60-79: High Risk
+        - 80-95: Critical Risk
+    
+    Args:
+        project_data: User input dictionary with keys like deployment_stage,
+                     project_description, technology_type, industry, ai_capabilities
+    
+    Returns:
+        Dictionary with complete risk_scores structure:
+        {
+            "overall_score": int,
+            "risk_level": str,
+            "risk_summary": str,
+            "principle_scores": {fairness: int, reliability: int, ...},
+            "critical_factors": {
+                "score_drivers_negative": [str],
+                "score_drivers_positive": [str]
+            },
+            "qualitative_assessment": str,
+            "score_explanation": str
+        }
+    
+    Note:
+        This function ALWAYS returns all fields, making it safe to merge with
+        partial AI responses without risking undefined keys in the UI.
     """
 
     overall = 55
@@ -1282,13 +1412,56 @@ def build_static_pillar_recommendations(recommendations: list) -> dict:
 
 def generate_recommendations_adaptive(project_data):
     """
-    Generate recommendations using the adaptive prompt system.
+    Generate recommendations using the adaptive prompt system (PRIMARY ENGINE).
     
-    This function:
-    1. Assesses input completeness
-    2. Builds adapted system and user prompts
-    3. Calls Azure OpenAI with the appropriate context
-    4. Returns structured recommendations with priority levels
+    This is the main recommendation generation function that routes through
+    the adaptive prompt builder for context-aware guidance. It adjusts prompt
+    depth and response structure based on input completeness scoring.
+    
+    Adaptive Flow:
+        1. Assess input completeness (0-100 score based on field richness)
+        2. Detect project type and scenario context
+        3. Build adapted system prompt with relevant examples
+        4. Build adapted user prompt with enriched context
+        5. Call Azure OpenAI with response_format={"type": "json_object"}
+        6. Parse and enrich response with adaptive metadata
+    
+    Response Depth Levels (determined by completeness score):
+        - Quick (< 40): Basic recommendations, minimal context
+        - Standard (40-70): Balanced guidance with examples
+        - Comprehensive (> 70): Detailed roadmaps, full stakeholder mapping
+    
+    Args:
+        project_data: User input dictionary with fields:
+            - project_name (required)
+            - project_description (required)
+            - industry, technology_type, deployment_stage (optional)
+            - ai_capabilities, sensitive_data, etc. (optional)
+    
+    Returns:
+        Dictionary with AI-generated recommendations:
+        {
+            "recommendations_by_pillar": {pillar_key: {...}},
+            "risk_scores": {...} (may be incomplete),
+            "quick_start_guide": {...},
+            "reference_architecture": {...},
+            "tiered_recommendations": {...},
+            "_adaptive_metadata": {
+                "response_depth": str,
+                "completeness_score": int,
+                "detected_project_type": str,
+                "suggestions_for_better_review": [str]
+            }
+        }
+    
+    Fallback Behavior:
+        - If ADAPTIVE_SYSTEM_AVAILABLE=False → generate_recommendations_with_ai_legacy()
+        - If Azure OpenAI unavailable → generate_recommendations_static()
+        - If API call fails → falls back to legacy system
+    
+    Note:
+        Response is augmented with augment_with_dynamic_resources() before
+        returning to endpoint to ensure all fields are populated.
     """
     if not client:
         return generate_recommendations_static(project_data)
