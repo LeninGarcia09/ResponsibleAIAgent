@@ -762,17 +762,24 @@ def augment_with_dynamic_resources(ai_response: dict, project_data: dict) -> dic
             except Exception as activity_error:
                 logger.debug(f"Latest tool activity lookup failed: {activity_error}")
 
+        # Calculate fallback risk scores with all fields
         fallback_risks = calculate_basic_risk_scores(project_data)
         risk_scores = ai_response.get("risk_scores")
 
         if not risk_scores:
+            # No risk_scores from AI - use fallback entirely
             ai_response["risk_scores"] = fallback_risks
-            risk_scores = ai_response["risk_scores"]
         else:
-            # Ensure all required fields are populated
-            risk_scores.setdefault("overall_score", fallback_risks.get("overall_score"))
-            risk_scores.setdefault("risk_level", fallback_risks.get("risk_level"))
-
+            # AI returned risk_scores - merge with fallback to ensure all fields exist
+            # Start with fallback as base (has all fields)
+            merged_risks = dict(fallback_risks)
+            
+            # Override with AI values if they exist
+            if "overall_score" in risk_scores:
+                merged_risks["overall_score"] = risk_scores["overall_score"]
+            if "risk_level" in risk_scores:
+                merged_risks["risk_level"] = risk_scores["risk_level"]
+            
             # Build comprehensive risk summary
             summary_parts = []
             if scenario and scenario.get("risk_profile"):
@@ -782,54 +789,49 @@ def augment_with_dynamic_resources(ai_response: dict, project_data: dict) -> dic
             else:
                 summary_parts.append(fallback_risks.get("risk_summary", ""))
             
-            # Always set risk_summary even if empty parts
             combined_summary = " ".join(part for part in summary_parts if part).strip()
-            if combined_summary:
-                risk_scores["risk_summary"] = combined_summary
-            else:
-                risk_scores["risk_summary"] = fallback_risks.get("risk_summary", "Risk assessment based on project details.")
+            merged_risks["risk_summary"] = combined_summary if combined_summary else fallback_risks.get("risk_summary", "Risk assessment based on project details.")
 
-            # Ensure principle_scores exist
-            principle_scores = risk_scores.get("principle_scores")
-            if not principle_scores:
-                risk_scores["principle_scores"] = fallback_risks.get("principle_scores", {})
-            else:
-                for principle, score in fallback_risks.get("principle_scores", {}).items():
-                    principle_scores.setdefault(principle, score)
+            # Merge principle_scores
+            merged_principle_scores = dict(fallback_risks.get("principle_scores", {}))
+            if risk_scores.get("principle_scores"):
+                merged_principle_scores.update(risk_scores["principle_scores"])
+            merged_risks["principle_scores"] = merged_principle_scores
 
-            # Merge critical factors - always ensure the structure exists
-            if "critical_factors" not in risk_scores:
-                risk_scores["critical_factors"] = {}
+            # Merge critical factors
+            merged_factors = dict(fallback_risks.get("critical_factors", {}))
+            if risk_scores.get("critical_factors"):
+                # Merge driver lists
+                for factor_key in ["score_drivers_positive", "score_drivers_negative"]:
+                    existing_list = risk_scores["critical_factors"].get(factor_key) or []
+                    fallback_list = merged_factors.get(factor_key) or []
+                    merged = _dedupe_preserve_order(existing_list + fallback_list)
+                    merged_factors[factor_key] = merged if merged else fallback_list
+            merged_risks["critical_factors"] = merged_factors
+
+            # Merge qualitative_assessment
+            if risk_scores.get("qualitative_assessment"):
+                merged_risks["qualitative_assessment"] = risk_scores["qualitative_assessment"]
             
-            existing_factors = risk_scores["critical_factors"]
-            fallback_factors = fallback_risks.get("critical_factors", {})
-            
-            # Always populate both positive and negative drivers
-            for factor_key in ["score_drivers_positive", "score_drivers_negative"]:
-                existing_list = existing_factors.get(factor_key) or []
-                fallback_list = fallback_factors.get(factor_key) or []
-                merged = _dedupe_preserve_order(existing_list + fallback_list)
-                # Always set the field, even if empty
-                existing_factors[factor_key] = merged if merged else fallback_list
-
-            # Ensure qualitative_assessment exists
-            if not risk_scores.get("qualitative_assessment"):
-                risk_scores["qualitative_assessment"] = fallback_risks.get("qualitative_assessment", {})
-
-            # Build score_explanation if missing
-            if not risk_scores.get("score_explanation"):
-                drivers = existing_factors.get("score_drivers_negative", [])
+            # Build score_explanation
+            if risk_scores.get("score_explanation"):
+                merged_risks["score_explanation"] = risk_scores["score_explanation"]
+            else:
+                drivers = merged_factors.get("score_drivers_negative", [])
                 driver_clause = ""
                 if drivers:
                     driver_clause = f"Key drivers: {', '.join(drivers[:2])}"
                 if scenario and scenario.get("risk_profile"):
-                    risk_scores["score_explanation"] = " ".join(
+                    merged_risks["score_explanation"] = " ".join(
                         part for part in [scenario["risk_profile"], driver_clause] if part
                     ).strip()
                 elif driver_clause:
-                    risk_scores["score_explanation"] = driver_clause
+                    merged_risks["score_explanation"] = driver_clause
                 else:
-                    risk_scores["score_explanation"] = f"Risk level {risk_scores.get('risk_level', 'assessed')} based on project characteristics."
+                    merged_risks["score_explanation"] = f"Risk level {merged_risks.get('risk_level', 'assessed')} based on project characteristics."
+            
+            # Replace the AI's minimal risk_scores with the fully merged version
+            ai_response["risk_scores"] = merged_risks
 
         reference_description = dynamic_archs.get(
             "description",
