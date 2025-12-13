@@ -34,6 +34,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Responsible AI Agent - Test UI</title>
+    <!-- Chart.js for interactive visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         /* ===================================================================
            Global Styles & Reset
@@ -386,6 +388,332 @@
         .error.show {
             display: block;
         }
+        
+        /* ===================================================================
+           Phase 1: Interactive Risk Visualization
+           =================================================================== */
+        .risk-visualization {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .risk-gauge-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .gauge-canvas {
+            max-width: 250px;
+            margin: 0 auto;
+        }
+        
+        .principle-radar-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .factor-explorer {
+            margin-top: 20px;
+        }
+        
+        .factor-item {
+            background: white;
+            padding: 12px 15px;
+            margin: 8px 0;
+            border-radius: 6px;
+            border-left: 3px solid #dc3545;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .factor-item.positive {
+            border-left-color: #28a745;
+        }
+        
+        .factor-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transform: translateX(5px);
+        }
+        
+        .factor-item.expanded {
+            border-left-width: 5px;
+        }
+        
+        .factor-text {
+            flex: 1;
+            font-size: 14px;
+            color: #333;
+        }
+        
+        .factor-impact {
+            font-weight: 600;
+            font-size: 14px;
+            margin: 0 10px;
+        }
+        
+        .factor-impact.negative {
+            color: #dc3545;
+        }
+        
+        .factor-impact.positive {
+            color: #28a745;
+        }
+        
+        .factor-detail {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+            display: none;
+        }
+        
+        .factor-item.expanded .factor-detail {
+            display: block;
+        }
+        
+        /* ===================================================================
+           Phase 1: Contextual Help & Tooltips
+           =================================================================== */
+        .help-icon {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 18px;
+            font-size: 12px;
+            cursor: help;
+            margin-left: 5px;
+            font-weight: 600;
+        }
+        
+        .help-icon:hover {
+            background: #5568d3;
+        }
+        
+        .term {
+            border-bottom: 1px dotted #667eea;
+            cursor: help;
+            color: #667eea;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: #333;
+            color: white;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.5;
+            max-width: 300px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: none;
+            pointer-events: none;
+        }
+        
+        .tooltip.show {
+            display: block;
+        }
+        
+        .tooltip h6 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: #fff;
+        }
+        
+        .tooltip p {
+            margin: 5px 0;
+        }
+        
+        .tooltip strong {
+            color: #ffd700;
+        }
+        
+        .tooltip a {
+            color: #87ceeb;
+            text-decoration: none;
+        }
+        
+        /* ===================================================================
+           Phase 1: Smart Filtering
+           =================================================================== */
+        .recommendation-filters {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .filter-group {
+            margin-bottom: 15px;
+        }
+        
+        .filter-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 13px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .filter-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .pill {
+            padding: 6px 12px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        
+        .pill:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .pill.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .active-filters {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .clear-filters {
+            background: none;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 4px 8px;
+            text-decoration: underline;
+            width: auto;
+        }
+        
+        .clear-filters:hover {
+            color: #5568d3;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .recommendation.filtered-out {
+            display: none;
+        }
+        
+        /* ===================================================================
+           Phase 1: What-If Analysis Panel
+           =================================================================== */
+        .what-if-panel {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 2px solid #4caf50;
+        }
+        
+        .what-if-panel h4 {
+            margin: 0 0 10px 0;
+            color: #2e7d32;
+            font-size: 16px;
+        }
+        
+        .what-if-panel > p {
+            margin: 0 0 15px 0;
+            font-size: 13px;
+            color: #558b2f;
+        }
+        
+        .what-if-scenario {
+            background: white;
+            padding: 12px 15px;
+            margin: 8px 0;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+        
+        .what-if-scenario:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .what-if-scenario label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            margin: 0;
+            flex: 1;
+            font-weight: normal;
+            font-size: 14px;
+        }
+        
+        .what-if-scenario input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        .risk-impact {
+            font-weight: 600;
+            font-size: 14px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .what-if-summary {
+            background: #fff;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #4caf50;
+            font-size: 14px;
+        }
+        
+        .what-if-summary strong {
+            color: #2e7d32;
+        }
+        
+        .projected-risk {
+            display: inline-block;
+            margin-left: 10px;
+            padding: 4px 12px;
+            border-radius: 4px;
+            background: #c8e6c9;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -439,6 +767,39 @@
         
         <div id="error" class="error"></div>
         
+        <!-- Smart Filtering Controls (Phase 1) -->
+        <div id="recommendationFilters" class="recommendation-filters" style="display: none;">
+            <h3>🔍 Filter Recommendations</h3>
+            <div class="filter-group">
+                <label>Priority:</label>
+                <div class="filter-pills">
+                    <button class="pill active" data-filter-type="priority" data-filter-value="all">All</button>
+                    <button class="pill" data-filter-type="priority" data-filter-value="critical">Critical</button>
+                    <button class="pill" data-filter-type="priority" data-filter-value="high">High</button>
+                    <button class="pill" data-filter-type="priority" data-filter-value="medium">Medium</button>
+                    <button class="pill" data-filter-type="priority" data-filter-value="low">Low</button>
+                </div>
+            </div>
+            <div class="filter-group">
+                <label>Implementation Time:</label>
+                <div class="filter-pills">
+                    <button class="pill active" data-filter-type="time" data-filter-value="all">All</button>
+                    <button class="pill" data-filter-type="time" data-filter-value="quick">Quick (< 1 week)</button>
+                    <button class="pill" data-filter-type="time" data-filter-value="medium">Medium (1-4 weeks)</button>
+                    <button class="pill" data-filter-type="time" data-filter-value="long">Long (> 4 weeks)</button>
+                </div>
+            </div>
+            <div class="filter-group">
+                <label>Skill Level:</label>
+                <div class="filter-pills">
+                    <button class="pill active" data-filter-type="skill" data-filter-value="all">All</button>
+                    <button class="pill" data-filter-type="skill" data-filter-value="beginner">Beginner</button>
+                    <button class="pill" data-filter-type="skill" data-filter-value="intermediate">Intermediate</button>
+                    <button class="pill" data-filter-type="skill" data-filter-value="advanced">Advanced</button>
+                </div>
+            </div>
+        </div>
+        
         <div id="results" class="results">
             <h2 id="projectTitle"></h2>
             <div id="riskScore"></div>
@@ -489,6 +850,215 @@
                 content.classList.add('open');
                 icon.classList.add('open');
             }
+        }
+        
+        // =====================================================================
+        // Phase 1: Interactive Visualization Functions
+        // =====================================================================
+        
+        /**
+         * Render animated risk gauge using Chart.js
+         * @param {number} score - Risk score (0-100)
+         * @param {string} canvasId - Canvas element ID
+         */
+        function renderRiskGauge(score, canvasId) {
+            const ctx = document.getElementById(canvasId);
+            if (!ctx) return;
+            
+            // Determine gauge color based on risk level
+            let gaugeColor = '#10b981'; // Low (green)
+            if (score >= 80) gaugeColor = '#dc2626'; // Critical (red)
+            else if (score >= 60) gaugeColor = '#f59e0b'; // High (orange)
+            else if (score >= 40) gaugeColor = '#fb923c'; // Medium (light orange)
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [score, 100 - score],
+                        backgroundColor: [gaugeColor, '#e5e7eb'],
+                        borderWidth: 0,
+                        circumference: 180,
+                        rotation: 270
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    },
+                    cutout: '75%'
+                }
+            });
+        }
+        
+        /**
+         * Render principle radar chart using Chart.js
+         * @param {Object} principleScores - Scores by RAI principle
+         * @param {string} canvasId - Canvas element ID
+         */
+        function renderPrincipleRadar(principleScores, canvasId) {
+            const ctx = document.getElementById(canvasId);
+            if (!ctx) return;
+            
+            const labels = Object.keys(principleScores);
+            const data = Object.values(principleScores);
+            
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Risk Score by Principle',
+                        data: data,
+                        backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(102, 126, 234, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(102, 126, 234, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { stepSize: 20 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+        
+        // =====================================================================
+        // Phase 1: What-If Analysis Functions
+        // =====================================================================
+        
+        /**
+         * Calculate projected risk based on selected recommendations
+         * Updates the what-if summary with new risk projection
+         */
+        function calculateWhatIf() {
+            const checkboxes = document.querySelectorAll('.what-if-scenario input[type="checkbox"]:checked');
+            const currentRisk = parseFloat(document.getElementById('currentRisk').textContent);
+            
+            let totalReduction = 0;
+            checkboxes.forEach(cb => {
+                totalReduction += parseFloat(cb.dataset.impact);
+            });
+            
+            const projectedRisk = Math.max(0, currentRisk - totalReduction);
+            
+            document.getElementById('projectedRisk').textContent = projectedRisk.toFixed(0);
+            document.getElementById('riskReduction').textContent = `${totalReduction.toFixed(0)}%`;
+        }
+        
+        // =====================================================================
+        // Phase 1: Smart Filtering Functions
+        // =====================================================================
+        
+        let activeFilters = {
+            priority: 'all',
+            time: 'all',
+            skill: 'all'
+        };
+        
+        /**
+         * Initialize filter pill click handlers
+         */
+        function initializeFilters() {
+            document.querySelectorAll('.recommendation-filters .pill').forEach(pill => {
+                pill.addEventListener('click', function() {
+                    const filterType = this.dataset.filterType;
+                    const filterValue = this.dataset.filterValue;
+                    
+                    // Update active state
+                    this.parentElement.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update filter state
+                    activeFilters[filterType] = filterValue;
+                    
+                    // Apply filters
+                    applyRecommendationFilters();
+                });
+            });
+        }
+        
+        /**
+         * Apply active filters to recommendation elements
+         */
+        function applyRecommendationFilters() {
+            // This will be called after recommendations are rendered
+            // For now, we'll add data attributes to recommendations during rendering
+            console.log('Filters applied:', activeFilters);
+        }
+        
+        // =====================================================================
+        // Phase 1: Contextual Help / Tooltip Functions
+        // =====================================================================
+        
+        const tooltipDefinitions = {
+            'fairness': 'AI systems should treat all people fairly and avoid affecting similarly situated groups of people in different ways',
+            'reliability': 'AI systems should perform reliably and safely, with mechanisms to detect and prevent failures',
+            'privacy': 'AI systems should be secure and respect privacy, protecting sensitive data and ensuring appropriate access',
+            'inclusiveness': 'AI systems should empower and engage everyone, being accessible to people regardless of physical ability',
+            'transparency': 'AI systems should be understandable, with clear explanations of how they make decisions',
+            'accountability': 'People should be accountable for AI systems, with clear governance and oversight mechanisms',
+            'risk-score': 'Overall risk assessment based on project stage, data sensitivity, and existing controls',
+            'rai-principles': 'Microsoft\'s six principles for Responsible AI: Fairness, Reliability, Privacy, Inclusiveness, Transparency, Accountability'
+        };
+        
+        /**
+         * Show tooltip on hover
+         * @param {Event} event - Mouse event
+         * @param {string} term - Term to define
+         */
+        function showTooltip(event, term) {
+            const tooltip = document.getElementById('tooltipContainer');
+            const definition = tooltipDefinitions[term.toLowerCase()];
+            
+            if (!definition) return;
+            
+            tooltip.innerHTML = `<strong>${term}:</strong> ${definition}`;
+            tooltip.style.display = 'block';
+            tooltip.style.left = event.pageX + 10 + 'px';
+            tooltip.style.top = event.pageY + 10 + 'px';
+        }
+        
+        /**
+         * Hide tooltip
+         */
+        function hideTooltip() {
+            document.getElementById('tooltipContainer').style.display = 'none';
+        }
+        
+        /**
+         * Initialize tooltip handlers for help icons and terms
+         */
+        function initializeTooltips() {
+            // Add tooltips to key terms in results
+            document.querySelectorAll('.term').forEach(term => {
+                term.addEventListener('mouseenter', (e) => showTooltip(e, term.textContent));
+                term.addEventListener('mouseleave', hideTooltip);
+            });
+            
+            document.querySelectorAll('.help-icon').forEach(icon => {
+                icon.addEventListener('mouseenter', (e) => {
+                    const term = icon.dataset.term;
+                    showTooltip(e, term);
+                });
+                icon.addEventListener('mouseleave', hideTooltip);
+            });
         }
         
         document.getElementById('reviewForm').addEventListener('submit', async (e) => {
@@ -624,6 +1194,18 @@
             
             riskHTML += '</div>';
             
+            // Interactive Risk Visualization (Phase 1)
+            riskHTML += '<div class="risk-visualization" style="margin-top: 20px;">';
+            riskHTML += '<div class="risk-gauge-container">';
+            riskHTML += '<h4>Overall Risk Level</h4>';
+            riskHTML += '<canvas id="riskGaugeCanvas" width="300" height="200"></canvas>';
+            riskHTML += '</div>';
+            riskHTML += '<div class="principle-radar-container">';
+            riskHTML += '<h4>RAI Principles Assessment</h4>';
+            riskHTML += '<canvas id="principleRadarCanvas" width="400" height="400"></canvas>';
+            riskHTML += '</div>';
+            riskHTML += '</div>';
+            
             // Detailed risk factors in expandable section
             if (criticalFactors && (criticalFactors.score_drivers_negative || criticalFactors.score_drivers_positive)) {
                 riskHTML += '<div class="collapsible-section" style="margin-top: 15px;">';
@@ -658,6 +1240,50 @@
             }
             
             document.getElementById('riskScore').innerHTML = riskHTML;
+            
+            // What-If Analysis Panel (Phase 1)
+            if (data.recommendations_by_pillar) {
+                let whatIfHTML = '<div class="what-if-panel">';
+                whatIfHTML += '<h3>🔮 What-If Analysis</h3>';
+                whatIfHTML += '<p style="color: #666; font-size: 14px; margin-bottom: 15px;">Select recommendations to see projected risk reduction</p>';
+                whatIfHTML += '<div class="what-if-scenarios">';
+                
+                // Add top 8 recommendations as checkboxes
+                let recCount = 0;
+                for (const [pillar, recommendations] of Object.entries(data.recommendations_by_pillar)) {
+                    if (recCount >= 8) break;
+                    for (const rec of recommendations) {
+                        if (recCount >= 8) break;
+                        const recId = `whatif-${pillar.replace(/\s+/g, '-')}-${recCount}`;
+                        const impact = rec.priority === 'Critical' ? 15 : rec.priority === 'High' ? 10 : 5;
+                        whatIfHTML += `<div class="what-if-scenario">`;
+                        whatIfHTML += `<input type="checkbox" id="${recId}" data-impact="${impact}" onchange="calculateWhatIf()">`;
+                        whatIfHTML += `<label for="${recId}">`;
+                        whatIfHTML += `<span class="scenario-title">${rec.recommendation}</span>`;
+                        whatIfHTML += `<span class="risk-impact risk-reduction">-${impact}%</span>`;
+                        whatIfHTML += `</label></div>`;
+                        recCount++;
+                    }
+                }
+                
+                whatIfHTML += '</div>';
+                whatIfHTML += '<div class="what-if-summary">';
+                whatIfHTML += '<div class="summary-item">';
+                whatIfHTML += '<span class="summary-label">Current Risk:</span>';
+                whatIfHTML += `<span class="summary-value" id="currentRisk">${riskScore.overall_score}</span>`;
+                whatIfHTML += '</div>';
+                whatIfHTML += '<div class="summary-item">';
+                whatIfHTML += '<span class="summary-label">Projected Risk:</span>';
+                whatIfHTML += `<span class="summary-value" id="projectedRisk">${riskScore.overall_score}</span>`;
+                whatIfHTML += '</div>';
+                whatIfHTML += '<div class="summary-item" style="font-weight: 700; color: #10b981;">';
+                whatIfHTML += '<span class="summary-label">Risk Reduction:</span>';
+                whatIfHTML += '<span class="summary-value" id="riskReduction">0%</span>';
+                whatIfHTML += '</div>';
+                whatIfHTML += '</div></div>';
+                
+                document.getElementById('riskScore').innerHTML += whatIfHTML;
+            }
             
             // Reference Architecture (moved to collapsible)
             const refArch = data.reference_architecture;
@@ -791,7 +1417,28 @@
             
             resultsDiv.classList.add('show');
             resultsDiv.scrollIntoView({ behavior: 'smooth' });
+            
+            // Phase 1: Render interactive visualizations
+            setTimeout(() => {
+                // Render risk gauge
+                renderRiskGauge(riskScore.overall_score, 'riskGaugeCanvas');
+                
+                // Render principle radar if principle scores are available
+                if (riskScore.principle_scores) {
+                    renderPrincipleRadar(riskScore.principle_scores, 'principleRadarCanvas');
+                }
+                
+                // Initialize tooltips
+                initializeTooltips();
+                
+                // Show filter controls
+                document.getElementById('recommendationFilters').style.display = 'block';
+                initializeFilters();
+            }, 100); // Small delay to ensure DOM is ready
         }
     </script>
+    
+    <!-- Tooltip Container (Phase 1) -->
+    <div id="tooltipContainer" class="tooltip" style="display: none;"></div>
 </body>
 </html>
