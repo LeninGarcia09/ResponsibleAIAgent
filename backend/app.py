@@ -769,18 +769,27 @@ def augment_with_dynamic_resources(ai_response: dict, project_data: dict) -> dic
             ai_response["risk_scores"] = fallback_risks
             risk_scores = ai_response["risk_scores"]
         else:
+            # Ensure all required fields are populated
             risk_scores.setdefault("overall_score", fallback_risks.get("overall_score"))
             risk_scores.setdefault("risk_level", fallback_risks.get("risk_level"))
 
+            # Build comprehensive risk summary
             summary_parts = []
             if scenario and scenario.get("risk_profile"):
                 summary_parts.append(f"Scenario assessment: {scenario['risk_profile']}")
             if risk_scores.get("risk_summary"):
                 summary_parts.append(risk_scores["risk_summary"])
             else:
-                summary_parts.append(fallback_risks.get("risk_summary"))
-            risk_scores["risk_summary"] = " ".join(part for part in summary_parts if part).strip()
+                summary_parts.append(fallback_risks.get("risk_summary", ""))
+            
+            # Always set risk_summary even if empty parts
+            combined_summary = " ".join(part for part in summary_parts if part).strip()
+            if combined_summary:
+                risk_scores["risk_summary"] = combined_summary
+            else:
+                risk_scores["risk_summary"] = fallback_risks.get("risk_summary", "Risk assessment based on project details.")
 
+            # Ensure principle_scores exist
             principle_scores = risk_scores.get("principle_scores")
             if not principle_scores:
                 risk_scores["principle_scores"] = fallback_risks.get("principle_scores", {})
@@ -788,18 +797,26 @@ def augment_with_dynamic_resources(ai_response: dict, project_data: dict) -> dic
                 for principle, score in fallback_risks.get("principle_scores", {}).items():
                     principle_scores.setdefault(principle, score)
 
-            existing_factors = risk_scores.setdefault("critical_factors", {})
+            # Merge critical factors - always ensure the structure exists
+            if "critical_factors" not in risk_scores:
+                risk_scores["critical_factors"] = {}
+            
+            existing_factors = risk_scores["critical_factors"]
             fallback_factors = fallback_risks.get("critical_factors", {})
+            
+            # Always populate both positive and negative drivers
             for factor_key in ["score_drivers_positive", "score_drivers_negative"]:
-                merged = _dedupe_preserve_order(
-                    (existing_factors.get(factor_key) or []) + (fallback_factors.get(factor_key) or [])
-                )
-                if merged:
-                    existing_factors[factor_key] = merged
+                existing_list = existing_factors.get(factor_key) or []
+                fallback_list = fallback_factors.get(factor_key) or []
+                merged = _dedupe_preserve_order(existing_list + fallback_list)
+                # Always set the field, even if empty
+                existing_factors[factor_key] = merged if merged else fallback_list
 
+            # Ensure qualitative_assessment exists
             if not risk_scores.get("qualitative_assessment"):
-                risk_scores["qualitative_assessment"] = fallback_risks.get("qualitative_assessment")
+                risk_scores["qualitative_assessment"] = fallback_risks.get("qualitative_assessment", {})
 
+            # Build score_explanation if missing
             if not risk_scores.get("score_explanation"):
                 drivers = existing_factors.get("score_drivers_negative", [])
                 driver_clause = ""
@@ -811,49 +828,54 @@ def augment_with_dynamic_resources(ai_response: dict, project_data: dict) -> dic
                     ).strip()
                 elif driver_clause:
                     risk_scores["score_explanation"] = driver_clause
+                else:
+                    risk_scores["score_explanation"] = f"Risk level {risk_scores.get('risk_level', 'assessed')} based on project characteristics."
 
         reference_description = dynamic_archs.get(
             "description",
             f"Reference architecture for {scenario.get('title') if scenario else (project_type_source or 'AI')} projects"
         )
 
-        if not ai_response.get("reference_architecture") or not ai_response["reference_architecture"].get("repos"):
-            ai_response["reference_architecture"] = {
-                "description": reference_description,
-                "azure_services": dynamic_archs.get("azure_services", [
-                    "Azure OpenAI Service",
-                    "Azure AI Studio",
-                    "Azure Machine Learning",
-                    "Azure Content Safety"
-                ]),
-                "repos": [
-                    {
-                        "name": repo.get("name", ""),
-                        "url": repo.get("url", repo.get("html_url", "")),
-                        "description": repo.get("description", ""),
-                        "stars": repo.get("stars", repo.get("stargazers_count", 0)),
-                        "language": repo.get("language", "Python"),
-                        "last_updated": repo.get("last_updated", repo.get("updated_at", ""))
-                    }
-                    for repo in dynamic_repos[:5]
-                ],
-                "patterns": dynamic_archs.get("patterns", []),
-                "documentation": dynamic_archs.get("documentation", []),
-                "microsoft_docs": dynamic_archs.get("microsoft_docs", [
-                    {
-                        "title": "Azure AI Services Documentation",
-                        "url": "https://learn.microsoft.com/azure/ai-services/"
-                    },
-                    {
-                        "title": "Responsible AI Overview",
-                        "url": "https://learn.microsoft.com/azure/machine-learning/concept-responsible-ai"
-                    },
-                    {
-                        "title": "Azure OpenAI Service",
-                        "url": "https://learn.microsoft.com/azure/ai-services/openai/"
-                    }
-                ])
-            }
+        # Build complete reference architecture from dynamic sources
+        ref_arch = ai_response.get("reference_architecture") or {}
+        
+        # Ensure all fields are populated, prioritizing dynamic data
+        ai_response["reference_architecture"] = {
+            "description": ref_arch.get("description") or reference_description,
+            "azure_services": ref_arch.get("azure_services") or dynamic_archs.get("azure_services", [
+                "Azure OpenAI Service",
+                "Azure AI Studio",
+                "Azure Machine Learning",
+                "Azure Content Safety"
+            ]),
+            "repos": ref_arch.get("repos") or [
+                {
+                    "name": repo.get("name", ""),
+                    "url": repo.get("url", repo.get("html_url", "")),
+                    "description": repo.get("description", ""),
+                    "stars": repo.get("stars", repo.get("stargazers_count", 0)),
+                    "language": repo.get("language", "Python"),
+                    "last_updated": repo.get("last_updated", repo.get("updated_at", ""))
+                }
+                for repo in dynamic_repos[:5]
+            ] if dynamic_repos else [],
+            "patterns": ref_arch.get("patterns") or dynamic_archs.get("patterns", []),
+            "documentation": ref_arch.get("documentation") or dynamic_archs.get("documentation", []),
+            "microsoft_docs": ref_arch.get("microsoft_docs") or dynamic_archs.get("microsoft_docs", [
+                {
+                    "title": "Azure AI Services Documentation",
+                    "url": "https://learn.microsoft.com/azure/ai-services/"
+                },
+                {
+                    "title": "Responsible AI Overview",
+                    "url": "https://learn.microsoft.com/azure/machine-learning/concept-responsible-ai"
+                },
+                {
+                    "title": "Azure OpenAI Service",
+                    "url": "https://learn.microsoft.com/azure/ai-services/openai/"
+                }
+            ])
+        }
 
         quick_start_guide = ai_response.get("quick_start_guide") or {}
         ai_response["quick_start_guide"] = quick_start_guide
