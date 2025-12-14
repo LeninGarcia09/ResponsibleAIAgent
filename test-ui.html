@@ -1092,10 +1092,13 @@
                 }
                 
                 const data = await response.json();
+                console.log('API Response:', data);
+                console.log('recommendations_by_pillar:', data.recommendations_by_pillar);
                 displayResults(data);
                 
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error details:', error);
+                console.error('Error stack:', error.stack);
                 const errorDiv = document.getElementById('error');
                 errorDiv.textContent = `Error: ${error.message}. Please check your connection and try again.`;
                 errorDiv.classList.add('show');
@@ -1125,10 +1128,12 @@
          * @param {Object} data.reference_architecture - Azure services, repos, docs
          */
         function displayResults(data) {
-            const resultsDiv = document.getElementById('results');
-            
-            // Project Title
-            document.getElementById('projectTitle').textContent = data.project_name;
+            try {
+                console.log('Rendering results with data:', data);
+                const resultsDiv = document.getElementById('results');
+                
+                // Project Title
+                document.getElementById('projectTitle').textContent = data.project_name;
             
             // Risk Score with high-level summary
             const riskScore = data.risk_scores;
@@ -1351,15 +1356,17 @@
                         <p style="font-size: 13px; color: #666; margin-bottom: 10px;">${pillar.why_it_matters}</p>
                 `;
                 
-                pillar.recommendations.forEach(rec => {
-                    recHTML += `
-                        <div class="recommendation">
-                            <strong>${rec.priority} ${rec.title}</strong>
-                            ${rec.why_needed ? `<br><small>Why: ${rec.why_needed}</small>` : ''}
-                            ${rec.what_happens_without ? `<br><small style="color: #c00;">Risk: ${rec.what_happens_without}</small>` : ''}
-                        </div>
-                    `;
-                });
+                if (pillar.recommendations && Array.isArray(pillar.recommendations)) {
+                    pillar.recommendations.forEach(rec => {
+                        recHTML += `
+                            <div class="recommendation">
+                                <strong>${rec.priority} ${rec.title}</strong>
+                                ${rec.why_needed ? `<br><small>Why: ${rec.why_needed}</small>` : ''}
+                                ${rec.what_happens_without ? `<br><small style="color: #c00;">Risk: ${rec.what_happens_without}</small>` : ''}
+                            </div>
+                        `;
+                    });
+                }
                 
                 recHTML += '</div>';
             }
@@ -1436,6 +1443,13 @@
                 document.getElementById('recommendationFilters').style.display = 'block';
                 initializeFilters();
             }, 100); // Small delay to ensure DOM is ready
+            
+            } catch (error) {
+                console.error('Error rendering results:', error);
+                const errorDiv = document.getElementById('error');
+                errorDiv.innerHTML = `<strong>Error rendering results:</strong> ${error.message}<br><br>Please check the console for details.`;
+                errorDiv.classList.add('show');
+            }
         }
     </script>
     
