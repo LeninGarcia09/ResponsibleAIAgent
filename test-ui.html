@@ -1250,16 +1250,17 @@
                 
                 // Add top 8 recommendations as checkboxes
                 let recCount = 0;
-                for (const [pillar, recommendations] of Object.entries(data.recommendations_by_pillar)) {
+                for (const [pillarKey, pillarData] of Object.entries(data.recommendations_by_pillar)) {
                     if (recCount >= 8) break;
-                    for (const rec of recommendations) {
+                    if (!pillarData.recommendations || !Array.isArray(pillarData.recommendations)) continue;
+                    for (const rec of pillarData.recommendations) {
                         if (recCount >= 8) break;
-                        const recId = `whatif-${pillar.replace(/\s+/g, '-')}-${recCount}`;
-                        const impact = rec.priority === 'Critical' ? 15 : rec.priority === 'High' ? 10 : 5;
+                        const recId = `whatif-${pillarKey.replace(/\s+/g, '-')}-${recCount}`;
+                        const impact = rec.priority?.includes('CRITICAL') ? 15 : rec.priority?.includes('High') ? 10 : 5;
                         whatIfHTML += `<div class="what-if-scenario">`;
                         whatIfHTML += `<input type="checkbox" id="${recId}" data-impact="${impact}" onchange="calculateWhatIf()">`;
                         whatIfHTML += `<label for="${recId}">`;
-                        whatIfHTML += `<span class="scenario-title">${rec.recommendation}</span>`;
+                        whatIfHTML += `<span class="scenario-title">${rec.title || rec.recommendation || 'Recommendation'}</span>`;
                         whatIfHTML += `<span class="risk-impact risk-reduction">-${impact}%</span>`;
                         whatIfHTML += `</label></div>`;
                         recCount++;
