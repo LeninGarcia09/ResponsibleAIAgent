@@ -1300,27 +1300,35 @@
                     archHTML += `<p style="color: #666; margin-bottom: 20px;">${refArch.description}</p>`;
                 }
                 
-                // Azure Services
-                if (refArch.azure_services && refArch.azure_services.length > 0) {
-                    archHTML += '<h4 style="margin-top: 15px; font-size: 15px;">Recommended Azure Services</h4>';
-                    archHTML += '<div class="azure-services">';
-                    refArch.azure_services.forEach(service => {
-                        archHTML += `<span class="service-badge">${service}</span>`;
+                // Architecture Diagram
+                if (refArch.diagram_url) {
+                    archHTML += `<div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #667eea;">`;
+                    archHTML += `<strong>📊 Architecture Diagram:</strong> <a href="${refArch.diagram_url}" target="_blank" rel="noopener" style="color: #667eea; text-decoration: none;">View Diagram</a>`;
+                    archHTML += `</div>`;
+                }
+                
+                // Azure Services (handle both 'services' and 'azure_services' field names)
+                const services = refArch.services || refArch.azure_services;
+                if (services && services.length > 0) {
+                    archHTML += '<h4 style="margin-top: 15px; font-size: 15px;">🔧 Recommended Azure Services</h4>';
+                    archHTML += '<div class="azure-services" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">';
+                    services.forEach(service => {
+                        archHTML += `<span class="service-badge" style="background: #e0e7ff; color: #4338ca; padding: 6px 12px; border-radius: 6px; font-size: 13px;">${service}</span>`;
                     });
                     archHTML += '</div>';
                 }
                 
                 // GitHub Repos
                 if (refArch.repos && refArch.repos.length > 0) {
-                    archHTML += '<h4 style="margin-top: 20px; font-size: 15px;">Reference Implementations</h4>';
+                    archHTML += '<h4 style="margin-top: 20px; font-size: 15px;">💻 Reference Implementations</h4>';
                     refArch.repos.forEach(repo => {
-                        archHTML += '<div class="repo-card">';
-                        archHTML += `<h5><a href="${repo.url}" target="_blank" rel="noopener">${repo.name}</a></h5>`;
+                        archHTML += '<div class="repo-card" style="margin: 10px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e5e7eb;">';
+                        archHTML += `<h5 style="margin: 0 0 8px 0;"><a href="${repo.url}" target="_blank" rel="noopener" style="color: #667eea; text-decoration: none;">${repo.name}</a></h5>`;
                         if (repo.description) {
                             archHTML += `<p style="font-size: 13px; color: #666; margin: 5px 0;">${repo.description}</p>`;
                         }
                         if (repo.stars || repo.language) {
-                            archHTML += '<div class="repo-meta">';
+                            archHTML += '<div class="repo-meta" style="margin-top: 8px; font-size: 12px; color: #888;">';
                             if (repo.stars) archHTML += `⭐ ${repo.stars} stars`;
                             if (repo.stars && repo.language) archHTML += ' • ';
                             if (repo.language) archHTML += `${repo.language}`;
@@ -1332,12 +1340,17 @@
                 
                 // Microsoft Docs
                 if (refArch.microsoft_docs && refArch.microsoft_docs.length > 0) {
-                    archHTML += '<h4 style="margin-top: 20px; font-size: 15px;">Documentation</h4>';
+                    archHTML += '<h4 style="margin-top: 20px; font-size: 15px;">📚 Documentation</h4>';
                     archHTML += '<ul style="list-style: none; padding: 0;">';
                     refArch.microsoft_docs.forEach(doc => {
                         archHTML += `<li style="margin: 8px 0;">📘 <a href="${doc.url}" target="_blank" rel="noopener" style="color: #667eea; text-decoration: none;">${doc.title}</a></li>`;
                     });
                     archHTML += '</ul>';
+                }
+                
+                // If archHTML is still empty, show a message
+                if (!archHTML) {
+                    archHTML = '<p style="color: #666; font-style: italic;">Reference architecture details will be populated based on your project context.</p>';
                 }
                 
                 document.getElementById('content-referenceArchitecture').innerHTML = archHTML;
