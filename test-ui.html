@@ -1364,7 +1364,11 @@
                 console.log('Target element:', targetElement);
                 if (targetElement) {
                     targetElement.innerHTML = archHTML;
-                    console.log('Set innerHTML to element');
+                    // Auto-expand the section if it has content
+                    targetElement.classList.add('open');
+                    const icon = document.getElementById('icon-referenceArchitecture');
+                    if (icon) icon.classList.add('open');
+                    console.log('Set innerHTML to element and expanded section');
                 } else {
                     console.error('Target element not found!');
                 }
