@@ -1293,6 +1293,7 @@
             
             // Reference Architecture (moved to collapsible)
             const refArch = data.reference_architecture;
+            console.log('Reference Architecture data:', refArch);
             if (refArch) {
                 let archHTML = '';
                 
@@ -1300,10 +1301,11 @@
                     archHTML += `<p style="color: #666; margin-bottom: 20px;">${refArch.description}</p>`;
                 }
                 
-                // Architecture Diagram
-                if (refArch.diagram_url) {
+                // Architecture Diagram (handle both field names)
+                const diagramUrl = refArch.architecture_diagram || refArch.diagram_url;
+                if (diagramUrl) {
                     archHTML += `<div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #667eea;">`;
-                    archHTML += `<strong>📊 Architecture Diagram:</strong> <a href="${refArch.diagram_url}" target="_blank" rel="noopener" style="color: #667eea; text-decoration: none;">View Diagram</a>`;
+                    archHTML += `<strong>📊 Architecture Diagram:</strong> <a href="${diagramUrl}" target="_blank" rel="noopener" style="color: #667eea; text-decoration: none;">View Diagram</a>`;
                     archHTML += `</div>`;
                 }
                 
