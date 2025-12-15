@@ -1303,6 +1303,7 @@
                 
                 // Architecture Diagram (handle both field names)
                 const diagramUrl = refArch.architecture_diagram || refArch.diagram_url;
+                console.log('Diagram URL:', diagramUrl);
                 if (diagramUrl) {
                     archHTML += `<div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #667eea;">`;
                     archHTML += `<strong>📊 Architecture Diagram:</strong> <a href="${diagramUrl}" target="_blank" rel="noopener" style="color: #667eea; text-decoration: none;">View Diagram</a>`;
@@ -1311,7 +1312,8 @@
                 
                 // Azure Services (handle both 'services' and 'azure_services' field names)
                 const services = refArch.services || refArch.azure_services;
-                if (services && services.length > 0) {
+                console.log('Services:', services);
+                if (services && Array.isArray(services) && services.length > 0) {
                     archHTML += '<h4 style="margin-top: 15px; font-size: 15px;">🔧 Recommended Azure Services</h4>';
                     archHTML += '<div class="azure-services" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">';
                     services.forEach(service => {
@@ -1350,12 +1352,22 @@
                     archHTML += '</ul>';
                 }
                 
+                console.log('Generated archHTML length:', archHTML.length);
+                console.log('archHTML content:', archHTML);
+                
                 // If archHTML is still empty, show a message
                 if (!archHTML) {
                     archHTML = '<p style="color: #666; font-style: italic;">Reference architecture details will be populated based on your project context.</p>';
                 }
                 
-                document.getElementById('content-referenceArchitecture').innerHTML = archHTML;
+                const targetElement = document.getElementById('content-referenceArchitecture');
+                console.log('Target element:', targetElement);
+                if (targetElement) {
+                    targetElement.innerHTML = archHTML;
+                    console.log('Set innerHTML to element');
+                } else {
+                    console.error('Target element not found!');
+                }
             }
             
             // Recommendations by Pillar (moved to collapsible)
