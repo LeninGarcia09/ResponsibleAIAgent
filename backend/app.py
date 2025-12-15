@@ -963,9 +963,16 @@ def augment_with_dynamic_resources(ai_response: dict, project_data: dict) -> dic
         # Build complete reference architecture from dynamic sources
         ref_arch = ai_response.get("reference_architecture") or {}
         
+        # Validate and clean diagram_url - reject fake/placeholder URLs
+        diagram_url = ref_arch.get("diagram_url", "")
+        if diagram_url and ("example.com" in diagram_url or diagram_url.startswith("https://example")):
+            # Replace fake URL with real fallback
+            diagram_url = "https://learn.microsoft.com/azure/architecture/ai-ml/"
+        
         # Ensure all fields are populated, prioritizing dynamic data
         ai_response["reference_architecture"] = {
             "description": ref_arch.get("description") or reference_description,
+            "diagram_url": diagram_url or "https://learn.microsoft.com/azure/architecture/ai-ml/",
             "azure_services": ref_arch.get("azure_services") or dynamic_archs.get("azure_services", [
                 "Azure OpenAI Service",
                 "Azure AI Studio",

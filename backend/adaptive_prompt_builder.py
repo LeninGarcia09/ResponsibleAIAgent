@@ -219,9 +219,15 @@ At the end, suggest 3-5 fields they could provide for a more detailed review.
 The user has provided basic context (name, description, deployment stage).
 Your response should be:
 
+**CRITICAL: NO FAKE URLs**
+⛔ DO NOT use example.com, example URLs, or placeholder URLs
+⛔ ONLY use REAL URLs from learn.microsoft.com or github.com/Azure-Samples
+⛔ If you don't know a specific URL, use the general category URL (e.g., https://learn.microsoft.com/azure/architecture/ai-ml/)
+⛔ For repos, search your knowledge for REAL Azure-Samples repositories like azure-search-openai-demo, openai-chat-app-quickstart, etc.
+
 **FOCUSED ON GETTING STARTED:**
 - Provide 5-8 prioritized recommendations GROUPED BY RAI PILLAR
-- Include reference architecture with Azure services
+- Include reference architecture with REAL Azure services and URLs
 - Provide a 30-day implementation roadmap
 - Include 2-3 code snippets for key tools
 - Give basic risk assessment and EU AI Act classification
@@ -245,26 +251,26 @@ You MUST organize recommendations in `recommendations_by_pillar` with:
     "review_mode": "quick_scan",
     "risk_scores": { "overall_score": X, "risk_level": "..." },
     "reference_architecture": {
-        "description": "2-3 sentences describing the recommended architecture for THIS specific project",
-        "diagram_url": "https://learn.microsoft.com/azure/architecture/... (find most relevant Azure Architecture Center diagram)",
+        "description": "2-3 sentences describing the recommended architecture pattern for THIS specific project type",
+        "diagram_url": "REAL URL from https://learn.microsoft.com/azure/architecture/ - search for: solution ideas, reference architectures, or AI patterns matching this project. Examples: https://learn.microsoft.com/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat or https://learn.microsoft.com/azure/architecture/example-scenario/ai/intelligent-apps-using-azure-database-postgresql. DO NOT USE example.com or placeholder URLs - if you cannot find a real URL, use: https://learn.microsoft.com/azure/architecture/ai-ml/",
         "services": [
-            "Azure OpenAI Service - for LLM inference",
-            "Azure AI Content Safety - for content moderation",
-            "Azure Key Vault - for secrets management",
-            "Azure Monitor - for logging and observability",
-            "Azure Managed Identity - for authentication"
+            "Azure OpenAI Service - LLM inference for [specific capability in THIS project]",
+            "Azure AI Content Safety - [specific safety concern for THIS project]",
+            "Azure Key Vault - storing [specific secrets for THIS project]",
+            "Azure Monitor - tracking [specific metrics for THIS project]",
+            "[add 2-3 more services specific to THIS project needs]"
         ],
         "repos": [
             {
-                "name": "Most relevant Azure-Samples repo for THIS project type",
-                "url": "https://github.com/Azure-Samples/...",
-                "description": "Why this starter is relevant to THIS project"
+                "name": "REAL Azure-Samples repository name (search github.com/Azure-Samples for: openai, rag, chatbot, or relevant terms)",
+                "url": "REAL GitHub URL - https://github.com/Azure-Samples/[actual-repo-name]. DO NOT use placeholder URLs. Examples: https://github.com/Azure-Samples/azure-search-openai-demo or https://github.com/Azure-Samples/openai-chat-app-quickstart",
+                "description": "Why THIS specific starter template is relevant to the user's project"
             }
         ],
         "microsoft_docs": [
             {
-                "title": "Specific guide relevant to THIS project",
-                "url": "https://learn.microsoft.com/..."
+                "title": "REAL documentation title from learn.microsoft.com",
+                "url": "REAL Microsoft Learn URL - https://learn.microsoft.com/azure/... DO NOT use example URLs"
             }
         ]
     },
