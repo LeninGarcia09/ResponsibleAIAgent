@@ -244,7 +244,30 @@ You MUST organize recommendations in `recommendations_by_pillar` with:
 {
     "review_mode": "quick_scan",
     "risk_scores": { "overall_score": X, "risk_level": "..." },
-    "reference_architecture": {...},
+    "reference_architecture": {
+        "description": "2-3 sentences describing the recommended architecture for THIS specific project",
+        "diagram_url": "https://learn.microsoft.com/azure/architecture/... (find most relevant Azure Architecture Center diagram)",
+        "services": [
+            "Azure OpenAI Service - for LLM inference",
+            "Azure AI Content Safety - for content moderation",
+            "Azure Key Vault - for secrets management",
+            "Azure Monitor - for logging and observability",
+            "Azure Managed Identity - for authentication"
+        ],
+        "repos": [
+            {
+                "name": "Most relevant Azure-Samples repo for THIS project type",
+                "url": "https://github.com/Azure-Samples/...",
+                "description": "Why this starter is relevant to THIS project"
+            }
+        ],
+        "microsoft_docs": [
+            {
+                "title": "Specific guide relevant to THIS project",
+                "url": "https://learn.microsoft.com/..."
+            }
+        ]
+    },
     "quick_start_guide": {...},
     "recommendations_by_pillar": {
         "reliability_safety": {
