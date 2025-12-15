@@ -63,6 +63,26 @@ def handle_preflight():
         response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         return response
 
+# Global handler to add security headers to all responses
+@app.after_request
+def add_security_headers(response):
+    """Add security headers to all API responses."""
+    # Prevent MIME type sniffing
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    
+    # Cache control for API responses
+    if request.path.startswith('/api/'):
+        # API responses should not be cached by default
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+    
+    # Additional security headers
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    
+    return response
+
 # =============================================================================
 # Module Imports - Graceful Degradation Pattern
 # =============================================================================
